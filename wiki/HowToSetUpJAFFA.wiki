@@ -1,0 +1,25 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+Add your content here.
+
+Runs on the bash command-line...
+
+= Required software =
+  * bpipe
+  * R (with packages GenomicRanges...)
+  * samtools
+  * fastx tools ??
+  * blat
+  * trinity? (maybe interchanged with another assembler)
+  * trimmomatic (may be interchanged with other trimming/cleaning tools)
+  * bowtie2 (maybe interchanged with another mapper)
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
