@@ -1,0 +1,30 @@
+
+Necessary Software
+------------------
+- bpipe
+- trimmomatic
+- Oases and Velvet
+- blat
+- R (GenomicRanges,...) ? 
+- bowtie2
+- fastx tools
+- samtools
+- bash command-line tools - grep, awk,...
+
+- also need human genome reference for extra filtering
+this can be obtained from:
+http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
+untar and unzip then ... cat *.fa > hg19.fa
+
+- Annotation...
+
+FILES
+-----
+JAFFA.groovy
+JAFFA_stages.groovy
+compile_results.R
+get_spanning_reads.R
+make_final_table.R
+process_transcriptome_blat_table.R
+
+
