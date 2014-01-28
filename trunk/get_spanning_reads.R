@@ -10,7 +10,7 @@ show(candidates_table)
 show(output_table)
 
 fusions=read.delim(candidates_table,header=F,stringsAsFactors=F)
-fusions=unique(fusions[,c(10,22:24,11)])
+#fusions=unique(fusions[,c(10,22:24,11)])
 colnames(fusions)<-c("transcript","break_min","break_max","fusion_genes","contig_length")
 
 alignments_table=read.delim(bam_data_file,header=F,stringsAsFactors=F)
