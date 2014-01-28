@@ -2,7 +2,7 @@
 
 /** The following parameters must be set by the user: **/
 // environment
-code_base="/mnt/storage/nadiad/work_area/20121023_cancer_fusion/code/"
+code_base="/mnt/storage/nadiad/work_area/20121023_cancer_fusion/jaffa-project/"
 trimmomatic="/usr/local/Trimmomatic-0.30/trimmomatic-0.30.jar" //"/home/nadia/Trimmomatic-0.30/trimmomatic-0.30.jar"
 TRINITY="/mnt/storage/nadiad/trinityrnaseq_r20131110/Trinity.pl" //trinityrnaseq_r2013_08_14/Trinity.pl
 hgFasta="/mnt/storage/shared/genomes/hg19/fasta/hg19.fa" //"/home/Shared/data/annotation/Human/genome/GRCH37/GRCH37.fa"
@@ -178,7 +178,7 @@ extract_fusion_sequences = {
     produce(base+".fusions.fa"){
        from("txt","fasta"){
           exec """
-           cat $input1 | cut -d \"\t\" -f 10 | sort -u | sed \'s/^/^>/g\' > ${output}.temp ;
+           cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
            fasta_formatter -i $input2 | grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
            rm ${output}.temp ;
            bowtie2-build $output $output.prefix ;
@@ -263,7 +263,7 @@ make_simple_reads_table = {
 	   from("txt"){
            exec """
                echo  -e "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads" > $output ; 
-               awk '{ print \$10"\t"\$22"\t"\$23"\t"\$24"\t"0"\t"1}' $input | sort -u  >> $output
+               awk '{ print \$1"\t"\$2"\t"\$3"\t"\$4"\t"0"\t"1}' $input | sort -u  >> $output
            """
 	    }
 	}
