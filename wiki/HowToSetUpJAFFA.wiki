@@ -3,8 +3,11 @@
 = Introduction =
 
 The JAFFA tar ball consists of some bpipe scripts (those ending in .groovy) and
-a number of R scripts. Because JAFFA is a pipeline rather than a stand-alone program 
-it also relies on a number of other software tools, which must be installed.
+a number of R scripts. Rather than being a stand-alone program, it is a pipeline,
+meaning that it primarily steers a number of pipeline stages which make use of
+other software tools. The required software is listed below.
+
+JAFFA is designed to be run on the bash command-line and has been tested on linux.
 
 = Required software =
   * [https://code.google.com/p/bpipe/ Bpipe] - manages the pipeline. For example this will allow you to run multiple jobs in parallel etc.
