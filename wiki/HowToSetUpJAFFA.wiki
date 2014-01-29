@@ -18,10 +18,10 @@ it also relies on a number of other software tools, which must be installed.
 
 = Installing =
 
-# Download the JAFFA tar ball from here
-# unzip and untar
-# Download the human genome from UCSC if you don't already have it
-# Download a matching annotation from UCSC ....
-# Fix the annotation....
-# Change the paths in the JAFFA_stages.groovy file
-# Run on the test data....?
+  # Download the JAFFA tar ball from here
+  # unzip and untar
+  # Download the human genome from UCSC if you don't already have it
+  # Download a matching annotation from UCSC ....
+  # Fix the annotation....
+  # Change the paths in the JAFFA_stages.groovy file
+  # Run on the test data....?
