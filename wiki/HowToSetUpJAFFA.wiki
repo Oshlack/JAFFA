@@ -28,3 +28,6 @@ JAFFA is designed to be run on the bash command-line and has been tested on linu
   # Fix the annotation....
   # Change the paths in the JAFFA_stages.groovy file
   # Run on the test data....?
+
+
+= Running =
