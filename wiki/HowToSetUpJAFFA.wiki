@@ -1,4 +1,4 @@
-#summary How to install and configure JAFFA ready for running
+#summary How to install JAFFA
 
 = Introduction =
 
@@ -7,19 +7,21 @@ a number of R scripts. Because JAFFA is a pipeline rather than a stand-alone pro
 it also relies on a number of other software tools, which must be installed.
 
 = Required software =
-  * [https://code.google.com/p/bpipe/ bpipe] - manages the pipeline. For example this will allow you to run multiple jobs in parallel etc.
+  * [https://code.google.com/p/bpipe/ Bpipe] - manages the pipeline. For example this will allow you to run multiple jobs in parallel etc.
   * [http://www.bioconductor.org/ R] (with the bioconductor package GenomicRanges)
-  * [http://samtools.sourceforge.net/ samtools]
+  * [http://samtools.sourceforge.net/ Samtools]
   * [http://genome.ucsc.edu/FAQ/FAQblat.html#blat3 BLAT]
-  * [http://hannonlab.cshl.edu/fastx_toolkit/ fastx tools]
+  * [http://hannonlab.cshl.edu/fastx_toolkit/ Fastx tools]
   * [http://www.ebi.ac.uk/~zerbino/oases/ Oases and Velvet] (maybe interchanged with another assembler)
-  * http://www.usadellab.org/cms/?page=trimmomatic trimmomatic] (may be interchanged with other trimming/cleaning tools)
+  * [http://www.usadellab.org/cms/?page=trimmomatic Trimmomatic] (may be interchanged with other trimming/cleaning tools)
   * [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml bowtie2] (maybe interchanged with another mapper)
 
+= Installing =
 
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+# Download the JAFFA tar ball from here
+# unzip and untar
+# Download the human genome from UCSC if you don't already have it
+# Download a matching annotation from UCSC ....
+# Fix the annotation....
+# Change the paths in the JAFFA_stages.groovy file
+# Run on the test data....?
