@@ -1,20 +1,20 @@
-#summary One-sentence summary of this page.
+#summary How to install and configure JAFFA ready for running
 
 = Introduction =
 
-Add your content here.
-
-Runs on the bash command-line...
+The JAFFA tar ball consists of some bpipe scripts (those ending in .groovy) and
+a number of R scripts. Because JAFFA is a pipeline rather than a stand-alone program 
+it also relies on a number of other software tools, which must be installed.
 
 = Required software =
-  * bpipe
-  * R (with packages GenomicRanges...)
-  * samtools
-  * fastx tools ??
-  * blat
-  * trinity? (maybe interchanged with another assembler)
-  * trimmomatic (may be interchanged with other trimming/cleaning tools)
-  * bowtie2 (maybe interchanged with another mapper)
+  * [https://code.google.com/p/bpipe/ bpipe] - manages the pipeline. For example this will allow you to run multiple jobs in parallel etc.
+  * [http://www.bioconductor.org/ R] (with the bioconductor package GenomicRanges)
+  * [http://samtools.sourceforge.net/ samtools]
+  * [http://genome.ucsc.edu/FAQ/FAQblat.html#blat3 BLAT]
+  * [http://hannonlab.cshl.edu/fastx_toolkit/ fastx tools]
+  * [http://www.ebi.ac.uk/~zerbino/oases/ Oases and Velvet] (maybe interchanged with another assembler)
+  * http://www.usadellab.org/cms/?page=trimmomatic trimmomatic] (may be interchanged with other trimming/cleaning tools)
+  * [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml bowtie2] (maybe interchanged with another mapper)
 
 
 = Details =
