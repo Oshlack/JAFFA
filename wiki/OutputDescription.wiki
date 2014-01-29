@@ -1,0 +1,11 @@
+#summary A description of the output from JAFFA
+
+
+= Excel readable table =
+
+
+
+= Fasta File =
+
+
+= Other files =
