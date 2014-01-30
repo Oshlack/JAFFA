@@ -181,7 +181,6 @@ extract_fusion_sequences = {
            cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
            fasta_formatter -i $input2 | grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
            rm ${output}.temp ;
-           bowtie2-build $output $output.prefix ;
           """
        }
     }
@@ -195,6 +194,7 @@ map_reads = {
 	from("fusions.fa","1.fastq","2.fastq")
 	prefix=base+"/"+base
 	exec """
+           bowtie2-build $input1 $input1.prefix ;
 	   $MAP_COMMAND --no-unal -p $cpus -x $input1.prefix -1 $input2 -2 $input3 -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
            samtools view -S -b ${prefix}.sam > ${prefix}.bam ;
            samtools sort ${prefix}.bam ${prefix}.sorted ;
@@ -236,12 +236,12 @@ get_final_list = {
     produce(base+".summary"){
 	from("psl","reads"){
 	    	exec """
-	               R --slave --no-save --no-restore --no-environ --args $input1 $input2 $output $refSeqTable < $R_get_final_list
+	               R --slave --no-save --no-restore --no-environ --args $input1 $input2 $output $refSeqTable < $R_get_final_list 
 	        """
 	 }
     }
 }
-
+      
 //Remove un-needed and large files
 clean_up = {
     def base=input.split("/")[0]
@@ -251,8 +251,21 @@ clean_up = {
 
 
 //Compile the results from multiple samples into an excel .csv table
+//Make a fasta file with the candidates
 compile_all_results = {
-    exec " R --slave --no-save --no-restore --no-environ --args $output_name $inputs < $R_compile_results_script"
+    exec """
+        R --slave --no-save --no-restore --no-environ --args $output_name $inputs < $R_compile_results_script ;
+	function get_sequence { 
+	   if [ \$1 == "sample" ] ; then return ; fi ;
+	   fusions_file=\$1/\$1.fusions.fa ;
+	   new_id=\$1---\$2---\${13} ;
+           echo ">\$new_id" >> ${output_name}.fasta ;
+           grep -A1 "^>\${13}" \$fusions_file | grep -v "^>"  >> ${output_name}.fasta
+	; } ;
+	rm -f ${output_name}.fasta ;
+	cat ${output_name}.csv | tr "," "\\t" | sed 's/\\"//g' | while read line ; do get_sequence \$line ; done ;
+	echo "All Done" 
+   """
 }
 
 //Used for the non-assembly pipeline

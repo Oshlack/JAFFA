@@ -202,11 +202,15 @@ format_positions<-function(x){
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
 show("Merging with read coverage data...")
+
 #############  merge with read coverage and gene name information  ###########
 result=cbind(fusion_info[,c(1,4:6)],do.call(rbind.data.frame,genome_info))
 fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
 result$fusion_genes<-sapply(result$fusion_genes,fix_names)
-r=split(result,result$fusion_genes)
+
+break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
+show(break_string)
+r=split(result,break_string) # result$fusion_genes)
 merge_result<-function(x){
    is_short = all(x$spanning_pairs=="-")
    x$spanning_pairs[x$spanning_pairs=="-"]=0
@@ -222,16 +226,7 @@ merge_result<-function(x){
    x_rep
 }
 result=do.call(rbind.data.frame,lapply(r,merge_result))
-result<-result[!is.na(result$rearrangement),]
-
-#############  do some final filtering and output the candidate fusions ###########
-# Logic for transcripts to filter out...
-# If the genomic gap is small and there's no evidence of rearrangement this is probably a regular transcripts
-###gap_cut = result$rearrangement | (as.numeric(as.character(result$gap))>200)  ##<-- magic numbers
-
-# If there are no spanning pairs or exon structure being preserved, it's probably an assembly artifact
-#read_cut = (result$spanning_pairs>0) | result$aligns
-cand=result #[read_cut,] # & gap_cut,]
+cand<-result[!is.na(result$rearrangement),]
 
 ########### now classify the candidates #########################
 
