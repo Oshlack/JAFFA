@@ -1,3 +1,5 @@
+options(echo=FALSE)
+
 ###################################################################################################
 # This script takes as input a blat .psl format file from transcripts aligned to the human genome
 # (produced in the previous step of the pipeline), read coverage information (produced in the
@@ -19,18 +21,17 @@
 args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
-output_file=args[3]       # name of the output file, will be <X>.summary
-refSeq_table_file=args[4] # a reference annotation file, refSeq_table.txt provided.
+trans_table_file=args[3]  # a reference annotation file
+gapmin=args[4] 		  # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[5]		  # which "classifications" to remove"
+output_file=args[6]       # name of the output file, will be <X>.summary
 
-#minimum genomic gap of the transcriptional break-point (in bases). 
-#FIX: this should be an input argument
-GAPMIN=10000  
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
-transTable=read.table(refSeq_table_file,header=T,stringsAsFactors=F,comment.char="/")
+transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char="/")
 blat_table<-read.delim(blat_table_file,stringsAsFactors=F,skip=5,header=F)
 sgb=split(blat_table,blat_table$V10)
 
@@ -113,12 +114,12 @@ check_gap<-function(x){
 	gap=min(distance,na.rm=T)
 	min_gap_idx=which(distance==gap,arr.ind=TRUE)[1,]
 	#return empty if we don't pass the gap requirement???
-	if(gap < GAPMIN & !rearr(x[min_gap_idx,]) ) return()
+	if(gap < gapmin & !rearr(x[min_gap_idx,]) ) return()
 	# otherwise lets work out which is the best match
 	# (it might not be the one which is closest)
 	return( get_best_fit() )
 }
-show("Calculating gap size in the genome...")
+message("Calculating gap size in the genome...")
 new_genome_pos=lapply(genome_pos,check_gap)
 
 #############  compare against the know annotation ###########
@@ -181,7 +182,7 @@ get_frame_info<-function(x){
 	}
 	res
 }
-show("Checking if the fusions are in frame...")
+message("Checking if the fusions are in frame...")
 new_new_genome_pos=lapply(new_genome_pos,get_frame_info)
 
 #############  format nicely  ###########
@@ -201,7 +202,7 @@ format_positions<-function(x){
 }
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
-show("Merging with read coverage data...")
+message("Merging with read coverage data...")
 
 #############  merge with read coverage and gene name information  ###########
 result=cbind(fusion_info[,c(1,4:6)],do.call(rbind.data.frame,genome_info))
@@ -209,7 +210,6 @@ fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
 result$fusion_genes<-sapply(result$fusion_genes,fix_names)
 
 break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
-show(break_string)
 r=split(result,break_string) # result$fusion_genes)
 merge_result<-function(x){
    is_short = all(x$spanning_pairs=="-")
@@ -236,4 +236,9 @@ cand$classification[ cand$aligns ]<-"MediumConfidence"
 cand$classification[ cand$spanning_pairs>0 & cand$spanning_reads>0 & cand$aligns ]<-"HighConfidence"
 cand$classification[ cand$gap<200 & !cand$rearrangement ]<-"PotentialRegularTranscript"
 
-write.table(cand[ cand$classification!="NoSupport", ],output_file,row.names=F,quote=F,sep="\t")
+#remove any group in the exclude list
+exclude=unlist(strsplit(exclude," "))
+cand=cand[ !cand$classification %in% exclude, ]
+
+write.table(cand,output_file,row.names=F,quote=F,sep="\t")
+message("Done producing summary file")
