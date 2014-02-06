@@ -25,7 +25,12 @@ transTable=code_base+"/hg19_genCode.tab" // table of gene coordinates
 // Input pattern (see bpipe documentation for how files are grouped and split )
 // group on start, split on end. eg. on ReadsA_1.fastq.gz, ReadA_2.fastq.gz
 // this would group the read files into pairs like we want.
-fastq_filename_pattern="%_*.fastq.gz"
+fastq_input_format="%_*.fastq.gz"
+
+// Simlar to above for running JAFFA_no_assemble with a fasta file.
+// You should need to change this unless the suffix is ".fa" instead of ".fasta"
+fasta_suffix="fasta"  
+fasta_input_format="%."+fasta_suffix
 
 /************** Other configurables *************************************/
 
@@ -37,9 +42,10 @@ scores=33
 minlen=30
 minQScore=10  
 
-// for the assembly
-//mem="100G"
-contig_length="100"
+// assembly options (we founds these setting to work well on 50bp reads)
+Ks="19,23,27,31,35" //kmer lengths to use for the assembly
+Kmerge=27
+transLength=100 //the minimum length for oases to report an assembled contig
 
 // for aligning to known genes using blat
 minId="98" //98% similar
@@ -57,11 +63,12 @@ MAP_COMMAND="bowtie2 -k1 --no-mixed --no-discordant --mm"
 over_hang=15 //how many bases require on either side of break to count a read.
 
 /********** Variables that shouldn't need to be changed ***********************/
-//name of R scripts
+//name of scripts
 R_filter_transcripts_script=code_base+"/process_transcriptome_blat_table.R"
 R_get_final_list=code_base+"/make_final_table.R"
 R_get_spanning_reads_script=code_base+"/get_spanning_reads.R"
 R_compile_results_script=code_base+"/compile_results.R"
+oases_assembly_script=code_base+"/assemble.sh"
 
 //A function to get the base name of a pair of reads. This is used
 //for the directory name and other prefixes in the pipeline
@@ -99,7 +106,7 @@ run_check = {
 }
 
 //Make a directory for each sample
-make_dir = {
+make_dir_using_fastq_names = {
    from("*.gz"){
       def base=get_base_name(input1.toString(),input2.toString())
       output.dir=base.prefix
@@ -107,7 +114,22 @@ make_dir = {
          exec """ 
             if [ ! -d $output.dir ]; then mkdir $output.dir ; fi ;
       	    touch $output #this is just to get around the dir. being passed.
-         """
+         """  
+       }
+   }
+}
+
+make_dir_using_fasta_name = {
+   from("*.fasta"){
+      def inputPath=file(input.toString()).absolutePath
+      def stringList = input.prefix.split("/")
+      base=stringList[(stringList.size()-1)]
+      output.dir=base
+      produce(base+".fasta"){
+         exec """
+            if [ ! -d $output.dir ]; then mkdir $output.dir ; fi ;
+            ln -s $inputPath $output
+         """    
       }
    }
 }
@@ -172,7 +194,7 @@ run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+".fasta"){
-       exec "my_time ./assemble.sh $base $input1 $input2 $output $threads"
+       exec "time $oases_assembly_script $base $input1 $input2 $output $Ks $Kmerge $transLength"
     }
 }
 
@@ -182,7 +204,7 @@ align_transcripts_to_annotation = {
     output.dir=base
     produce(base+".psl"){
        exec """
-                my_time blat $transFasta $input -minIdentity=$minId -minScore=$minScore -tileSize=$tile 
+                time blat $transFasta $input -minIdentity=$minId -minScore=$minScore -tileSize=$tile 
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
             """
     }

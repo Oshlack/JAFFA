@@ -27,4 +27,4 @@ get_spanning_reads.R
 make_final_table.R
 process_transcriptome_blat_table.R
 
-
+assemble.sh

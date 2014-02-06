@@ -15,16 +15,18 @@ commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samto
 
 load "JAFFA_stages.groovy"
 
+
 // The actual pipeline.
-Bpipe.run{ run_check + fastq_filename_pattern * [ 
-	   		      make_dir +
-       			      prepare_reads + 
-			      run_assembly +
-			      align_transcripts_to_annotation + 
-			      filter_transcripts + 
-			      extract_fusion_sequences + 
-			      map_reads + 
-			      get_spanning_reads +
-			      align_transcripts_to_genome + 
-			      get_final_list 
-			      ] + compile_all_results }
+run{ run_check + fastq_input_format * [ 
+   		      make_dir_using_fastq_names +
+      		      prepare_reads + 
+		      run_assembly +
+		      align_transcripts_to_annotation + 
+		      filter_transcripts + 
+		      extract_fusion_sequences + 
+		      map_reads + 
+		      get_spanning_reads +
+		      align_transcripts_to_genome + 
+		      get_final_list 
+		      ] + compile_all_results 
+}
