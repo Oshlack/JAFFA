@@ -1,16 +1,15 @@
+options(echo=F)
 
 # make a list of the summary files from the pipe-line
 args = commandArgs(trailingOnly = TRUE)
 out_name=args[1]
 sfiles=args[2:length(args)]
 dir=sapply(strsplit(sfiles,"/"),function(x){x[1]})
-show(dir)
+message(paste("Compiling the results from:",dir))
 
 summary_files=paste(getwd(),sfiles,sep="/")
-show(summary_files)
 #check to see if the summary file was even made:
 exists=file.exists(summary_files)
-show(exists)
 if(sum(!exists)>0){
    show("No fusions were found for the following samples:")
    show(dir[!exists])
@@ -34,7 +33,6 @@ colnames(full_list)[colnames(full_list)=="transcript"]<-"contig"
 colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
 
 #reorder
-show(colnames(full_list))
 full_list=full_list[,c("sample","fusion genes","chrom1","base1","chrom2","base2",
 	     "gap (kb)","spanning pairs","spanning reads",
 	     "inframe","aligns","rearrangement",
@@ -44,5 +42,5 @@ v=split(full_list,full_list$classification)
 full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialRegularTranscript"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
 
-
+message(paste("Done writing output ",out_name,".csv",sep=""))
 

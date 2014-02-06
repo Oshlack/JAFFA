@@ -81,7 +81,7 @@ multi_gene<-function(x){
 
      if(length(covValue)>=3){ 
          temp_pos=which(sapply( 1:(length(runValue(cov))-2),pattern_match))+1
-	 temp_pos=temp_pos[which(runLength(cov)[temp_pos]==min(runLength(cov)[temp_pos]))[1]]
+	 temp_pos=suppressWarnings(temp_pos[which(runLength(cov)[temp_pos]==min(runLength(cov)[temp_pos]))[1]])
          ov=runLength(cov)[temp_pos] #how big is the overlap between genes
       	 if(!is.na(ov) & ov<MAX_OVERLAP & ov>0){ #when two gene overlap by more than 15 bases it probably an assembler mistake
 	       # set the fusion point to the first base which has
