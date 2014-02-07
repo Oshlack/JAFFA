@@ -34,12 +34,13 @@ The first step of the JAFFA pipeline is to check that the required software has 
     * read_length - the length of your reads
     * threads - programs called by JAFFA, that allow parallelisation will be called with this many threads. Note that this will only be the number of threads for one sample. For example if you run JAFFA on 10 samples at once, with threads set to 4, you could potentially have 40 threads running simultaneously. 
    * hgFasta - this is the path to the human genome. If you leave this unchanged it will default to the directory of the JAFFA package
-   * fastq_input_format - This tells bpipe how to split on samples and group of read pairs. The default should work if your reads are named like "SampleA_1.fastq.gz SampleA_2.fastq.gz SampleB_1.fastq.gz SampleB_2.fastq.gz" etc. JAFFA will create one directory for each sample. If you find this does not happen in a way you expect, you might need to adjust this variable. See the end of [https://code.google.com/p/bpipe/wiki/ParallelTasks this] bpipe doc page for more information.
+   * fastq_input_format - This tells bpipe how to split on samples and group of read pairs. The default should work if your reads are named like "SampleA_1.fastq.gz SampleA_2.fastq.gz SampleB_1.fastq.gz SampleB_2.fastq.gz" etc. JAFFA will create one directory for each sample. If you find this does not happen in a way you expect, you might need to adjust this variable. See the end of [https://code.google.com/p/bpipe/wiki/ParallelTasks this] bpipe doc page for more information. Also, you may need to change with parameter if you use the "fq" extension instead of "fastq".
 
 Note that any variable defined in the pipeline can also be set temporarily at runtime with the bpipe -p option.
 
-  # Run on the test data....?
+= Input =
 
+The input to JAFFA should be either pair-end reads which have been gzipped. ie. with an ending like ".fastq.gz" or a fasta file of contigs with an ending like ".fasta". JAFFA assumes there is only one pair of files per sample for fastq, and one file per sample for fasta.
 
 = Running =
 
