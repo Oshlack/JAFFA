@@ -1,21 +1,20 @@
 #summary How to install JAFFA
 
-= Introduction =
-
-The JAFFA tar ball consists of some bpipe scripts (those ending in .groovy) and
-a number of R scripts. Rather than being a stand-alone program, it is a pipeline,
-meaning that it primarily steers a number of pipeline stages which make use of
-other software tools. The required software is listed below.
-
-JAFFA is designed to be run on the bash command-line and has been tested on linux.
+JAFFA is designed to be run on the bash command-line in linux. Having an understanding
+of bash (and R) would be useful to understand what the pipeline is doing, but shouldn't
+be a requirement. 
 
 = Required software =
-  * [https://code.google.com/p/bpipe/ Bpipe] - manages the pipeline. For example this will allow you to run multiple jobs in parallel etc.
-  * [http://www.bioconductor.org/ R] (with the bioconductor package GenomicRanges)
+Before installing JAFFA, there are quite a few other programs which must be install first.
+
+  * [https://code.google.com/p/bpipe/ Bpipe] - This is a framework for managing pipeline. It's convenient because it allows multiple jobs to be run in parallel, easy restarting of jobs and a lot of other great features. JAFFA has been written using bpipe to control the pipeline stages.
+
+  * [http://www.bioconductor.org/ R] (with the bioconductor package GenomicRanges) - Some of our filtering and data processing steps have been written as R scripts. In the future we may rewrite then to python to improve performance and remove the requirement to have R installed. 
+
   * [http://samtools.sourceforge.net/ Samtools]
   * [http://genome.ucsc.edu/FAQ/FAQblat.html#blat3 BLAT]
   * [http://hannonlab.cshl.edu/fastx_toolkit/ Fastx tools]
-  * [http://www.ebi.ac.uk/~zerbino/oases/ Oases and Velvet] (maybe interchanged with another assembler)
+  * [http://www.ebi.ac.uk/~zerbino/oases/ Oases ] and  [http://www.ebi.ac.uk/~zerbino/velvet/ Velvet] (maybe interchanged with another assembler)
   * [http://www.usadellab.org/cms/?page=trimmomatic Trimmomatic] (may be interchanged with other trimming/cleaning tools)
   * [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml bowtie2] (maybe interchanged with another mapper)
 
@@ -24,8 +23,6 @@ JAFFA is designed to be run on the bash command-line and has been tested on linu
   # Download the JAFFA tar ball from here
   # unzip and untar
   # Download the human genome from UCSC if you don't already have it
-  # Download a matching annotation from UCSC ....
-  # Fix the annotation....
   # Change the paths in the JAFFA_stages.groovy file
   # Run on the test data....?
 
