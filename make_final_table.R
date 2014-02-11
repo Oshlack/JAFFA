@@ -22,12 +22,13 @@ args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
 trans_table_file=args[3]  # a reference annotation file
-gapmin=args[4] 		  # minimum genomic gap of the transcriptional break-point (in bases). 
+gapmin=as.numeric(args[4]) # minimum genomic gap of the transcriptional break-point (in bases). 
 exclude=args[5]		  # which "classifications" to remove"
 output_file=args[6]       # name of the output file, will be <X>.summary
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
+REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flagged as regular
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
@@ -96,12 +97,25 @@ check_gap<-function(x){
                 r$genome_dir[1]!=r$genome_dir[2] || #inversion
                 ((r$genome_pos[!r$is_start] > r$genome_pos[r$is_start]) != r$genome_dir[1] ) }
 		# rearrangement like FGFR3-TACC3 
+	#below is how we choose which start and end in the genome to use (in case of
+	#multiple starts and ends..	
 	get_best_fit<-function(){
-		#choose the two longest
+		#if there is a start and end close together (less the 200kb default), use them..
                 starts=x[x$is_start,]
                 ends=x[!x$is_start,]
-                xstart=starts[which.max(starts$length*starts$pid),]
-                xend=ends[which.max(ends$length*ends$pid),]
+		close_matrix=(abs(outer(starts$genome_pos,ends$genome_pos,"-"))<REGGAP*1000) &
+		      outer(starts$genome_chrom,ends$genome_chrom,"==") &
+		      outer(starts$genome_dir,ends$genome_dir,"==")
+		close_ind=which(close_matrix,arr.ind=TRUE)
+		if(length(close_ind)>0){
+		   # use the first instance (not completely correct...)
+		   xstart=starts[close_ind[1,1],]
+		   xend=ends[close_ind[1,2],]
+		} else { 
+		   #otherwise choose the two longest
+                   xstart=starts[which.max(starts$length*starts$pid),]
+                   xend=ends[which.max(ends$length*ends$pid),]
+		}
                 temp<-rbind(xstart,xend)
                 temp$gap<-Inf
 		if(length(unique(temp$genome_chrom))==1) temp$gap = abs(diff(temp$genome_pos))/1000
@@ -145,7 +159,7 @@ get_frame_info<-function(x){
 		#which exon in this transc
 		dist=sort(c(as.integer(starts[[trans]])+1,as.integer(ends[[trans]]))-pos)
 		closest=which(abs(dist)==min(abs(dist)))[1]
-		overhang<-dist[closest]     ##(dist*rep(c(1,-1),length(dist)))[closest]
+		overhang<-dist[closest]   
 		closestExon=ceiling(closest[1]/2)
 		is_actually_the_start=((gene$strand=="+")==x[j,]$genome_dir)==x[j,]$is_start
 		frames=as.integer(unlist(strsplit(as.character(gene$exonFrames),",")))
@@ -209,8 +223,9 @@ result=cbind(fusion_info[,c(1,4:6)],do.call(rbind.data.frame,genome_info))
 fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
 result$fusion_genes<-sapply(result$fusion_genes,fix_names)
 
+#group fusions by break-point
 break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
-r=split(result,break_string) # result$fusion_genes)
+r=split(result,break_string) 
 merge_result<-function(x){
    is_short = all(x$spanning_pairs=="-")
    x$spanning_pairs[x$spanning_pairs=="-"]=0
@@ -230,11 +245,14 @@ cand<-result[!is.na(result$rearrangement),]
 
 ########### now classify the candidates #########################
 
-cand$classification<-"NoSupport" 
-cand$classification[ cand$spanning_pairs>0 & cand$spanning_reads>0 ]<-"LowConfidence"
-cand$classification[ cand$aligns ]<-"MediumConfidence"
-cand$classification[ cand$spanning_pairs>0 & cand$spanning_reads>0 & cand$aligns ]<-"HighConfidence"
-cand$classification[ cand$gap<200 & !cand$rearrangement ]<-"PotentialRegularTranscript"
+cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
+cand$classification<-"NoSupport"
+spanP=cand$spanning_pairs>0
+spanR=cand$spanning_reads>0
+cand$classification[ spanP & spanR ]<-"LowConfidence"
+cand$classification[ cand$aligns & (spanP | spanR ) ]<-"MediumConfidence"
+cand$classification[ cand$aligns & spanP & spanR ]<-"HighConfidence"
+cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRegularTranscript"
 
 #remove any group in the exclude list
 exclude=unlist(strsplit(exclude," "))
