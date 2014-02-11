@@ -6,21 +6,20 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
  ** Last Update: 6th Feb 2014
  ********************************************************************************/
-
+VERSION=0.80
 
 code_base = new File(bpipe.Config.config.script).parentFile.absolutePath
 
 /**********  Parameters that must be check by the user: *******************/
 
 read_length=75 //Read length
+
 threads=1 //Threads to use when running the pipeline on a single sample. ie. the total threads will be samples*threads
 
 // Genome, Transcriptome and related data paths. You have two options:
 // 1) put the full paths below. e.g. hgFasta=<path_to_genome> 
 // or 2) leave as is and symlink the data files to the jaffa code directory. e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
 hgFasta=code_base+"/hg19.fa"  //genome sequence
-transFasta=code_base+"/hg19_genCode.fa"  // transcript cDNA sequences
-transTable=code_base+"/hg19_genCode.tab" // table of gene coordinates
 
 // Input pattern (see bpipe documentation for how files are grouped and split )
 // group on start, split on end. eg. on ReadsA_1.fastq.gz, ReadA_2.fastq.gz
@@ -62,6 +61,10 @@ exclude="NoSupport" //fusions marked with these classifications will be thrown a
 MAP_COMMAND="bowtie2 -k1 --no-mixed --no-discordant --mm"
 over_hang=15 //how many bases require on either side of break to count a read.
 
+//location of transcriptomic data
+transFasta=code_base+"/hg19_genCode.fa"  // transcript cDNA sequences
+transTable=code_base+"/hg19_genCode.tab" // table of gene coordinates
+
 /********** Variables that shouldn't need to be changed ***********************/
 //name of scripts
 R_filter_transcripts_script=code_base+"/process_transcriptome_blat_table.R"
@@ -92,7 +95,9 @@ def get_base_name(s1,s2) {
 
 //lets start by checking the dependencies
 run_check = {
+    produce("checks"){
     exec """
+       echo "Running JAFFA version $VERSION" ;
        echo "Using a read length of $read_length" ;
        echo "Checking for the required software..." ;
        for i in $commands ; do which $i 2>/dev/null || { echo "CAN'T FIND $i" ; 
@@ -101,15 +106,17 @@ run_check = {
        for i in $transFasta $transTable $hgFasta ; 
             do ls $i 2>/dev/null || { echo "CAN'T FIND $i..." ; 
 	    echo "PLEASE DOWNLOAD and/or FIX PATH... STOPPING NOW" ; exit 1  ; } ; done ;
-       echo "All looking good"
+       echo "All looking good" ;
+       echo "running JAFFA version $VERSION.. checks passed" > $output 
     """
+    }
 }
 
 //Make a directory for each sample
 make_dir_using_fastq_names = {
    from("*.gz"){
       def base=get_base_name(input1.toString(),input2.toString())
-      output.dir=base.prefix
+      output.dir=base
       produce(base+".ignore"){
          exec """ 
             if [ ! -d $output.dir ]; then mkdir $output.dir ; fi ;
