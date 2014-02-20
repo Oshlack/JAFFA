@@ -1,4 +1,5 @@
 options(echo=FALSE)
+options(stringsAsFactors=F)
 
 ###################################################################################################
 # This script takes as input a blat .psl format file from transcripts aligned to the human genome
@@ -29,6 +30,7 @@ output_file=args[6]       # name of the output file, will be <X>.summary
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
 REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flagged as regular
+TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
@@ -51,7 +53,16 @@ get_break_pos<-function(n){
       start=as.numeric(unlist(strsplit(x[j,]$V20,",")))
       width=as.numeric(unlist(strsplit(x[j,]$V19,",")))
       genome_starts=as.numeric(unlist(strsplit(x[j,]$V21,",")))
-      genome_dir=(x[j,]$V9=="+")
+
+      # first lets adjust for small gaps in the alignment - this will help to remove false positives from
+      # highly variable regions.
+      l=length(start)
+      if(l>1){
+         trans_align_gaps = c(start[2:l]-start[1:(l-1)]-width[1:(l-1)],0)
+         trans_align_gaps[trans_align_gaps > TRAN_GAP_MAX] = 0 #don't adjust gaps biggest than TRANS_GAP_MAX
+         width=width+trans_align_gaps
+      }
+      genome_dir=(x[j,]$V9=="+")     
       if(!genome_dir){
          start=x[j,]$V11-start-width
 	 genome_starts=genome_starts+width
@@ -77,7 +88,6 @@ get_break_pos<-function(n){
 }
 show("Getting the location of fusion transcripts in the genome..")
 genome_pos=lapply(1:length(fusion_info$transcript),get_break_pos)
-
 
 #############  get the genomic gap size ###########
 # and also filter out transcripts which haven't fully aligned.
@@ -147,20 +157,29 @@ get_frame_info<-function(x){
 		####  if we don't find a match then return..   
 		if(sum(correct_pos&correct_chrom)==0) return()
 		gene=transTable[correct_pos&correct_chrom,]
+
+		#are we looking for the starts or the ends of the exons?
+		if(x[j,]$genome_dir==x[j,]$is_start){ #use the ends
+		   exon_pos=lapply(strsplit(gene$exonEnd,","),as.integer)
+		} else {
+		   exon_pos=lapply(strsplit(gene$exonStart,","),function(y){ as.integer(y) + 1 } )
+		}
 		#get the exon positions for each transcripts
-		starts=strsplit(gene$exonStart,",")
-		ends=strsplit(gene$exonEnd,",")
-		dists=lapply(1:length(starts),function(y){ 
-		   min(abs(as.integer(c(starts[[y]],ends[[y]]))-pos)) 
+		#starts=strsplit(gene$exonStart,",")
+		#ends=strsplit(gene$exonEnd,",")
+		dists=lapply(1:length(exon_pos),function(y){     #starts),function(y){ 
+		   min(abs(as.integer(exon_pos[[y]])-pos))        #c(starts[[y]],ends[[y]]))-pos)) 
                 })
 		# select the transcript with the closest exon to the break point
 		trans=which.min(unlist(dists))
 		gene=gene[trans,]
-		#which exon in this transc
-		dist=sort(c(as.integer(starts[[trans]])+1,as.integer(ends[[trans]]))-pos)
+		gene_name=gene$name2 #get the gene symbol
+		#which exon in this trans
+		dist=exon_pos[[trans]]-pos
+		#dist=sort(c(as.integer(starts[[trans]])+1,as.integer(ends[[trans]]))-pos)
 		closest=which(abs(dist)==min(abs(dist)))[1]
 		overhang<-dist[closest]   
-		closestExon=ceiling(closest[1]/2)
+		closestExon=closest #closestExon=ceiling(closest[1]/2)
 		is_actually_the_start=((gene$strand=="+")==x[j,]$genome_dir)==x[j,]$is_start
 		frames=as.integer(unlist(strsplit(as.character(gene$exonFrames),",")))
 		frame=frames[closestExon]
@@ -171,10 +190,11 @@ get_frame_info<-function(x){
 		      frame=-1 # return non-coding frame if we hit the end of the transcript
 		   } else { frame=frames[nextExon] }
 		}
-		return(data.frame(x[j,],overhang,frame,is_actually_the_start));
+		return(data.frame(x[j,],overhang,frame,is_actually_the_start,gene_name));
 	}
    	res=do.call(rbind.data.frame,lapply(1:(dim(x)[1]),do_one_row))   
 	if(dim(res)[1]!=2) return()
+	if(res$gene_name[1]==res$gene_name[2]) return() #reject if two halves of the same gene
 	### check frame #####
 	res$inFrame=NA
 	### fix/check overhang... #####
@@ -202,29 +222,35 @@ new_new_genome_pos=lapply(new_genome_pos,get_frame_info)
 #############  format nicely  ###########
 format_positions<-function(x){
 	if(length(x)==0){
-	   res=data.frame(NA,NA,NA,0,NA,NA,NA,NA,NA)
-	   colnames(res)<-c("contig_break","chrom1","base1","chrom2","base2","gap","rearrangement","aligns","inframe")
+	   res=data.frame(NA,NA,NA,0,NA,NA,NA,NA,NA,NA)
+	   colnames(res)<-c("contig_break","chrom1","base1","chrom2","base2","gap","rearrangement","aligns","inframe","fusion_genes")
 	   return(res)
 	 }
 	#there should only be 2 or 0 genomic positions at this point.
-	chrom1=x$genome_chrom[1] ; chrom2=x$genome_chrom[2]
-	base1=x$genome_pos[1] ;  base2=x$genome_pos[2]
+	#sort the break points
+	x$genome_chrom<-as.character(x$genome_chrom)
+	x$gene_name<-as.character(x$gene_name)
+	ord=order(x$gene_name)
+	chrom1=x$genome_chrom[ord[1]] ; chrom2=x$genome_chrom[ord[2]]
+	base1=x$genome_pos[ord[1]] ;  base2=x$genome_pos[ord[2]]
 	gap=as.numeric(as.character(x$gap[1])) ; rearrangement=x$rearrangement[1] 
 	aligns=all(x$aligns) ; inframe=x$inFrame[1]
 	contig_break=min(x$brk)[1] 
-	return(data.frame(contig_break,chrom1,base1,chrom2,base2,gap,rearrangement,aligns,inframe))
+	fusion_genes=paste(x$gene_name[ord[1]],x$gene_name[ord[2]],sep=":")
+	return(data.frame(contig_break,chrom1,base1,chrom2,base2,gap,rearrangement,aligns,inframe,fusion_genes))
 }
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
 message("Merging with read coverage data...")
 
 #############  merge with read coverage and gene name information  ###########
-result=cbind(fusion_info[,c(1,4:6)],do.call(rbind.data.frame,genome_info))
-fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
-result$fusion_genes<-sapply(result$fusion_genes,fix_names)
+result=cbind(fusion_info[,c("transcript","spanning_pairs","spanning_reads")],do.call(rbind.data.frame,genome_info))
+#fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
+#result$fusion_genes<-sapply(result$fusion_genes,fix_names)
 
 #group fusions by break-point
-break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
+#break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
+break_string=paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep="")
 r=split(result,break_string) 
 merge_result<-function(x){
    is_short = all(x$spanning_pairs=="-")
