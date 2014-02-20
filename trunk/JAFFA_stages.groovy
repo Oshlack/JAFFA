@@ -47,10 +47,11 @@ Kmerge=27
 transLength=100 //the minimum length for oases to report an assembled contig
 
 // for aligning to known genes using blat
-minId="98" //98% similar
+minIdTrans="98" //98% similar when we blat to the human transcriptome
 minScore="30" // this is the minimum required flaking sequence assembled around the break-point
 tile="18" //big tile size makes blat faster
 maxIntron="0" //don't expect intron when mapping to the transcriptome
+minIdGenome="90" //90% similar when we blat to the human genome
 
 // filtering
 gapSize="1000" //minimum distance between the two fusion candidates for the 1st filtering stage
@@ -150,9 +151,8 @@ prepare_reads = {
 	    // need to check here for whether the files are zipped - FIX
 	    //trim & fix the file names so Trinity handles the paired-ends reads correctly 
            exec """
-             cd $base ;
-             trimmomatic PE -threads $threads -phred$scores ../$input1 ../$input2 
-                         tempp1.fq tempu1.fq tempp2.fq tempu2.fq 
+             trimmomatic PE -threads $threads -phred$scores $input1 $input2 
+                         ${base}/tempp1.fq ${base}/tempu1.fq ${base}/tempp2.fq ${base}/tempu2.fq 
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
               
              function fix_ids { 
@@ -163,10 +163,9 @@ prepare_reads = {
                                   i++ ; 
                                   if(i==4) i=0 }' 2>/dev/null 
              ; } ;
-	     fix_ids tempp1.fq 1 > ${base}_trim1.fastq ;
-	     fix_ids tempp2.fq 2 > ${base}_trim2.fastq ;
-             rm tempu1.fq tempu2.fq tempp1.fq tempp2.fq ;
-             cd ../ 
+	     fix_ids ${base}/tempp1.fq 1 > ${base}/${base}_trim1.fastq ;
+	     fix_ids ${base}/tempp2.fq 2 > ${base}/${base}_trim2.fastq ;
+             rm ${base}/tempu1.fq ${base}/tempu2.fq ${base}/tempp1.fq ${base}/tempp2.fq ;
            """ 
 	}
    }
@@ -211,7 +210,7 @@ align_transcripts_to_annotation = {
     output.dir=base
     produce(base+".psl"){
        exec """
-                time blat $transFasta $input -minIdentity=$minId -minScore=$minScore -tileSize=$tile 
+                time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$tile 
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
             """
     }
@@ -296,7 +295,7 @@ align_transcripts_to_genome = {
     output.dir=base
     produce(base+"_genome.psl"){
 	from(base+".fusions.fa"){
-            exec "blat $hgFasta $input1 $output 2>&1 | tee $base/log_genome_blat"
+            exec "blat $hgFasta $input1 -minIdentity=$minIdGenome $output 2>&1 | tee $base/log_genome_blat"
 	}
     }
 }

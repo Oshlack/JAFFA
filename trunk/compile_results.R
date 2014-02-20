@@ -5,7 +5,8 @@ args = commandArgs(trailingOnly = TRUE)
 out_name=args[1]
 sfiles=args[2:length(args)]
 dir=sapply(strsplit(sfiles,"/"),function(x){x[1]})
-message(paste("Compiling the results from:",dir))
+message("Compiling the results from:")
+message(paste(dir,collapse=" "))
 
 summary_files=paste(getwd(),sfiles,sep="/")
 #check to see if the summary file was even made:
