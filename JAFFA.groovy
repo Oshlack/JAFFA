@@ -13,7 +13,7 @@
 //these are the commands we will check for at the start of every run.
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools"
 
-load "JAFFA_stages.groovy"
+load "/vlsci/VR0193/shared/nadiad/JAFFA/JAFFA/JAFFA_stages.groovy"
 
 
 // The actual pipeline.
