@@ -10,7 +10,7 @@
  *********************************************************/
 
 commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
-load "JAFFA_stages.groovy"
+load "/vlsci/VR0193/shared/nadiad/JAFFA/JAFFA/JAFFA_stages.groovy"
 
 body = segment { align_transcripts_to_annotation +
                  filter_transcripts +

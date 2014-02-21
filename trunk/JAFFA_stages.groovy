@@ -195,6 +195,21 @@ get_unmapped = {
     }
 }
 
+//Like above: remove reads that don't map to transcriptome, but this time use the assembled
+//transcriptome instead of the reference
+get_assembly_unmapped = {
+    def base=input.split("/")[0]
+    output.dir=base
+    produce(base+".unmapped.fasta"){
+        exec """
+	     bowtie2-build $input.fasta $input.fasta.prefix ;
+             $MAP_COMMAND --very-fast --un $output -p $threads -x $input.fasta.prefix -f -U $input
+                          -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map ;
+             rm -f ${output.dir}/temp.sam ;
+        """
+    }
+}
+
 //Run the de novo assembler (this is the most important part of the pipeline)
 run_assembly = {
     def base=input.split("/")[0]
@@ -208,7 +223,7 @@ run_assembly = {
 align_transcripts_to_annotation = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".psl"){
+    produce(input.prefix+".psl"){
        exec """
                 time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$tile 
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
@@ -220,7 +235,7 @@ align_transcripts_to_annotation = {
 filter_transcripts = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".txt"){
+    produce(input.prefix+".txt"){
        exec """
                time R --vanilla --args $input $output $gapSize $transTable < 
 	       $R_filter_transcripts_script &> $base/log_filter 
@@ -232,7 +247,7 @@ filter_transcripts = {
 extract_fusion_sequences = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".fusions.fa"){
+    produce(input.prefix+".fusions.fa"){
        from("txt","fasta"){
           exec """
            cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
@@ -264,8 +279,8 @@ map_reads = {
 get_spanning_reads = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".reads"){
-        from("txt","bam"){
+    produce(input.txt.prefix+".reads"){
+       from("txt","bam"){
 	   exec """ 
                samtools view  $input2  | cut -f 3,4,8  > $base/${base}.temp ;
                R --vanilla --args $base/$base $input1 $base/${base}.temp 
@@ -279,8 +294,8 @@ get_spanning_reads = {
 make_simple_reads_table = {
 	def base=input.split("/")[0]
 	output.dir=base
-	produce(base+".reads"){
-	   from("txt"){
+	produce(input.txt.prefix+".reads"){
+	from("txt"){
            exec """
                echo  -e "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads" > $output ; 
                awk '{ print \$1"\t"\$2"\t"\$3"\t"\$4"\t"0"\t"1}' $input | sort -u  >> $output
@@ -289,12 +304,25 @@ make_simple_reads_table = {
 	}
 }
 
+merge_assembly_and_unmapped_reads_candidates = {
+    def base=input.split("/")[0]
+    output.dir=base
+    produce(base+".all.fusions.fa",base+".all.reads"){
+       from("fusions.fa",base+".fusions.fa",
+            "reads",base+".reads"){
+           exec """ cat $input1 $input2 > $output1 ;
+                    cp $input3 $output2 ; tail -n+2 $input4 >> $output2 """
+       }
+    }
+}
+
+
 //Align candidate fusions to the genome
 align_transcripts_to_genome = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+"_genome.psl"){
-	from(base+".fusions.fa"){
+	from(".fusions.fa"){
             exec "blat $hgFasta $input1 -minIdentity=$minIdGenome $output 2>&1 | tee $base/log_genome_blat"
 	}
     }
@@ -316,12 +344,13 @@ get_final_list = {
 //Compile the results from multiple samples into an excel .csv table
 //Make a fasta file with the candidates
 compile_all_results = {
+    var type : ""
     produce(output_name+".fasta",output_name+".csv"){
        exec """
           R --vanilla --args $output_name $inputs < $R_compile_results_script ;
 	  function get_sequence { 
 	     if [ \$1 == "sample" ] ; then return ; fi ;
-	     fusions_file=\$1/\$1.fusions.fa ;
+	     fusions_file=\$1/\$1${type}.fusions.fa ;
 	     new_id=\$1---\$2---\${13} ;
              echo ">\$new_id" >> ${output_name}.fasta ;
              grep -A1 "^>\${13}" \$fusions_file | grep -v "^>"  >> ${output_name}.fasta
