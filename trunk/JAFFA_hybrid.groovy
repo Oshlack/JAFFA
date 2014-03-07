@@ -13,13 +13,14 @@
  *********************************************************/
 
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools fastx_collapser"
-load "/vlsci/VR0193/shared/nadiad/JAFFA/JAFFA/JAFFA_stages.groovy"
+
+load "JAFFA_stages.groovy"
 
 run{ run_check + fastq_input_format * [ 
    		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly + //start the first part - assembly
-		      align_transcripts_to_annotation + 
+		      align_transcripts_to_annotation.using(tile:contigTile) +
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      map_reads + 
@@ -27,7 +28,7 @@ run{ run_check + fastq_input_format * [
 		      cat_reads + // start the second part - unmapped reads
 		      remove_dup + 
 		      get_assembly_unmapped +
-		      align_transcripts_to_annotation + 
+		      align_transcripts_to_annotation.using(tile:readTile) + 
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      make_simple_reads_table +
