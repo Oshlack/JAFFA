@@ -13,7 +13,7 @@
 //these are the commands we will check for at the start of every run.
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools"
 
-load "/vlsci/VR0193/shared/nadiad/JAFFA/JAFFA/JAFFA_stages.groovy"
+load "JAFFA_stages.groovy"
 
 
 // The actual pipeline.
@@ -21,7 +21,7 @@ run{ run_check + fastq_input_format * [
    		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly +
-		      align_transcripts_to_annotation + 
+		      align_transcripts_to_annotation.using(tile:readTile) + 
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      map_reads + 

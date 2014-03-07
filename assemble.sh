@@ -20,7 +20,7 @@ for k in $Ks ; do
     echo "done" >> log_${k}
 done
 
-echo "running velveth" >> log
+echo "running velveth to merge with Kmerge = $Kmerge " >> log
 velveth mergedAssembly $Kmerge -long directory*/transcripts.fa >> log
 echo "running velvetg" >> log
 velvetg mergedAssembly -read_trkg yes -conserveLong yes >> log

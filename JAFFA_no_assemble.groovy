@@ -10,10 +10,10 @@
  *********************************************************/
 
 commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
-load "/vlsci/VR0193/shared/nadiad/JAFFA/JAFFA/JAFFA_stages.groovy"
 
-body = segment { align_transcripts_to_annotation +
-                 filter_transcripts +
+load "JAFFA_stages.groovy"
+
+body = segment { filter_transcripts +
                  extract_fusion_sequences +
                  align_transcripts_to_genome +
                  make_simple_reads_table +
@@ -25,6 +25,7 @@ get_unmapped_as_fasta = segment { prepare_reads + cat_reads + remove_dup + get_u
 if(args[0].endsWith(fasta_suffix)) {
    run { run_check + fasta_input_format * [
 	     make_dir_using_fasta_name + 
+	     align_transcripts_to_annotation.using(tile:contigTile) +
 	     body ] + compile_all_results
    } 
 // or you can provide the reads and they will be 
@@ -34,6 +35,7 @@ if(args[0].endsWith(fasta_suffix)) {
    run { run_check + fastq_input_format * [
        	    make_dir_using_fastq_names +
 	    get_unmapped_as_fasta +
+	    align_transcripts_to_annotation.using(tile:readTile) +
 	    body ] + compile_all_results 
    }
 }

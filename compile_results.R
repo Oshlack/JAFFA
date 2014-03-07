@@ -38,8 +38,15 @@ full_list=full_list[,c("sample","fusion genes","chrom1","base1","chrom2","base2"
 	     "gap (kb)","spanning pairs","spanning reads",
 	     "inframe","aligns","rearrangement",
 	     "contig","contig break","classification")]
+
+#first order on the gap size (useful for direct mode where the spanning reads are mostly just 1)
+full_list=full_list[order(as.numeric(full_list$`gap (kb)`),decreasing=F),] 
+
+#now order on the number of spanning reads
 full_list=full_list[order(as.numeric(full_list$`spanning reads`),decreasing=T),]
 v=split(full_list,full_list$classification)
+
+#then order on classification
 full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialRegularTranscript"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
 
