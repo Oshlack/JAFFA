@@ -17,7 +17,7 @@ Before installing JAFFA, there are quite a few other programs which must be inst
   * [http://www.usadellab.org/cms/?page=trimmomatic Trimmomatic]
   * [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml bowtie2] 
 
-Note that may of these tool (like the assembler, trimming software and mapper) can be easily replaced in the pipeline with your favourites. 
+Note that may of these tool (like the assembler, trimming software and mapper) can be replaced in the pipeline with other options. 
 
 The first step of the JAFFA pipeline is to check that the required software has been installed. You should get a warning if any of the commands are not found.
 
@@ -41,14 +41,21 @@ tar -xvf <file.tar>
 
 Note that any variable defined in the pipeline can also be set temporarily at runtime with the `bpipe -p` option.
 
-= Input =
+= Input Type =
 
-The input to JAFFA should be either pair-end reads which have been gzipped. ie. with an ending like ".fastq.gz" or a fasta file of contigs with an ending like ".fasta". JAFFA assumes there is only one pair of files per sample for fastq, and one file per sample for fasta.
+The input to JAFFA should be either pair-end reads which have been gzipped. i.e. with an ending like ".fastq.gz" or a fasta file of contigs with an ending like ".fasta". JAFFA assumes there is one pair of files per sample for fastq, and one file per sample for fasta.
 
 = Running =
 
-The first step of the JAFFA pipeline is to check that the required software has been installed. You should get a warning any of the commands are not found.
+Create and change into the directory where you intend for JAFFA to run.
+You then have a choice of three JAFFA three running modes (each described below).
 
+== Assembly ==
+This is appropriate for approximately 70bp reads and shorter. JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. 
+
+== Direct ==
+
+== Hybrid ==
 
 
 = Feedback =
