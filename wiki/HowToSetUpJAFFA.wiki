@@ -73,9 +73,9 @@ bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <pat
 
 == When to use which mode? ==
 
-  * For reads shorter than 60bp only the assembly method will give results. This is because only contigs/reads with 30bp either side of a breakpoint will be recognised as candidate fusions.
-  * For longer reads (We tested with 75 and 100 bp), the hybrid mode is the most sensative. However, because it involves assembly, it requires the most memory and CPU hours. If computational resources are a constraint, we recommend using the direct method. 
-   * For long reads (e.g. several hundred bases), there is probably not advantage in assembling, therefore we recommend the direct mode.
+  * For reads *shorter than 60bp* only the assembly method will give results. This is because only contigs/reads with 30bp either side of a breakpoint will be recognised as candidate fusions.
+  * For longer reads (we tested with *75 and 100 bp*), the hybrid mode is the most sensative. However, because it involves assembly, it requires the most memory and CPU hours. If computational resources are a constraint, we recommend using the direct method. 
+  * For *long reads* (e.g. several hundred bases), there is probably not advantage in assembling, therefore we recommend the direct mode.
 
 
 = Feedback =
