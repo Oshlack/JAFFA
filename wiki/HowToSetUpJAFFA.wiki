@@ -30,9 +30,7 @@ The first step of the JAFFA pipeline is to check that the required software has 
 gunzip <filename> 
 tar -xvf <file.tar> 
 }}}
-
   # Download the human genome, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`) or, provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy`.
-
   # Configure the JAFFA pipeline options for your data. Open `JAFFA_stages.groovy` in your favourite editor, at the top of this file are some variable you might want to change. In particular:
     * `read_length` - the length of your reads
     * `threads` - programs called by JAFFA, that allow parallelisation will be called with this many threads. Note that this will only be the number of threads for one sample. For example if you run JAFFA on 10 samples at once, with threads set to 4, you could potentially have 40 threads running simultaneously. 
@@ -51,11 +49,22 @@ Create and change into the directory where you intend for JAFFA to run.
 You then have a choice of three JAFFA three running modes (each described below).
 
 == Assembly ==
-This is appropriate for approximately 70bp reads and shorter. JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. 
+JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs.{{{
+bpipe run -p read_length=<read length> <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
 
 == Direct ==
+JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
+{{{
+bpipe run <path to JAFFA>/JAFFA_no_assembly.groovy <path_to_directory with fastq files>/*.gz
 
 == Hybrid ==
+
+This is a combination of the pervious two modes. First JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. Next it will map reads to both the known reference transcriptome and the assembled transcriptome. It will then search for fusions from amongst the unmapped reads. 
+
+
+== When to use which mode? ==
+
+
 
 
 = Feedback =
