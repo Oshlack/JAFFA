@@ -51,16 +51,24 @@ You then have a choice of three JAFFA three running modes (each described below)
 == Assembly ==
 JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs.{{{
 bpipe run -p read_length=<read length> <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
+}}}
 
 == Direct ==
 JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
 {{{
 bpipe run <path to JAFFA>/JAFFA_no_assembly.groovy <path_to_directory with fastq files>/*.gz
+}}}
+In this mode, you can only search for fusions in pre-assembled transcriptomes, but providing a fasta file as input. In this case we skip the step where we filter for unmapped sequences.
+{{{
+bpipe run <path to JAFFA>/JAFFA_no_assembly.groovy <path_to_directory with fasta file>/*.fasta
+}}}
 
 == Hybrid ==
 
-This is a combination of the pervious two modes. First JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. Next it will map reads to both the known reference transcriptome and the assembled transcriptome. It will then search for fusions from amongst the unmapped reads. 
-
+This is a combination of the previous two modes. First JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. Next it will map reads to both the known reference transcriptome and the assembled transcriptome. It will then search for fusions from amongst the unmapped reads. 
+{{{
+bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <path_to_directory with fastq files>/*.gz
+}}}
 
 == When to use which mode? ==
 
