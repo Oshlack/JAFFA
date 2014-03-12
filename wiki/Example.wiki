@@ -5,15 +5,10 @@
 To help get you started, here, we provide a small demo of how to run JAFFA.
 
 We will use the first 1 million read pairs from the BTF-7 (SRA accession: SRR925695)
-and MCF-7 (SRA accession: SRR925723) RNA-Seq datasets. 
-
-You can download this demo dataset from [address here]. 
-The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
+and MCF-7 (SRA accession: SRR925723) RNA-Seq datasets. You can download this demo dataset from [address here]. The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
 
 Before you start, place all the downloaded files into the same directory. I'll refer to this directory like so `<data dir>` in the example. The directory with the JAFFA package, will be refered to as `<JAFFA dir>`.
-
 Now, create the directory where you want the JAFFA output file to be written, and change into this directory.
-
 
 = JAFFA - assembly =
 
@@ -25,7 +20,11 @@ bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/*.fastq.gz
 Bpipe will start giving you information about the stage it's running. Let go through these in some detail.
   # First, it will run a stage call " ". This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
   # Next bpipe with create two branchs, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parrallel. You can control the number of branches running in parallel with the bpipe `-n` option.
-     #Now you will see that bpipe is running trimmomatic. With the default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See`JAFFA_stages.groovy`. 
+     # Now you will see that bpipe is running Trimmomatic. With JAFFA's default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See`JAFFA_stages.groovy`.
+    # Next the reads will be assembled. The assembly involved running velveth, velvetg then oases, 6 times: once for each kmer 19, 23, 27,31 and 35, and these once to merge. If something goes wrong with the pipeline, it is often during this stage. For example you will need to ensure that your machine has enough RAM (especially if you are running samples in parallel). The assembly can be adjusted in the JAFFA script `assemble.sh`
+    # The assembled contigs will then be aligned to the reference transcriptome (GENCODE by default). BLAT is used for this.
+    #
+
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
