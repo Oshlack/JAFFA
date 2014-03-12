@@ -18,9 +18,9 @@ bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/*.fastq.gz
 }}}
 
 Bpipe will start giving you information about the stage it's running. Let go through these in some detail.
-  # First, it will run a stage call " ". This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
-  # Next bpipe with create two branchs, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parrallel. You can control the number of branches running in parallel with the bpipe `-n` option.
-     # Now you will see that bpipe is running Trimmomatic. With JAFFA's default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See`JAFFA_stages.groovy`.
+  # *_Stage run_check_* - This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
+  # *Stage _make_dir_using_fastq_names_* - Next bpipe with create two branchs, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parrallel. You can control the number of branches running in parallel with the bpipe `-n` option.
+     # *_Stage prepare_reads_* Now you will see that bpipe is running Trimmomatic. With JAFFA's default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See`JAFFA_stages.groovy`.
     # Next the reads will be assembled. The assembly involved running velveth, velvetg then oases, 6 times: once for each kmer 19, 23, 27,31 and 35, and these once to merge. If something goes wrong with the pipeline, it is often during this stage. For example you will need to ensure that your machine has enough RAM (especially if you are running samples in parallel). The assembly can be adjusted in the JAFFA script `assemble.sh`
     # The assembled contigs will then be aligned to the reference transcriptome (GENCODE by default). BLAT is used for this.
     #
