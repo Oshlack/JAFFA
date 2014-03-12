@@ -12,15 +12,15 @@ Now, create the directory where you want the JAFFA output file to be written, an
 
 = JAFFA - assembly =
 
-We will start by demonstrating the assembly mode. Type the following on the command-lines:
+We will start by demonstrating the assembly mode. Type the following on the command line:
 {{{
 bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
-Or just,
+Or, if you only have the demo files in <data dir>, you can just type:
 {{{
 bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/*
 }}}
-if you only have the demo files in <data dir>
+
 
 Bpipe will start giving you information about the stages it is running. Let go through these in some detail.
   # *_Stage run_check_* - This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
@@ -28,7 +28,13 @@ Bpipe will start giving you information about the stages it is running. Let go t
      # *_Stage prepare_reads_* Now you will see that bpipe is running Trimmomatic. With JAFFA's default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See`JAFFA_stages.groovy`.
     # *_Stage run_assembly_*. Next the reads will be assembled. This stage may take a while. The assembly involved running velveth, velvetg then oases, 6 times: once for each kmer 19, 23, 27,31 and 35, and these once to merge. If something goes wrong with the pipeline, it is often during this stage. For example you will need to ensure that your machine has enough RAM (especially if you are running samples in parallel). The assembly can be adjusted in the JAFFA script `assemble.sh`
     # The assembled contigs will then be aligned to the reference transcriptome (GENCODE by default). BLAT is used for this.
-    #
+    # Preliminary filtering will be performed (this uses an R script)
+    # The fasta sequences of the preliminary candidate will be extracted
+    # Reads are mapped back to the candidate fusion sequences
+    # JAFFA will count the number of spanning read and spanning pairs over the break point of the fusions
+    # The candidates will be aligned to the human genome using BLAT
+    # A second filtering of the candidates is done using the genomic alignment and read coverage data. A file ending in `.summary` will contain all the candidates fusions identified by JAFFA
+  #The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
 
 
 = JAFFA - Direct =
