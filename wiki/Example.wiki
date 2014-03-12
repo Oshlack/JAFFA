@@ -14,11 +14,11 @@ Now, create the directory where you want the JAFFA output file to be written, an
 
 We will start by demonstrating the assembly mode. Type the following on the command line:
 {{{
-bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p read_length=76 <JAFFA dir>/JAFFA.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
 Or, if you only have the demo files in <data dir>, you can just type:
 {{{
-bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/*
+bpipe run -p read_length=76 <JAFFA dir>/JAFFA.groovy <data dir>/*
 }}}
 
 
