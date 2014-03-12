@@ -43,7 +43,7 @@ If everything runs smoothly, you should see two new files created in your workin
 
 To run the direct mode, do:
 {{{
-bpipe run -p ...? <JAFFA dir>/JAFFA_no_assembly.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p output_name="jaffa_results_direct" <JAFFA dir>/JAFFA_no_assembly.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
 Note here that I haven't specified the read lengths. This is parameter is not used here. Also see that I've specified a different output filename prefix (so that we don't overwrite the previous jaffa_results files we created from the assembly mode.
 
@@ -53,25 +53,8 @@ You'll see a few different stages in this pipeline, compared to the previous:
 
 = JAFFA - Hybrid =
 
+Hybrid give you the best of both assembly and direct. Run it like so:
+{{{
+bpipe run -p output_name="jaffa_results_hybrid" -p read_length=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+}}}
 
-= Making sense of the output =
-
-
-= Useful command line options =
-
-Here are the command line options that I've found most useful when running JAFFA.
-
-Bpipe commands:
-  * _*run*_ - run the pipeline!
-  * _*test*_ - print the next stage in the pipeline which will be run (without actually running it)
-  * _*history*_ - tells you pervious bpipe commands you've run. This makes it easy to rerun the same command again
-  * _*log*_ - a log of all the info bpipe outputs to stdout. This can be useful for monitoring jobs which are running in the background.
-
-Bpipe options:
-  * _*-n_* - limits the number of sample run in parallel
-  * _*-r_* - will create a html report of the running time of the pipeline.
-  * _*-p_* - set a JAFFA option (see below)
-
-JAFFA options:
-  * _*read_length* - this one will need to be set most times
-  * see the variables at the head of `JAFFA_stages.groovy` for a full list
