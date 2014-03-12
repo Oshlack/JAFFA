@@ -2,10 +2,15 @@
 
 = Introduction =
 
-Download the dataset from Fusion Map....
+To get you started, here, we provide a small demo of how to run JAFFA.
+We will use the first 1 million read pairs from one of the ENCDOE MCF-7 
+RNA-Seq datasets (SRA...). You can download this small example dataset 
+from [address here]. These reads are 100bp paired end, which means we
+can show all three modes of JAFFA: assembly, direct and hybrid.
+
+= JAFFA - assembly =
 
 
-= Details =
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
