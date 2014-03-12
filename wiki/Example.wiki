@@ -34,7 +34,7 @@ Bpipe will giving you information about each stage in the pipeline as it run it.
     #_*Stage get_spanning_reads*_. JAFFA will count the number of spanning read and spanning pairs over the break point of the fusions
     # _*Stage align_transcripts_to_genome*_. The candidates will be aligned to the human genome using BLAT
     # _*Stage get_final_list*_. A second filtering of the candidates is done using the genomic alignment and read coverage data. A file ending in `.summary` will contain all the candidates fusions identified by JAFFA
-  #_*Stage   *_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
+  #_*Stage compile_all_results*_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
 
 If everything runs smoothly, you should see two new files created in your working directory: `jaffa_results.csv` and `jaffa_results.fasta`. See OutputDescription for a description of the content of these files.
 
@@ -48,7 +48,9 @@ bpipe run -p output_name="jaffa_results_direct" <JAFFA dir>/JAFFA_no_assembly.gr
 Note here that I haven't specified the read lengths. This is parameter is not used here. Also see that I've specified a different output filename prefix (so that we don't overwrite the previous jaffa_results files we created from the assembly mode.
 
 You'll see a few different stages in this pipeline, compared to the previous:
-  # _*Stage *_ . 
+  # _*Stage cat_reads*_ . Concatenate the paired-end reads into a single file.
+  # _*Stage remove_dup*_ . Remove duplicate reads.
+  # _*Stage get_unmapped*_. Map the reads to the reference transcriptome and extract the reads that do not map.
 
 
 = JAFFA - Hybrid =
@@ -57,4 +59,3 @@ Hybrid give you the best of both assembly and direct. Run it like so:
 {{{
 bpipe run -p output_name="jaffa_results_hybrid" -p read_length=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
-
