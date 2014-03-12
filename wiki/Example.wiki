@@ -36,7 +36,8 @@ Bpipe will giving you information about each stage in the pipeline as it run it.
     # _*Stage   *_. A second filtering of the candidates is done using the genomic alignment and read coverage data. A file ending in `.summary` will contain all the candidates fusions identified by JAFFA
   #_*Stage   *_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
 
-If everything runs smoothly, you should see two new files created in your working directory: `jaffa_results.csv` and `jaffa_results.fasta`
+If everything runs smoothly, you should see two new files created in your working directory: `jaffa_results.csv` and `jaffa_results.fasta`. See OutputDescription for a description of the content of these files.
+
 
 = JAFFA - Direct =
 
