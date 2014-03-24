@@ -23,7 +23,7 @@ get_unmapped_as_fasta = segment { prepare_reads + cat_reads + remove_dup + get_u
 
 // below is the pipeline for a fasta file
 if(args[0].endsWith(fasta_suffix)) {
-   run { run_check + fasta_input_format * [
+   run { run_check + fastaInputFormat * [
 	     make_dir_using_fasta_name + 
 	     align_transcripts_to_annotation.using(tile:contigTile) +
 	     body ] + compile_all_results
@@ -32,7 +32,8 @@ if(args[0].endsWith(fasta_suffix)) {
 // filtered and converted to fasta before running
 // the same pipeline as above
 } else {
-   run { run_check + fastq_input_format * [
+  if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
+  run { run_check + fastqInputFormat * [
        	    make_dir_using_fastq_names +
 	    get_unmapped_as_fasta +
 	    align_transcripts_to_annotation.using(tile:readTile) +

@@ -17,7 +17,7 @@ load "JAFFA_stages.groovy"
 
 
 // The actual pipeline.
-run{ run_check + fastq_input_format * [ 
+run{ run_check + fastqInputFormat * [ 
    		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly +

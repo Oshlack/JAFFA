@@ -8,12 +8,12 @@
  ********************************************************************************/
 VERSION=0.80
 
-code_base = new File(bpipe.Config.config.script).parentFile.absolutePath
+codeBase = new File(bpipe.Config.config.script).parentFile.absolutePath
 
 /**********  Parameters that must be check by the user: ***********************/
 /*** Modify them below, or set them when you run bpipe (with the -p option)   */
 
-read_length=50 //Read length
+readLength=50 //Read length
 
 threads=1 //Threads to use when running the pipeline on a single sample. ie. the total threads will be samples*threads
           //Note that oases doesn't support threads, so this option will probably not make much difference to performance
@@ -21,22 +21,22 @@ threads=1 //Threads to use when running the pipeline on a single sample. ie. the
 // Genome, Transcriptome and related data paths. You have two options:
 // 1) put the full paths below. e.g. hgFasta=<path_to_genome> 
 // or 2) leave as is and symlink the data files to the jaffa code directory. e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
-hgFasta=code_base+"/hg19.fa"  //genome sequence
+hgFasta=codeBase+"/hg19.fa"  //genome sequence
 
 // Input pattern (see bpipe documentation for how files are grouped and split )
 // group on start, split on end. eg. on ReadsA_1.fastq.gz, ReadA_2.fastq.gz
 // this would group the read files into pairs like we want.
-fastq_input_format="%_*.fastq.gz"
+fastqInputFormat="%_*.fastq.gz"
 
 // Simlar to above for running JAFFA_no_assemble with a fasta file.
 // You should not need to change this unless the suffix is ".fa" instead of ".fasta"
-fasta_suffix="fasta"  
-fasta_input_format="%."+fasta_suffix
+fastaSuffix="fasta"  
+fastaInputFormat="%."+fastaSuffix
 
 /***************** Other configurables *************************************/
 
 //Default output name
-output_name="jaffa_results"
+outputName="jaffa_results"
 
 // trimming
 scores=33 //PHRED quality score type
@@ -54,7 +54,7 @@ transLength=100 //the minimum length for Oases to report an assembled contig
 minIdTrans=98 //98% similar when we blat to the human transcriptome
 minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
 contigTile=18 //big tile size makes blat fast
-readTile=18 //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
+readTile=0 //This is a dummy. Gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
 maxIntron=0 //don't expect intron when mapping to the transcriptome
 
 // filtering
@@ -63,21 +63,21 @@ finalGapSize=10000 //minimum distance for the final filtering
 exclude="NoSupport" //fusions marked with these classifications will be thrown away. Can be a list. 
 
 //mapping and counting the coverage
-MAP_COMMAND="bowtie2 -k1 --no-mixed --no-discordant --mm"
-over_hang=15 //how many bases are require on either side of a break to count the read.
+MapCommand="bowtie2 -k1 --no-mixed --no-discordant --mm"
+overHang=15 //how many bases are require on either side of a break to count the read.
 
 /********** Variables that shouldn't need to be changed ***********************/
 
 //location of transcriptomic data
-transFasta=code_base+"/hg19_genCode.fa"  // transcript cDNA sequences
-transTable=code_base+"/hg19_genCode.tab" // table of gene coordinates
+transFasta=codeBase+"/hg19_genCode.fa"  // transcript cDNA sequences
+transTable=codeBase+"/hg19_genCode.tab" // table of gene coordinates
 
 //name of scripts
-R_filter_transcripts_script=code_base+"/process_transcriptome_blat_table.R"
-R_get_final_list=code_base+"/make_final_table.R"
-R_get_spanning_reads_script=code_base+"/get_spanning_reads.R"
-R_compile_results_script=code_base+"/compile_results.R"
-oases_assembly_script=code_base+"/assemble.sh"
+R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
+R_get_final_list=codeBase+"/make_final_table.R"
+R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
+R_compile_results_script=codeBase+"/compile_results.R"
+oases_assembly_script=codeBase+"/assemble.sh"
 
 //A function to get the base name of a pair of reads. This is used
 //for the directory name and other prefixes in the pipeline
@@ -104,7 +104,7 @@ run_check = {
     produce("checks"){
     exec """
        echo "Running JAFFA version $VERSION" ;
-       echo "Using a read length of $read_length" ;
+       echo "Using a read length of $readLength" ;
        echo "Checking for the required software..." ;
        for i in $commands ; do which $i 2>/dev/null || { echo "CAN'T FIND $i" ; 
             echo "PLEASE INSTALL IT... STOPPING NOW" ; exit 1  ; } ; done ;
@@ -195,7 +195,7 @@ get_unmapped = {
     output.dir=base
     produce(base+".fasta"){
 	exec """
-	     $MAP_COMMAND --very-fast --un $output -p $threads -x $transFasta.prefix -f -U $input
+	     $MapCommand --very-fast --un $output -p $threads -x $transFasta.prefix -f -U $input
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
 	     rm -f ${output.dir}/temp.sam
         """
@@ -209,10 +209,10 @@ get_assembly_unmapped = {
     output.dir=base
     produce(base+".unmapped.fasta"){
         exec """
-             $MAP_COMMAND --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
+             $MapCommand --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
 	     bowtie2-build ${base}/${base}.fasta ${base}/${base} ;
-             $MAP_COMMAND --very-fast --un $output -p $threads -x ${base}/${base} -f -U ${base}/${base}.temp
+             $MapCommand --very-fast --un $output -p $threads -x ${base}/${base} -f -U ${base}/${base}.temp
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_assembly ;
              rm -f ${output.dir}/temp.sam ${base}/${base}.temp;
         """
@@ -232,31 +232,31 @@ run_assembly = {
 align_transcripts_to_annotation = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(input.prefix+".psl"){
+    produce(input.prefix+".psl"){ from(input.prefix+".fasta"){
        exec """
                 time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$tile 
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
             """
-    }
+    } }
 }
 
 //Parse the blat alignment table and filter for candidate fusions (uses an R script)
 filter_transcripts = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(input.prefix+".txt"){
+    produce(input.prefix+".txt"){ from(input.prefix+".psl"){
        exec """
                time R --vanilla --args $input $output $gapSize $transTable < 
 	       $R_filter_transcripts_script &> $base/log_filter 
             """
-    }
+    }}
 }
 
 //Extract the fasta sequences for the candidate fusions into their own fasta file
 extract_fusion_sequences = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(input.prefix+".fusions.fa"){
+    produce(input.prefix+".fusions.fa"){ from(input.prefix+".psl"){
        from("txt","fasta"){
           exec """
            cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
@@ -264,7 +264,7 @@ extract_fusion_sequences = {
            rm ${output}.temp ;
           """
        }
-    }
+    }}
 }
 
 //Map the reads back to the candidate fusion sequences
@@ -273,16 +273,17 @@ map_reads = {
     output.dir=base
     produce(base+".sorted.bam"){
 	from("fusions.fa","1.fastq","2.fastq")
-	prefix=base+"/"+base
+	def prefix=base+"/"+base
 	exec """
            bowtie2-build $input1 $input1.prefix ;
-	   $MAP_COMMAND --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
+	   $MapCommand --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
            samtools view -S -b ${prefix}.sam > ${prefix}.bam ;
            samtools sort ${prefix}.bam ${prefix}.sorted ;
-           samtools index $output ${output}.bai ;
+           samtools index $output ${output}.bai ;  
        """
     }
-}
+}  // $MapCommand --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S | samtools view -bSu - | samtools sort -o - - > $output ;
+ 
 
 //Calculate the number of reads which span the breakpoint of the fusions
 get_spanning_reads = {
@@ -293,7 +294,7 @@ get_spanning_reads = {
 	   exec """ 
                samtools view  $input2  | cut -f 3,4,8  > $base/${base}.temp ;
                R --vanilla --args $base/$base $input1 $base/${base}.temp 
-                 $output $read_length $over_hang < $R_get_spanning_reads_script
+                 $output $readLength $overHang < $R_get_spanning_reads_script ;
 	       rm $base/${base}.temp 
 	   """
 	}
@@ -358,26 +359,26 @@ get_final_list = {
 //Make a fasta file with the candidates
 compile_all_results = {
     var type : ""
-    produce(output_name+".fasta",output_name+".csv",output_name+".psl"){
+    produce(outputName+".fasta",outputName+".csv",outputName+".psl"){
        exec """
-          R --vanilla --args $output_name $inputs < $R_compile_results_script ;
+          R --vanilla --args $outputName $inputs < $R_compile_results_script ;
 	  function get_sequence { 
 	     if [ \$1 == "sample" ] ; then return ; fi ;
 	     fusions_file=\$1/\$1${type}.fusions.fa ;
 	     new_id=\$1---\$2---\${13} ;
-             echo ">\$new_id" >> ${output_name}.fasta ;
+             echo ">\$new_id" >> ${outputName}.fasta ;
 	     break=\${14} ; 
 	     sequence=`grep -A1 "^>\${13}" \$fusions_file | grep -v "^>"` ;
 	     start=`echo \$sequence | cut -c 1-\$((\${break}-1))` ;
 	     middle=`echo \$sequence | cut -c \$break-\$((\${break}+1)) | tr '[:upper:]' '[:lower:]'` ;
 	     string_length=`echo \${#sequence}` ;
 	     end=`echo \$sequence | cut -c \$((\$break+2))-$string_length ` ;
-	     echo ${start}${middle}${end} >> ${output_name}.fasta ;
-	     grep \${13} \$1/\$1_genome.psl >> ${output_name}.psl ;
+	     echo ${start}${middle}${end} >> ${outputName}.fasta ;
+	     grep \${13} \$1/\$1_genome.psl >> ${outputName}.psl ;
 	  } ;
-	  rm -f ${output_name}.fasta ;	  
-	  cat ${output_name}.csv | tr "," "\\t" | sed 's/\\"//g' | while read line ; do get_sequence \$line ; done ;
-	  echo "Done writing ${output_name}.fasta" ;
+	  rm -f ${outputName}.fasta ;	  
+	  cat ${outputName}.csv | tr "," "\\t" | sed 's/\\"//g' | while read line ; do get_sequence \$line ; done ;
+	  echo "Done writing ${outputName}.fasta" ;
 	  echo "All Done" 
         """
        }

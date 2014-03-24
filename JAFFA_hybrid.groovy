@@ -16,7 +16,9 @@ commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samto
 
 load "JAFFA_stages.groovy"
 
-run{ run_check + fastq_input_format * [ 
+
+if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
+run{ run_check + fastqInputFormat * [ 
    		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly + //start the first part - assembly

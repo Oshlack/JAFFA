@@ -30,3 +30,4 @@ echo "done" >> log
 cd ../../
 
 mv ${base}/oases/mergedAssembly/transcripts.fa ${output}
+rm -rf ${base}/oases
