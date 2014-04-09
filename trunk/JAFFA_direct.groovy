@@ -11,7 +11,8 @@
 
 commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
 
-load "./JAFFA_stages.groovy"
+codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
+load codeBase+"/JAFFA_stages.groovy"
 
 body = segment { filter_transcripts +
                  extract_fusion_sequences +
@@ -32,7 +33,6 @@ if(args[0].endsWith(fastaSuffix)) {
 // filtered and converted to fasta before running
 // the same pipeline as above
 } else {
-  if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
   if(readLayout=="single"){ fastqInputFormat="%.gz" }
   run { run_check + fastqInputFormat * [
        	    make_dir_using_fastq_names +

@@ -157,7 +157,7 @@ get_frame_info<-function(x){
 		####  if we don't find a match then return..   
 		if(sum(correct_pos&correct_chrom)==0) return()
 		gene=transTable[correct_pos&correct_chrom,]
-		show(gene)
+#		show(gene)
 
 		#are we looking for the starts or the ends of the exons?
 		if(x[j,]$genome_dir==x[j,]$is_start){ #use the ends
@@ -173,8 +173,8 @@ get_frame_info<-function(x){
                 })
 		# select the transcript with the closest exon to the break point
 		trans=which.min(unlist(dists))
-		show(dists)
-		show(trans)
+#		show(dists)
+#		show(trans)
 		gene=gene[trans,]
 		gene_name=gene$name2 #get the gene symbol
 		#which exon in this trans
