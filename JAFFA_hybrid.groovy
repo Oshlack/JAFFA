@@ -9,28 +9,28 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 12th Feb 2014
+ ** Last Update: 2nd April 2014
  *********************************************************/
 
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools fastx_collapser"
 
-load "JAFFA_stages.groovy"
+load "./JAFFA_stages.groovy"
 
+get_unmapped_as_fasta = segment { cat_reads + remove_dup + get_assembly_unmapped }
 
-if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
+//if(readTile==0 & readLength<100 ){ def readSize=15 } else { def readSize=18 } 
+if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
    		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly + //start the first part - assembly
-		      align_transcripts_to_annotation.using(tile:contigTile) +
+		      align_transcripts_to_annotation +
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      map_reads + 
 		      get_spanning_reads +
-		      cat_reads + // start the second part - unmapped reads
-		      remove_dup + 
-		      get_assembly_unmapped +
-		      align_transcripts_to_annotation.using(tile:readTile) + 
+		      get_unmapped_as_fasta + // start the second part - unmapped reads
+		      align_reads_to_annotation + 
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      make_simple_reads_table +
@@ -39,3 +39,4 @@ run{ run_check + fastqInputFormat * [
 		      get_final_list 
 		 ] + compile_all_results.using(type:".all")
 }
+

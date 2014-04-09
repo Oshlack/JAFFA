@@ -11,7 +11,7 @@
 
 commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
 
-load "JAFFA_stages.groovy"
+load "./JAFFA_stages.groovy"
 
 body = segment { filter_transcripts +
                  extract_fusion_sequences +
@@ -22,10 +22,10 @@ body = segment { filter_transcripts +
 get_unmapped_as_fasta = segment { prepare_reads + cat_reads + remove_dup + get_unmapped }
 
 // below is the pipeline for a fasta file
-if(args[0].endsWith(fasta_suffix)) {
+if(args[0].endsWith(fastaSuffix)) {
    run { run_check + fastaInputFormat * [
 	     make_dir_using_fasta_name + 
-	     align_transcripts_to_annotation.using(tile:contigTile) +
+	     align_transcripts_to_annotation +
 	     body ] + compile_all_results
    } 
 // or you can provide the reads and they will be 
@@ -33,10 +33,11 @@ if(args[0].endsWith(fasta_suffix)) {
 // the same pipeline as above
 } else {
   if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
+  if(readLayout=="single"){ fastqInputFormat="%.gz" }
   run { run_check + fastqInputFormat * [
        	    make_dir_using_fastq_names +
 	    get_unmapped_as_fasta +
-	    align_transcripts_to_annotation.using(tile:readTile) +
+	    align_reads_to_annotation +
 	    body ] + compile_all_results 
    }
 }

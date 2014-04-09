@@ -15,13 +15,14 @@ commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samto
 
 load "JAFFA_stages.groovy"
 
+prepare = segment { make_dir_using_fastq_names + prepare_reads }
 
 // The actual pipeline.
+if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
-   		      make_dir_using_fastq_names +
-      		      prepare_reads + 
+     	       	      prepare +
 		      run_assembly +
-		      align_transcripts_to_annotation.using(tile:readTile) + 
+		      align_transcripts_to_annotation.using(tile:contigTile) + 
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      map_reads + 

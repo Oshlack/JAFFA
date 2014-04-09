@@ -1,18 +1,20 @@
 #!/bin/bash
 
 base=$1
-input1=$2
-input2=$3
-output=$4
-Ks=`echo $5 | sed s'/,/ /g'` #convert comma seperated to space separated
-Kmerge=$6
-transLength=$7
+output=$2
+Ks=`echo $3 | sed s'/,/ /g'` #convert comma seperated to space separated
+Kmerge=$4
+transLength=$5
+inputs="../../$6"
+if [ $# -eq 7 ] ; then
+   inputs="$inputs ../../$7"
+fi
 
 mkdir ${base}/oases ; cd ${base}/oases
 for k in $Ks ; do
     echo "directory_${k}" >> log_${k}
     echo "running velveth" >> log_${k}
-    velveth directory_${k} $k -fastq -separate ../../$input1 ../../$input2 >> log_${k}
+    velveth directory_${k} $k -fastq -separate $inputs >> log_${k}
     echo "running velvetg" >> log_${k}
     velvetg directory_$k -read_trkg yes >> log_${k}
     echo "running oases" >> log_${k}
