@@ -22,9 +22,9 @@ The first step of the JAFFA pipeline is to check that the required software has 
 
 = Installing =
 
-  # [Download] the JAFFA tar ball
+  # [Download] the JAFFA tar ball and reference file.
 
-  # unzip and untar: 
+  # unzip and untar both files in the same place: 
 {{{
 gunzip <filename> 
 tar -xvf <file.tar> 
