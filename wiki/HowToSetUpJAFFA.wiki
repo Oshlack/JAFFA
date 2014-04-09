@@ -31,29 +31,29 @@ tar -xvf <file.tar>
 }}}
   # Download the human genome, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`) or, provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy`.
   # Configure the JAFFA pipeline options for your data. Open `JAFFA_stages.groovy` in your favourite editor, at the top of this file are some variable you might want to change. In particular:
-    * _`read_length`_ - the length of your reads
-    * _`threads`_ - programs called by JAFFA, that allow parallelisation will be called with this many threads. Note that this will only be the number of threads for one sample. For example if you run JAFFA on 10 samples at once, with threads set to 4, you could potentially have 40 threads running simultaneously. 
+    * _`readLength`_ - the length of your reads
+    * _`readLayout`_ - change to "single" if you have single-end reads otherwise paired-end is assumed.
    * _`hgFasta`_ - this is the path to the human genome. If you leave this unchanged it will default to the directory of the JAFFA package
-   * _`fastq_input_format`_ - This tells bpipe how to split on samples and group of read pairs. The default should work if your reads are named like `SampleA_1.fastq.gz SampleA_2.fastq.gz SampleB_1.fastq.gz SampleB_2.fastq.gz` etc. JAFFA will create one directory for each sample. If you find this does not happen in a way you expect, you might need to adjust this variable. See the end of [https://code.google.com/p/bpipe/wiki/ParallelTasks this] bpipe doc page for more information. Also, you may need to change with parameter if you use the `fq` extension instead of `fastq`.
+   * _`fastqInputFormat`_ - This tells bpipe how to split on samples and group of read pairs. The default should work if your reads are named like `SampleA_1.fastq.gz SampleA_2.fastq.gz SampleB_1.fastq.gz SampleB_2.fastq.gz` etc. JAFFA will create one directory for each sample. If you find this does not happen in a way you expect, you might need to adjust this variable. See the end of [https://code.google.com/p/bpipe/wiki/ParallelTasks this] bpipe doc page for more information. Also, you may need to change this parameter if your reads have the `fq` extension instead of `fastq`.
 
 Note that any variable defined in the pipeline can also be set temporarily at runtime with the `bpipe -p` option.
 
 = Input Type =
 
-The input to JAFFA should be either pair-end reads which have been gzipped. i.e. with an ending like ".fastq.gz" or a fasta file of contigs with an ending like ".fasta". JAFFA assumes there is one pair of files per sample for fastq, and one file per sample for fasta.
+The input to JAFFA should be either reads which have been gzipped. i.e. with an ending like ".fastq.gz" or a fasta file of contigs with an ending like ".fasta". JAFFA assumes there is one files (single-end) or pair of files (paired-end) per sample.
 
 = Running =
 
-Create and change into the directory where you intend for JAFFA to run.
+Create and change into the directory where you intend to run JAFFA.
 You then have a choice of three JAFFA three running modes (each described below).
 
-== Assembly ==
+== Assembly - Use for < 60bp read lengths ==
 JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs.
 {{{
 bpipe run -p read_length=<read length> <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
 }}}
 
-== Direct ==
+== Direct - Use for > 200bp read lengths or > 70 bp when assembly is too resource greedy ==
 JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
 {{{
 bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fastq files>/*.gz
@@ -63,7 +63,7 @@ In this mode, you can only search for fusions in pre-assembled transcriptomes, b
 bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fasta file>/*.fasta
 }}}
 
-== Hybrid ==
+== Hybrid - Use for 70-200bp read lengths ==
 
 This is a combination of the previous two modes. First JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. Next it will map reads to both the known reference transcriptome and the assembled transcriptome. It will then search for fusions from amongst the unmapped reads. 
 {{{
