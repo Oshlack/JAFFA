@@ -1,5 +1,5 @@
 #summary Download
 
-[https://drive.google.com/file/d/0B1FwZagazjpcTWVYZDMzcUpqWjQ/edit?usp=sharing JAFFA version 0.80 ]
+[https://drive.google.com/file/d/0B1FwZagazjpcTWVYZDMzcUpqWjQ JAFFA version 0.80 ]
 
-[https://drive.google.com/file/d/0B1FwZagazjpcN1NCOWhnU2hCSjQ/edit?usp=sharing Supporting data (the GENCODE reference transcriptome, version 17) ]
+[https://drive.google.com/file/d/0B1FwZagazjpcN1NCOWhnU2hCSjQ Supporting data (the GENCODE reference transcriptome, version 17) ]
