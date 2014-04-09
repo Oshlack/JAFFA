@@ -78,7 +78,7 @@ bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <pat
 
 == What does the pipeline do ==
 
-<img src="https://drive.google.com/host/0B1FwZagazjpcekJQRE9LWWRSck0">
+<img src="http://drive.google.com/uc?export=view&id=0B1FwZagazjpcekJQRE9LWWRSck0">
 
 
 
