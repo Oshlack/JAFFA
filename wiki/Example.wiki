@@ -44,11 +44,9 @@ If everything runs smoothly, you should see two new files created in your workin
 
 To run the direct mode, do:
 {{{
-bpipe run -p output_name="jaffa_results_direct" -p readTile=15 <JAFFA dir>/JAFFA_no_assembly.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p output_name="jaffa_results_direct" -p read_length=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
-Note here that I haven't specified the read lengths. The read lengths are not needed for the direct mode. Also see that I've specified a different output filename prefix (so that we don't overwrite the previous jaffa_results files we created from the assembly mode. 
-
-"readTile" is a parameter for the BLAT stage of the pipeline. It controls how big the tile size is during alignment. By default JAFFA will use 18, because this significantly speeds up BLAT. Generally is does not effect the alignment results, but for reads of 76 bases in length it does. JAFFA required at least 30 bp of flanking sequence either size of the break point. This mean that at least 2 tiles must match on either side. By default this would be 18*2=36 bases either side of the break. 36+36=72, meaning there are only a 4 base window in the center of the read where a break could be detected. Making the tile size 15, increases this region to 76 - 30+30 = 16 bases. For 100bp read, we recommend leaving the tile size at 18.
+See that I've specified a different output filename prefix (so that we don't overwrite the previous jaffa_results files we created from the assembly mode. 
 
 You'll see a few different stages in this pipeline, compared to the previous:
   # _*Stage cat_reads*_ . Concatenate the paired-end reads into a single file.
@@ -60,5 +58,5 @@ You'll see a few different stages in this pipeline, compared to the previous:
 
 Hybrid give you the best of both assembly and direct. Run it like so:
 {{{
-bpipe run -p output_name="jaffa_results_hybrid" -p readTile=15 -p read_length=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p output_name="jaffa_results_hybrid" -p read_length=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
