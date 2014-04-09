@@ -22,7 +22,7 @@ The first step of the JAFFA pipeline is to check that the required software has 
 
 = Installing =
 
-  # Download the JAFFA tar ball from [here]
+  # [Download] the JAFFA tar ball
 
   # unzip and untar: 
 {{{
