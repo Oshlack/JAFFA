@@ -76,6 +76,10 @@ This is a combination of the previous two modes. First JAFFA will call Velvet an
 bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <path_to_directory with fastq files>/*.gz
 }}}
 
+== What does the pipeline do ==
+
+<img src="https://drive.google.com/file/d/0B1FwZagazjpcekJQRE9LWWRSck0/edit?usp=sharing">
+
 
 
 = Feedback =
