@@ -80,7 +80,7 @@ bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <pat
 
 <img src="http://drive.google.com/uc?export=view&id=0B1FwZagazjpcekJQRE9LWWRSck0">
 
-http://drive.google.com/uc?export=view&id=0B1FwZagazjpcekJQRE9LWWRSck0
+http://drive.google.com/uc?export=view&id=0B1FwZagazjpcekJQRE9LWWRSck0&nonsense=something_that_ends_with.png
 
 = Feedback =
 Please report any issue you find to us. This is a very new version of the software and we looking forward to ironing out bugs etc. with our pilot users. If you find that everything goes smoothly, we'd also like to know that! Feedback is more useful that you might realise.
