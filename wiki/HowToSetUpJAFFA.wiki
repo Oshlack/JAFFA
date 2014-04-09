@@ -1,7 +1,6 @@
 #summary How to install JAFFA
 
-JAFFA is designed to be run on the bash command-line in linux. Having an understanding
-of bash (and R) would be useful to understand what the pipeline is doing, but isn't essential.
+In this wiki we describe how to install JAFFA and give some basic instructions to start running it. JAFFA is designed to be run on the bash command-line in linux. Having an understanding of bash (and R) would be useful to understand what the pipeline is doing, but isn't essential.
 
 = Required software =
 Before installing JAFFA, there are quite a few other programs which must be installed.
