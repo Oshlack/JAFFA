@@ -14,11 +14,11 @@
 
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools fastx_collapser"
 
-load "./JAFFA_stages.groovy"
+codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
+load codeBase+"/JAFFA_stages.groovy"
 
 get_unmapped_as_fasta = segment { cat_reads + remove_dup + get_assembly_unmapped }
 
-//if(readTile==0 & readLength<100 ){ def readSize=15 } else { def readSize=18 } 
 if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
    		      make_dir_using_fastq_names +

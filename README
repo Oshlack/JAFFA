@@ -1,30 +1,7 @@
+This is JAFFA version 0.8
 
-Necessary Software
-------------------
-- bpipe
-- trimmomatic
-- Oases and Velvet
-- blat
-- R (GenomicRanges,...) ? 
-- bowtie2
-- fastx tools
-- samtools
-- bash command-line tools - grep, awk,...
+Please visit https://code.google.com/p/jaffa-project/ for installation and running instructions.
+Questions should be directed to the google group linked to on this page.
 
-- also need human genome reference for extra filtering
-this can be obtained from:
-http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
-untar and unzip then ... cat *.fa > hg19.fa
-
-- Annotation...
-
-FILES
------
-JAFFA.groovy
-JAFFA_stages.groovy
-compile_results.R
-get_spanning_reads.R
-make_final_table.R
-process_transcriptome_blat_table.R
-
-assemble.sh
+Written and maintained by Nadia Davidson, Murdoch Childrens Research Institute, Parkville, Australia.
+Last Updated April 9 2014
