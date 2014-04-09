@@ -44,13 +44,13 @@ The input to JAFFA should be either reads which have been gzipped. i.e. with an 
 
 = Running =
 
-Create and change into the directory where you intend to run JAFFA. You then have a choice of three JAFFA running modes: Assembly, Hybrid and  Direct. When mode to use will depend on your read length.
+Create and change into the directory where you intend to run JAFFA. You then have a choice of three JAFFA running modes: Assembly, Hybrid and  Direct. Which mode to use will depend on your read length.
 
 == When to use which mode? ==
 
-  * For reads *shorter than 70bp* only the assembly method will give results. This is because only contigs/reads with 30bp either side of a breakpoint will be recognised as candidate fusions.
-  * For longer reads ( *70 and 200 bp*), the hybrid mode is the most sensitive. However, because it involves assembly, it requires the most memory and CPU hours. If computational resources are a constraint, we recommend using the direct method. 
-  * For long reads (e.g. *several hundred bases*), there is probably not advantage in assembling, therefore we recommend the direct mode.
+  * For reads *shorter than 70bp* use the Assembly mode. The reads are too short to be used as contigs directly.
+  * For longer reads ( *70 and 200 bp*), the hybrid mode is the most sensitive. However, because it involves assembly, it requires a lot of memory and CPU time. If computational resources are a constraint, we recommend using the direct method. 
+  * For long reads (e.g. *several hundred bases*), there is no advantage in assembling, therefore we recommend the direct mode.
 
 
 == Assembly ==
