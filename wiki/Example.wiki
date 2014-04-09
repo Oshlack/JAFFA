@@ -21,7 +21,6 @@ Or, if you only have the demo files in <data dir>, you can just type:
 bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/*
 }}}
 
-
 Bpipe will giving you information about each stage in the pipeline as it run it. Let go through these in some detail.
   # *_Stage run_check_* - This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
   #  Next bpipe with create two branches, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parallel. You can control the number of branches running in parallel with the bpipe `-n` option.
@@ -42,11 +41,11 @@ If everything runs smoothly, you should see two new files created in your workin
 
 = JAFFA - Direct =
 
-To run the direct mode, do:
+Create and change into another directory for the "Direct" mode example.
+To run, type:
 {{{
-bpipe run -p outputName="jaffa_results_direct" -p readLength=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p readLength=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
-See that I've specified a different output filename prefix (so that we don't overwrite the previous jaffa_results files we created from the assembly mode. 
 
 You'll see a few different stages in this pipeline, compared to the previous:
   # _*Stage cat_reads*_ . Concatenate the paired-end reads into a single file.
@@ -56,7 +55,7 @@ You'll see a few different stages in this pipeline, compared to the previous:
 
 = JAFFA - Hybrid =
 
-Hybrid give you the best of both assembly and direct. Run it like so:
+Hybrid give you the best of both assembly and direct. Again, create and change into a new working directory, then run it like so:
 {{{
-bpipe run -p outputName="jaffa_results_hybrid" -p readLength=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p readLength=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
 }}}
