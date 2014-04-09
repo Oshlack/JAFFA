@@ -56,11 +56,11 @@ bpipe run -p read_length=<read length> <path to JAFFA>/JAFFA.groovy <path_to_dir
 == Direct ==
 JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
 {{{
-bpipe run <path to JAFFA>/JAFFA_no_assembly.groovy <path_to_directory with fastq files>/*.gz
+bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fastq files>/*.gz
 }}}
 In this mode, you can only search for fusions in pre-assembled transcriptomes, but providing a fasta file as input. In this case we skip the step where we filter for unmapped sequences.
 {{{
-bpipe run <path to JAFFA>/JAFFA_no_assembly.groovy <path_to_directory with fasta file>/*.fasta
+bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fasta file>/*.fasta
 }}}
 
 == Hybrid ==
@@ -73,7 +73,7 @@ bpipe run -p read_length=<read_lengths> <path to JAFFA>/JAFFA_hybrid.groovy <pat
 == When to use which mode? ==
 
   * For reads *shorter than 60bp* only the assembly method will give results. This is because only contigs/reads with 30bp either side of a breakpoint will be recognised as candidate fusions.
-  * For longer reads (we tested with *75 and 100 bp*), the hybrid mode is the most sensative. However, because it involves assembly, it requires the most memory and CPU hours. If computational resources are a constraint, we recommend using the direct method. 
+  * For longer reads (we tested with *75 and 100 bp*), the hybrid mode is the most sensitive. However, because it involves assembly, it requires the most memory and CPU hours. If computational resources are a constraint, we recommend using the direct method. 
   * For long reads (e.g. *several hundred bases*), there is probably not advantage in assembling, therefore we recommend the direct mode.
 
 
