@@ -3,4 +3,4 @@
 = Blat fails to work =
 
 Check the tile size limit of the version of BLAT you have installed. 
-JAFFA assumes a tile size up to 18, but some version of BLAT (e.g. v. 35) do not support tile sizes this large. You can get around this easily by running with the bpipe option "-p contigTile=X -p readTile=X" replacing X with the maximum supported tile size. The tile size does not impact on the accuracy of results in most cases, but a larger size will make the alignment steps faster.
+JAFFA assumes a tile size up to 18, but some version of BLAT (e.g. v. 35) do not support tile sizes this large. You can get around this easily by running with the option "-p contigTile=X -p readTile=X" replacing X with the maximum supported tile size. The tile size does not impact on the accuracy of results in most cases, but a larger size will make the alignment steps faster.
