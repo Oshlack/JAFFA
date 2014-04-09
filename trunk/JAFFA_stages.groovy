@@ -4,16 +4,17 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 7th March 2014
+ ** Last Update: 2nd April 2014
  ********************************************************************************/
 VERSION=0.80
 
-codeBase = new File(bpipe.Config.config.script).parentFile.absolutePath
+codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
 /**********  Parameters that must be check by the user: ***********************/
 /*** Modify them below, or set them when you run bpipe (with the -p option)   */
 
 readLength=50 //Read length
+readLayout="paired" //change to "single" or single-end reads
 
 threads=1 //Threads to use when running the pipeline on a single sample. ie. the total threads will be samples*threads
           //Note that oases doesn't support threads, so this option will probably not make much difference to performance
@@ -54,7 +55,7 @@ transLength=100 //the minimum length for Oases to report an assembled contig
 minIdTrans=98 //98% similar when we blat to the human transcriptome
 minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
 contigTile=18 //big tile size makes blat fast
-readTile=0 //This is a dummy. Gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
+readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
 maxIntron=0 //don't expect intron when mapping to the transcriptome
 
 // filtering
@@ -81,7 +82,7 @@ oases_assembly_script=codeBase+"/assemble.sh"
 
 //A function to get the base name of a pair of reads. This is used
 //for the directory name and other prefixes in the pipeline
-def get_base_name(s1,s2) {
+def get_base_name_paired(s1,s2) {
     String base = "";
     //make the directory name the part of the two
     //read end names which are in common
@@ -96,6 +97,13 @@ def get_base_name(s1,s2) {
     def stringList = base.split("/")
     base=stringList[(stringList.size()-1)]
 }
+
+//A function to get the base name of single-end reads
+def get_base_name_single(s1){
+     def stringList = s1.split("/")
+     base=stringList[(stringList.size()-1)]
+}
+
 
 /******************* Here are the pipeline stages **********************/
 
@@ -121,7 +129,11 @@ run_check = {
 //Make a directory for each sample
 make_dir_using_fastq_names = {
    from("*.gz"){
-      def base=get_base_name(input1.toString(),input2.toString())
+      def base=""
+      if(readLayout=="single")
+         base=get_base_name_single(input.prefix.prefix.toString())
+      else 
+         base=get_base_name_paired(input1.toString(),input2.toString())
       output.dir=base
       produce(base+".ignore"){
          exec """ 
@@ -136,8 +148,9 @@ make_dir_using_fastq_names = {
 make_dir_using_fasta_name = {
    from("*.fasta"){
       def inputPath=file(input.toString()).absolutePath
-      def stringList = input.prefix.split("/")
-      base=stringList[(stringList.size()-1)]
+     // def stringList = input.prefix.split("/")
+     // base=stringList[(stringList.size()-1)]
+      def base = get_base_name_single(input.prefix)
       output.dir=base
       produce(base+".fasta"){
          exec """
@@ -153,32 +166,42 @@ prepare_reads = {
 	def base=input.split("/")[0]
 	output.dir=base //set the output directory
 	from("*.gz"){
-	produce(base+"_trim1.fastq",base+"_trim2.fastq"){ 
-	    // need to check here for whether the files are zipped - FIX
-	    //trim & fix the file names so Trinity handles the paired-ends reads correctly 
-           exec """
+          if(readLayout=="single"){
+	     produce(base+"_trim.fastq"){ 
+             exec """
+                 trimmomatic SE -threads $threads -phred$scores $input.gz $output
+                         LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
+                  """
+              }
+	  } else {
+	     produce(base+"_trim1.fastq",base+"_trim2.fastq"){ 
+	     // need to check here for whether the files are zipped - FIX
+	     //trim & fix the file names so Trinity handles the paired-ends reads correctly 
+             exec """
              trimmomatic PE -threads $threads -phred$scores $input1 $input2 
                          ${base}/tempp1.fq ${base}/tempu1.fq ${base}/tempp2.fq ${base}/tempu2.fq 
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
               
-             function fix_ids { 
+              function fix_ids { 
                     cat \$1 | awk -v app=\$2 
                                'BEGIN{ i=0 }{ 
                                   if(i==0) printf(\"%s\\/%s\\n\", \$1, app) ; 
                                   else print \$1 ; 
                                   i++ ; 
                                   if(i==4) i=0 }' 2>/dev/null 
-             ; } ;
-	     fix_ids ${base}/tempp1.fq 1 > ${base}/${base}_trim1.fastq ;
-	     fix_ids ${base}/tempp2.fq 2 > ${base}/${base}_trim2.fastq ;
-             rm ${base}/tempu1.fq ${base}/tempu2.fq ${base}/tempp1.fq ${base}/tempp2.fq ;
+              ; } ;
+	      fix_ids ${base}/tempp1.fq 1 > ${base}/${base}_trim1.fastq ;
+	      fix_ids ${base}/tempp2.fq 2 > ${base}/${base}_trim2.fastq ;
+              rm ${base}/tempu1.fq ${base}/tempu2.fq ${base}/tempp1.fq ${base}/tempp2.fq ;
            """ 
-	}
+	   }
+       }
    }
 }
 
 //Cat read pairs into a single file
 cat_reads = {
+    if(readLayout=="single") return
     output.dir=input.split("/")[0]
     exec "cat $input1.fastq $input2.fastq > $output.fastq"
 }
@@ -207,7 +230,7 @@ get_unmapped = {
 get_assembly_unmapped = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".unmapped.fasta"){
+    produce(base+"-unmapped.fasta"){
         exec """
              $MapCommand --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
@@ -224,7 +247,7 @@ run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+".fasta"){
-       exec "/usr/bin/time -v $oases_assembly_script $base $input1 $input2 $output $Ks $Kmerge $transLength"
+       exec "/usr/bin/time -v $oases_assembly_script $base $output $Ks $Kmerge $transLength $inputs"
     }
 }
 
@@ -232,12 +255,27 @@ run_assembly = {
 align_transcripts_to_annotation = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(input.prefix+".psl"){ from(input.prefix+".fasta"){
+    produce(input.prefix+".psl"){
+    from(".fasta"){
        exec """
-                time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$tile 
+                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$contigTile
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
             """
     } }
+}
+
+//Align the reads to the annotation 
+align_reads_to_annotation = {
+    if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
+    def base=input.split("/")[0]
+    output.dir=base
+    produce(input.prefix+".psl"){ from(input.prefix+".fasta"){
+       exec """
+                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$readTile
+                      -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
+            """
+    } }
+
 }
 
 //Parse the blat alignment table and filter for candidate fusions (uses an R script)
@@ -272,15 +310,20 @@ map_reads = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+".sorted.bam"){
-	from("fusions.fa","1.fastq","2.fastq")
 	def prefix=base+"/"+base
-	exec """
-           bowtie2-build $input1 $input1.prefix ;
-	   $MapCommand --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
-           samtools view -S -b ${prefix}.sam > ${prefix}.bam ;
-           samtools sort ${prefix}.bam ${prefix}.sorted ;
-           samtools index $output ${output}.bai ;  
-       """
+	def input_string=""
+	from("fusions.fa","*.fastq"){
+          if(readLayout=="single")
+	     input_string="-U $input2"
+	  else
+	     input_string="-1 $input2 -2 $input3"
+	  exec """
+             bowtie2-build $input1 $input1.prefix ;
+	     $MapCommand --no-unal -p $threads -x $input1.prefix $input_string -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
+             samtools view -S -b ${prefix}.sam > ${prefix}.bam ; samtools sort ${prefix}.bam ${prefix}.sorted ;
+             samtools index $output ${output}.bai ; rm ${prefix}.sam ${prefix}.bam ;  
+          """
+          }
     }
 }  // $MapCommand --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S | samtools view -bSu - | samtools sort -o - - > $output ;
  
