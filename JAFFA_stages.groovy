@@ -4,9 +4,9 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 2nd April 2014
+ ** Last Update: 10th April 2014
  ********************************************************************************/
-VERSION=0.80
+VERSION=0.81
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
@@ -124,6 +124,7 @@ run_check = {
        echo "running JAFFA version $VERSION.. checks passed" > $output 
     """
     }
+    if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 } //set readTile size.
 }
 
 //Make a directory for each sample
@@ -266,7 +267,6 @@ align_transcripts_to_annotation = {
 
 //Align the reads to the annotation 
 align_reads_to_annotation = {
-    if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 }
     def base=input.split("/")[0]
     output.dir=base
     produce(input.prefix+".psl"){ from(input.prefix+".fasta"){
