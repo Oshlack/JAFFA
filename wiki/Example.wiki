@@ -23,7 +23,7 @@ bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/*
 
 Bpipe will giving you information about each stage in the pipeline as it run it. Let go through these in some detail.
   # *_Stage run_check_* - This checks that all the required software is installed. If bpipe fails here, you may need to double check the installation.
-  #  Next bpipe with create two branches, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parallel. You can control the number of branches running in parallel with the bpipe `-n` option.
+  #  Next bpipe with create two branches, one for each sample set. In the case of this demo, there will be one for MCF-7 and one for BTF-7. These branches will be run in parallel. You can control the number of branches running in parallel with the bpipe `-n` option. For each branch, these stages are run:
     # *_Stage make_dir_using_fastq_names_*. Create a directory for each sample.
     # *_Stage prepare_reads_* Now you will see that bpipe is running Trimmomatic. With JAFFA's default setting, no trimming is actually performed, but the fastq files will be unzipped. It is possible to control the amount of trimming. See `JAFFA_stages.groovy`.
     # *_Stage run_assembly_*. Next the reads will be assembled. The assembly involved running velveth, velvetg then oases, 6 times: once for each kmer 19, 23, 27,31 and 35, and these once to merge. If something goes wrong with the pipeline, it is often during this stage. For example you will need to ensure that your machine has enough RAM (especially if you are running samples in parallel). The assembly can be adjusted in the JAFFA script `assemble.sh`. In this demo the assembly will be fast, but in practice this stage can take a long time.
@@ -34,7 +34,7 @@ Bpipe will giving you information about each stage in the pipeline as it run it.
     # _*Stage get_spanning_reads*_. JAFFA will count the number of spanning read and spanning pairs over the break point of the fusions
     # _*Stage align_transcripts_to_genome*_. The candidates will be aligned to the human genome using BLAT
     # _*Stage get_final_list*_. A second filtering of the candidates is done using the genomic alignment and read coverage data. A file ending in `.summary` will contain all the candidates fusions identified by JAFFA
-  #_*Stage compile_all_results*_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
+  # _*Stage compile_all_results*_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
 
 If everything runs smoothly, you should see two new files created in your working directory: `jaffa_results.csv` and `jaffa_results.fasta`. See OutputDescription for a description of the content of these files.
 
