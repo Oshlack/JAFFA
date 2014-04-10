@@ -1,21 +1,21 @@
 #summary A description of the output from JAFFA
 
-JAFFA will output two files, named jaffa_results.csv and jaffa_results.fasta by default.
+JAFFA will output two files, named jaffa_results.csv and jaffa_results.fasta (by default).
 
-= .cvs File  =
+= jaffa_results.cvs  =
 
-This is an excel readable table which summarised the fusions found in all samples. Each of the field are described below:
-  * *sample* - This is the sample name. JAFFA will take this from the start of the input file names.
-  * *fusion genes* - The gene symbols for the genes involved in the fusion even. Note that the names are order alphabetically and not by transcriptional direction.
-  * *chrom1*/*chrom2*/*base1*/*base2* - The position of the break-points in the human genome - hg19. Note that these are ordered by position and not by transcriptional direction.
-  * *gap (kb)* - How far apart are to the break-points in the genome? This is only really relevant for intrachromosomal events.
-  * *spanning pairs* - The number of read-pairs, where each read in the pair aligns entirely on either side of the break-point. You might see a "-" in some of these. This indicates that no spanning pairs were found, but that the cause may be because the contig didn't have enough flanking sequence to align reads to.
-  * *spanning reads* - The number of reads aligning to the break-point, with at least 15 bases of flanking sequence either side (by default).
+This is an excel readable table that summarises the fusions found. It has the following fields:
+  * *sample* - This is the sample name. JAFFA takes the sample names from the input file names.
+  * *fusion genes* - The gene symbols for the genes involved in the fusion event. Note that the names are order alphabetically and not by transcriptional direction.
+  * *chrom1*/*chrom2*/*base1*/*base2* - The position of the breakpoints in the human genome - hg19. Note that these are ordered by position and not by transcriptional direction.
+  * *gap (kb)* - How far apart are the breakpoints in the genome? This is only really relevant for intrachromosomal events.
+  * *spanning pairs* - The number of read-pairs, where each read in the pair aligns entirely on either side of the breakpoint. You might see a "-" in some of these. This indicates that no spanning pairs were found, but that the cause may be because the contig didn't have enough flanking sequence to align reads to.
+  * *spanning reads* - The number of reads aligning to the breakpoint, with at least 15 bases of flanking sequence either side (by default).
   * *inframe* - Do the fusion genes share the same frame? Note that this is only calculated if "aligns" is true. Otherwise "NA" is given.
-  * *aligns* - This indicates whether both breaks points lie on intron-exon boundaries. This would be consistent with a genomic break-point in an intron and splice sites being preserved.
+  * *aligns* - This indicates whether both breaks points lie on intron-exon boundaries. This would be consistent with a genomic breakpoint in an intron and splice sites being preserved.
   *  *rearrangement* - This is true if the genes are on different chromosomes, if there was an inverse, or any other rearrangement, such as direction, i.e. anything inconsistent with the structure of the human reference genome.
   * *contig* - Either the read ID or the contig ID from the assembly. This will usually not be of interest.
-  * *contig break* - At what position in the read or contig is the break-point. 
+  * *contig break* - At what position in the read or contig is the breakpoint. 
   * *classification* - This is the prioritisation of the fusions. It is decided in the following way: 
     * _HighConfidence_ - aligns to exons and has at least one spanning read and one spanning pair
     * _MediumConfidence_ - aligns to exons and has at least one spanning read or one spanning pair (but not both)
@@ -33,11 +33,11 @@ This file contains one sequence for each breakpoint identified. The ID of each s
 {{{ 
 <sample>---<fusions genes>---<contig>
 }}}
-The two bases either size of the break-point are in lower case.
+The two bases either size of the breakpoint are in lower case.
 
 You will find often that the sequences are not full length transcripts. This is because the de novo assembly is not always able to assembly the full transcript. The start and end of the assembled sequence does not indicate the actual start and end of the real transcript. If you used reads, the sequence will just be the read sequence. 
 
-Often there will be more than one contig for each break-point. We only provide the sequence of one of these - a representative selected by the most number of supporting reads. If you want to see all contigs that span a particular break-point you can search in the intermediate JAFFA files like so:
+Often there will be more than one contig for each breakpoint. We only provide the sequence of one of these - a representative selected by the most number of supporting reads. If you want to see all contigs that span a particular breakpoint you can search in the intermediate JAFFA files like so:
 {{{ 
 grep <fusions genes> <sample>/<sample>.txt 
 }}}
