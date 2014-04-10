@@ -3,7 +3,7 @@
 Download <a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcLXhWSkhQUEFDOEE" onclick=”_gaq.push(['_trackEvent','Download','0.81',this.href]);”>  JAFFA_0.81.tar.gz
 </a> 
 or check it out with svn:
-{{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-0.81 jaffa-project-read-only }}}
+{{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-0.81 jaffa-0.81 }}}
 
 This version fixes a bug in 0.80. The bug resulted is a lose of sensitivity for the Direct and Hybrid modes, when run with multiple samples and a read length of less than 100 bp. 
 
