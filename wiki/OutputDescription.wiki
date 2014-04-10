@@ -1,11 +1,28 @@
 #summary A description of the output from JAFFA
 
+JAFFA will output two files, named jaffa_results.csv and jaffa_results.fasta by default.
 
-= Excel readable table =
+= .cvs File  =
+
+This is an excel readable table which summarised the fusions found in all samples.
 
 
 
-= Fasta File =
+= . fasta File =
+
+This file contains one sequence for each breakpoint identified. The ID of each sequence is in the format:
+<sample name>---<fusions gene symbols>---<contig ID>
+The two bases either size of the break-point are in lower case.
+
+You will find often that the sequences are not full length transcripts. This is because the de novo assembly is not always able to assembly the full transcript. The start and end of the assembled sequence does not indicate the actual start and end of the real transcript. If you used reads, the sequence will just be the read sequence. 
+
+Often there will be more than one contig for each break-point. We only provide the sequence of one of these - a representative selected by the most number of supporting reads. If you want to see all contigs that span a particular break-point you can search in the intermediate JAFFA files like so:
+{{{ grep <fusions gene symbols> <sample name>/<sample name>.txt }}}
+The first column are the contig IDs. Get the sequences like so:
+{{{ grep -A1 "^><contig ID>"  <sample name>/<sample name>.fusions.fa }}}
 
 
 = Other files =
+
+Intermediate files are stored in each of the sample subdirectories. These are not intended for the user, but
+are useful for diagnosing issues, and for rerunning the pipeline without repeating steps.
