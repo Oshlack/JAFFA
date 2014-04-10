@@ -4,17 +4,17 @@
 
 To help get you started, here, we provide a small demo of how to run JAFFA.
 
-We will use the first 1 million read pairs from the BTF-7 (SRA accession: SRR925695)
-and MCF-7 (SRA accession: SRR925723) RNA-Seq datasets. You can download this demo dataset from [address here]. The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
+The demo is based on RNA-Seq from two breast cancer cell-lines: BTF-7 (SRA accession: SRR925695)
+and MCF-7 (SRA accession: SRR925723). We have filtered these dataset for reads that map to know fusions, just to make the file sizes smaller and the demonstration a bit faster. You can find the files [here]. The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
 
-Before you start, place all the downloaded files into the same directory. I'll refer to this directory like so `<data dir>` in the example. The directory with the JAFFA package, will be refered to as `<JAFFA dir>`.
+Before you start, place all the downloaded files into the same directory. I'll refer to this directory as, `<data dir>`, in the example. The directory with the JAFFA package, will be referred to as `<JAFFA dir>`.
 Now, create the directory where you want the JAFFA output file to be written, and change into this directory.
 
 = JAFFA - assembly =
 
 We will start by demonstrating the assembly mode. Type the following on the command line:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
 Or, if you only have the demo files in <data dir>, you can just type:
 {{{
@@ -44,7 +44,7 @@ If everything runs smoothly, you should see two new files created in your workin
 Create and change into another directory for the "Direct" mode example.
 To run, type:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p readLength=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
 
 You'll see a few different stages in this pipeline, compared to the previous:
@@ -57,5 +57,5 @@ You'll see a few different stages in this pipeline, compared to the previous:
 
 Hybrid give you the best of both assembly and direct. Again, create and change into a new working directory, then run it like so:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT-474_small_*.fastq.gz <data dir>/MCF-7_small_*.fastq.gz
+bpipe run -p readLength=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
