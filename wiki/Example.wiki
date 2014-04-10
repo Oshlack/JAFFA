@@ -31,7 +31,7 @@ Bpipe will giving you information about each stage in the pipeline as it run it.
     # _*Stage filter_transcripts*_. Preliminary filtering will be performed (this uses an R script).
     # _*Stage extract_fusion_sequences*_. The fasta sequences of the preliminary candidate will be extracted
     # _*Stage map_reads*_. Reads are mapped back to the candidate fusion sequences
-    #_*Stage get_spanning_reads*_. JAFFA will count the number of spanning read and spanning pairs over the break point of the fusions
+    # _*Stage get_spanning_reads*_. JAFFA will count the number of spanning read and spanning pairs over the break point of the fusions
     # _*Stage align_transcripts_to_genome*_. The candidates will be aligned to the human genome using BLAT
     # _*Stage get_final_list*_. A second filtering of the candidates is done using the genomic alignment and read coverage data. A file ending in `.summary` will contain all the candidates fusions identified by JAFFA
   #_*Stage compile_all_results*_. The summary information from all samples is merged. A fasta file of candidate fusions from all samples is created.
