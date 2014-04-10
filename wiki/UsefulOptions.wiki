@@ -1,1 +1,21 @@
 #summary JAFFA running options
+
+= Useful command line options =
+
+Here are the command line options that I've found most useful when running JAFFA.
+
+Bpipe commands:
+  * _*run*_ - run the pipeline!
+  * _*test*_ - print the next stage in the pipeline which will be run (without actually running it)
+  * _*history*_ - tells you previous bpipe commands you've run. This makes it easy to rerun the same command again
+  * _*log*_ - a log of all the info bpipe outputs to stdout. This can be useful for monitoring jobs which are running in the background.
+
+Bpipe options:
+  * _*-n_* - limits the number of samples run in parallel
+  * _*-r_* - will create a html report of the running time for the pipeline.
+  * _*-p_* - set a JAFFA option (see below)
+
+JAFFA options:
+  * _*readLength* - this one will need to be set every time you run JAFFA. e.g "-p -readLength=50"
+  * _*readLayout* - used to specify single end reads (otherwise paired is assumed). e.g. "-p -readayour="single" '
+  * see the variables at the head of `JAFFA_stages.groovy` for a full list
