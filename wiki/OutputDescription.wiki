@@ -25,7 +25,7 @@ This is an excel readable table that summarises the fusions found. It has the fo
 In our validation tests, almost all true positives were classified as `HighConfidence` or `MediumConfidence`, and all false positives were classified as `LowConfidence`. Therefore we recommend focusing on the `High` and `Medium` candidates.
 
 
-= .fasta File =
+= jaffa_results.fasta File =
 
 This file contains one sequence for each breakpoint identified. The ID of each sequence is in the format:
 {{{ 
