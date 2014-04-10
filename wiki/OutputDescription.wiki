@@ -16,15 +16,15 @@ This is an excel readable table which summarised the fusions found in all sample
   *  *rearrangement* - This is true if the genes are on different chromosomes, if there was an inverse, or any other rearrangement, such as direction, i.e. anything inconsistent with the structure of the human reference genome.
   * *contig* - Either the read ID or the contig ID from the assembly. This will usually not be of interest.
   * *contig break* - At what position in the read or contig is the break-point. 
-  * *classification" - This is the prioritisation of the fusions. It is decided in the following way: 
-  "HighConfidence" - aligns to exons and has at least one spanning read and one spanning pair
-  "MediumConfidence" - aligns to exons and has at least one spanning read or one spanning pair (but not both)
-  "LowConfidence" - does not align to exons but has at least one spanning read and one spanning pair (same as HighConfidence but without aligning)
-  "PotentialRegularTranscript" - the gap is less than 200bp and there is no evidence for a rearrangement. 
+  * *classification* - This is the prioritisation of the fusions. It is decided in the following way: 
+    * _HighConfidence_ - aligns to exons and has at least one spanning read and one spanning pair
+    * _MediumConfidence_ - aligns to exons and has at least one spanning read or one spanning pair (but not both)
+    * _LowConfidence_ - does not align to exons but has at least one spanning read and one spanning pair (same as HighConfidence but without aligning)
+    * _PotentialRegularTranscript_ - the gap is less than 200bp and there is no evidence for a rearrangement. 
 These events are reported, but are most likely not fusion events, so could safely be ignored.
   * Other candidates, such as those with no supporting reads (either spanning pairs or reads) or with a gap of < 10kb are filtered out.
 
-In our validation tests on simulation and previously validated fusions in RNA-Seq from cancer cell-lines, almost all true positives were classified as "HighConfidence" or "MediumConfidence", and all false positives were classified as "LowConfidence". Therefore we recommend focusing on these candidates.
+In our validation tests on simulation and previously validated fusions in RNA-Seq from cancer cell-lines, almost all true positives were classified as _HighConfidence_ or _MediumConfidence_, and all false positives were classified as _LowConfidence_. Therefore we recommend focusing on the _High_ and _Medium_ candidates.
 
 
 = .fasta File =
