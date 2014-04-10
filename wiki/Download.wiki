@@ -1,6 +1,6 @@
 #summary Download
 
 
-< a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRGRxZEtxZ3dNOGc"> JAFFA_0.80.tar.gz < /a > - The JAFFA source
+[ a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRGRxZEtxZ3dNOGc"] JAFFA_0.80.tar.gz [ /a ] - The JAFFA source
 
 [https://docs.google.com/uc?export=download&id=0B1FwZagazjpcN1NCOWhnU2hCSjQ JAFFA_REFERENCE_FILES_0.80.tar.gz] - Supporting data (the GENCODE reference transcriptome, version 17) 
