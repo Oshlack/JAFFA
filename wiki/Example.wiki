@@ -5,7 +5,7 @@
 To help get you started, here, we provide a small demo of how to run JAFFA.
 
 The demo is based on RNA-Seq from two breast cancer cell-lines: BTF-474 (SRA accession: SRR925695)
-and MCF-7 (SRA accession: SRR925723). We have filtered these datasets for reads that map to know fusions, just to make the file sizes smaller and the demonstration a bit faster. This demo should only take a few minutes, whereas a full dataset may take hours. You can find the files [https://drive.google.com//0B1FwZagazjpcRnV4OFVUZlFIeUk here]. The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
+and MCF-7 (SRA accession: SRR925723). We have filtered these datasets for reads that map to know fusions, just to make the file sizes smaller and the demonstration a bit faster. This demo should only take a few minutes, whereas a full dataset may take hours. You can find the files [https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRnV4OFVUZlFIeUk here]. The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
 
 Before you start, place all the downloaded files into the same directory. I'll refer to this directory as, `<data dir>`, in the example. The directory with the JAFFA package, will be referred to as `<JAFFA dir>`.
 Now, create the directory where you want the JAFFA output files to be written, and change into this directory.
