@@ -5,17 +5,17 @@ JAFFA will output two files, named jaffa_results.csv and jaffa_results.fasta by 
 = .cvs File  =
 
 This is an excel readable table which summarised the fusions found in all samples. Each of the field are described below:
-  * *sample*
-  * *fusion genes*
-  * *chrom1*/*chrom2*/*base1*/*base2*
-  * *gap (kb)*
-  * spanning pairs*
-  * spanning reads* 
+  * *sample* - This is the sample name. JAFFA will take this from the start of the input file names.
+  * *fusion genes* - The gene symbols for the genes involved in the fusion even. Note that the names are order alphabetically and not by transcriptional direction.
+  * *chrom1*/*chrom2*/*base1*/*base2* - The position of the break-points in the human genome - hg19. Note that these are ordered by position and not by transcriptional direction.
+  * *gap (kb)* - How far apart are to the break-points in the genome? This is only really relevant for intrachromosomal events.
+  * *spanning pairs* - 
+  * *spanning reads* -
   * *inframe*
   * *aligns*
   *  *rearrangement*
-  * *contig*
-  * *contig break*
+  * *contig* - Either the read ID or the contig ID from the assembly. This will usually not be of interest.
+  * *contig break* - At what position in the read or contig is the break-point. 
   * *classification"
 
 
@@ -23,7 +23,7 @@ This is an excel readable table which summarised the fusions found in all sample
 
 This file contains one sequence for each breakpoint identified. The ID of each sequence is in the format:
 {{{ 
-<sample name>---<fusions gene symbols>---<contig ID>
+<sample>---<fusions genes>---<contig>
 }}}
 The two bases either size of the break-point are in lower case.
 
@@ -31,11 +31,11 @@ You will find often that the sequences are not full length transcripts. This is 
 
 Often there will be more than one contig for each break-point. We only provide the sequence of one of these - a representative selected by the most number of supporting reads. If you want to see all contigs that span a particular break-point you can search in the intermediate JAFFA files like so:
 {{{ 
-grep <fusions gene symbols> <sample name>/<sample name>.txt 
+grep <fusions genes> <sample>/<sample>.txt 
 }}}
 The first column are the contig IDs. Get the sequences like so:
 {{{ 
-grep -A1 "^><contig ID>"  <sample name>/<sample name>.fusions.fa 
+grep -A1 "^><contig>"  <sample>/<sample>.fusions.fa 
 }}}
 
 
