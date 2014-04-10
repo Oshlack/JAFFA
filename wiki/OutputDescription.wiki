@@ -9,14 +9,22 @@ This is an excel readable table which summarised the fusions found in all sample
   * *fusion genes* - The gene symbols for the genes involved in the fusion even. Note that the names are order alphabetically and not by transcriptional direction.
   * *chrom1*/*chrom2*/*base1*/*base2* - The position of the break-points in the human genome - hg19. Note that these are ordered by position and not by transcriptional direction.
   * *gap (kb)* - How far apart are to the break-points in the genome? This is only really relevant for intrachromosomal events.
-  * *spanning pairs* - 
-  * *spanning reads* -
-  * *inframe*
-  * *aligns*
-  *  *rearrangement*
+  * *spanning pairs* - The number of read-pairs, where each read in the pair aligns entirely on either side of the break-point. You might see a "-" in some of these. This indicates that no spanning pairs were found, but that the cause may be because the contig didn't have enough flanking sequence to align reads to.
+  * *spanning reads* - The number of reads aligning to the break-point, with at least 15 bases of flanking sequence either side (by default).
+  * *inframe* - Do the fusion genes share the same frame? Note that this is only calculated if "aligns" is true. Otherwise "NA" is given.
+  * *aligns* - This indicates whether both breaks points lie on intron-exon boundaries. This would be consistent with a genomic break-point in an intron and splice sites being preserved.
+  *  *rearrangement* - This is true if the genes are on different chromosomes, if there was an inverse, or any other rearrangement, such as direction, i.e. anything inconsistent with the structure of the human reference genome.
   * *contig* - Either the read ID or the contig ID from the assembly. This will usually not be of interest.
   * *contig break* - At what position in the read or contig is the break-point. 
-  * *classification"
+  * *classification" - This is the prioritisation of the fusions. It is decided in the following way: 
+  "HighConfidence" - aligns to exons and has at least one spanning read and one spanning pair
+  "MediumConfidence" - aligns to exons and has at least one spanning read or one spanning pair (but not both)
+  "LowConfidence" - does not align to exons but has at least one spanning read and one spanning pair (same as HighConfidence but without aligning)
+  "PotentialRegularTranscript" - the gap is less than 200bp and there is no evidence for a rearrangement. 
+These events are reported, but are most likely not fusion events, so could safely be ignored.
+  * Other candidates, such as those with no supporting reads (either spanning pairs or reads) or with a gap of < 10kb are filtered out.
+
+In our validation tests on simulation and previously validated fusions in RNA-Seq from cancer cell-lines, almost all true positives were classified as "HighConfidence" or "MediumConfidence", and all false positives were classified as "LowConfidence". Therefore we recommend focusing on these candidates.
 
 
 = .fasta File =
