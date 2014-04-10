@@ -1,5 +1,5 @@
-#summary Download
 
+= Current =
 
 <a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcLXhWSkhQUEFDOEE" onclick=”_gaq.push(['_trackEvent','Download','0.81',this.href]);” >JAFFA_0.81.tar.gz 
 </a> - The JAFFA source. This version fixes a bug in 0.80. The bug resulted is a lose of sensitivity for the Direct and Hybrid modes, when run with multiple samples and a read length of less than 100 bp. 
@@ -10,4 +10,4 @@
 = Older =
 
 <a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRGRxZEtxZ3dNOGc" onclick=”_gaq.push(['_trackEvent','Download','0.80',this.href]);” >JAFFA_0.80.tar.gz 
-</a> - The JAFFA source
+</a> 
