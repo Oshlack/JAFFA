@@ -1,0 +1,14 @@
+#summary Common questions and issues will be posted here
+
+= FAQ =
+
+* How long will it take to run and how much RAM is needed if I use the Assembly or Hybrid modes?
+
+
+
+
+= Troubleshooting =
+
+* BLAT fails with error: _Internal error genoFind.c 2250_ *
+
+Check the tile size limit of the version of BLAT you have installed. JAFFA assumes a tile size up to 18, but some version of BLAT (e.g. v. 35) do not support tile sizes this large. You can get around this easily by running with the option "-p contigTile=X -p readTile=X" replacing X with the maximum supported tile size. The tile size does not impact on the accuracy of results in most cases, but a larger size will make the alignment steps faster.
