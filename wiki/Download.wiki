@@ -13,5 +13,5 @@ You will also need the supporting data:
 
 = Older =
 
-<a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRGRxZEtxZ3dNOGc" onclick=”ga('send','even','download','click',0.80)” >JAFFA_0.80.tar.gz 
+<a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRGRxZEtxZ3dNOGc" onclick=”ga('send','even','download','click',0.80);” >JAFFA_0.80.tar.gz 
 </a> 
