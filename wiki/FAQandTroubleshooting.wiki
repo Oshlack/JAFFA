@@ -6,22 +6,22 @@
 
 This will depend a lot on the depth of data (e.g. the number of bases sequenced) and on which JAFFA mode was run. The Direct mode is the least computationally expensive. Assembly and Hybrid modes can use much more memory and require longer to run because of the de novo assembly step. 
 
-Some examples from datasets we've run on:
+Some examples of the range to expect (based on datasets we've run on):
 
 Direct mode on 100bp paired-end reads
-Reads: 2.5-40 million 
-RAM: Always 4 GB
-Time: 1.5-25 CPU hours
+  * Reads: 2.5-40 million 
+  * RAM: Always 4 GB
+  * Time: 1.5-25 CPU hours
 
 Assembly mode on 50bp paired-end reads
-Reads: 14-42 milion
-RAM: 5.5-24 Gb
-Time: 2.5-11 hours
+  * Reads: 14-42 million
+  * RAM: 5.5-24 Gb
+  * Time: 2.5-11 hours
 
 Hybrid mode on 100bp paired-end reads
-Reads: 2.5-40 million 
-RAM: 4-60 GB
-Time: 4-100 CPU hours
+  * Reads: 2.5-40 million 
+  * RAM: 4-60 GB
+  * Time: 4-100 CPU hours
 
 = Troubleshooting =
 
