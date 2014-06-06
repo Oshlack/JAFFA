@@ -18,7 +18,7 @@ for k in $Kall ; do
     if (( $k <= $Kmin )) ; then Ks="$Ks $k"
     else 
        echo "k=$k is above the minimum k-mer of your velvet/oases (${Kmin})."
-       echo "Lets keep going with out it..."
+       echo "Lets keep going without it..."
     fi
 done
 

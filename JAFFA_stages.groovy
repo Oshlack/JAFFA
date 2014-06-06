@@ -259,9 +259,20 @@ align_transcripts_to_annotation = {
     produce(input.prefix+".psl"){
     from(".fasta"){
        exec """
+          function run_blat {
                 time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$contigTile
-                      -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
-            """
+                      -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat ;
+	  } ;
+	  run_blat
+	  ####  test for the Blat tileSize bug (version 35) ###
+	  $base/log_blat
+	  if [[ `cat $base/log_blat` == *"Internal error genoFind.c"* ]] ; then 
+	     echo "Blat error with tileSize=$contigTile" ;
+	     def contigTile=15 ;
+	     echo "Lets try again with tileSize=$contigTile" ;
+ 	     run_blat ;
+	  fi ;
+          """
     } }
 }
 
