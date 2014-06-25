@@ -1,29 +1,32 @@
+options(echo=FALSE)
 args = commandArgs(trailingOnly = TRUE)
 sample=args[1]
 candidates_table=args[2]
 bam_data_file=args[3]
 output_table=args[4]
-read_length=as.numeric(args[5])
+read_length_list=args[5]  #as.numeric(args[5])
 hang=as.numeric(args[6])
 
 show(candidates_table)
 show(output_table)
 
 fusions=read.delim(candidates_table,header=F,stringsAsFactors=F)
-#fusions=unique(fusions[,c(10,22:24,11)])
 colnames(fusions)<-c("transcript","break_min","break_max","fusion_genes","contig_length")
 
-alignments_table=read.delim(bam_data_file,header=F,stringsAsFactors=F)
+alignments_table=data.frame(read.delim(bam_data_file,header=F,stringsAsFactors=F),
+			    read.delim(read_length_list,header=F,stringsAsFactors=F))
 sal=split(1:length(alignments_table$V1),alignments_table$V1)
 
 get_spanning_pairs<-function(x){
 	contig_length=as.numeric(x[5])
 	pos=as.numeric(x[2])
-	if((pos<read_length*2)||((contig_length-pos)<read_length*2))
-		return("-") #flag short contigs
 	trans=x[1]
 	alignments=alignments_table[sal[[trans]],]
-	this_below=alignments$V2<(pos-read_length)
+	read_lengths=alignments[,4]
+	mean_length=mean(read_lengths)
+	if((pos<mean_length*2)||((contig_length-pos)<mean_length*2))
+		return("-") #flag short contigs
+	this_below=alignments$V2<(pos-read_lengths)
 	pair_above=alignments$V3>pos
 	dim(alignments[this_below&pair_above,])[1]
 }
@@ -33,7 +36,8 @@ get_spanning_reads<-function(x){
 	trans=x[1]
 	pos=as.numeric(x[2])
 	alignments=alignments_table[sal[[trans]],]
-	below_fusion=alignments$V2>(pos+hang-read_length)
+	read_lengths=alignments[,4]
+	below_fusion=alignments$V2>(pos+hang-read_lengths)
 	above_fusion=alignments$V2<(pos-hang)
         dim(alignments[below_fusion&above_fusion,])[1]
 }

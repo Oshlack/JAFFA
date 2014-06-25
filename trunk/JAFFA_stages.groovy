@@ -4,16 +4,15 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 10th April 2014
+ ** Last Update: 25th June 2014
  ********************************************************************************/
-VERSION=0.81
+VERSION=0.9
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
 /**********  Parameters that must be check by the user: ***********************/
 /*** Modify them below, or set them when you run bpipe (with the -p option)   */
 
-readLength=50 //Read length
 readLayout="paired" //change to "single" or single-end reads
 
 threads=1 //Threads to use when running the pipeline on a single sample. ie. the total threads will be samples*threads
@@ -112,7 +111,6 @@ run_check = {
     produce("checks"){
     exec """
        echo "Running JAFFA version $VERSION" ;
-       echo "Using a read length of $readLength" ;
        echo "Checking for the required software..." ;
        for i in $commands ; do which $i 2>/dev/null || { echo "CAN'T FIND $i" ; 
             echo "PLEASE INSTALL IT... STOPPING NOW" ; exit 1  ; } ; done ;
@@ -124,7 +122,6 @@ run_check = {
        echo "running JAFFA version $VERSION.. checks passed" > $output 
     """
     }
-    if(readTile==0 & readLength<100 ){ readTile=15 } else { readTile=18 } //set readTile size.
 }
 
 //Make a directory for each sample
@@ -248,7 +245,7 @@ run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+".fasta"){
-       exec "/usr/bin/time -v $oases_assembly_script $base $output $Ks $Kmerge $transLength $inputs"
+       exec "time $oases_assembly_script $base $output $Ks $Kmerge $transLength $inputs"
     }
 }
 
@@ -260,33 +257,52 @@ align_transcripts_to_annotation = {
     from(".fasta"){
        exec """
           function run_blat {
-                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$contigTile
+                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat ;
 	  } ;
-	  run_blat
-	  ####  test for the Blat tileSize bug (version 35) ###
-	  $base/log_blat
+	  run_blat $contigTile;
+	  `### test for the Blat tileSize bug (version 35) ###` ;
 	  if [[ `cat $base/log_blat` == *"Internal error genoFind.c"* ]] ; then 
 	     echo "Blat error with tileSize=$contigTile" ;
-	     def contigTile=15 ;
-	     echo "Lets try again with tileSize=$contigTile" ;
- 	     run_blat ;
+	     echo "Let's try again with tileSize=15" ;
+ 	     run_blat 15;
 	  fi ;
           """
-    } }
+    } } 
 }
+
 
 //Align the reads to the annotation 
 align_reads_to_annotation = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(input.prefix+".psl"){ from(input.prefix+".fasta"){
+    produce(input.prefix+".psl"){ 
+    from(input.prefix+".fasta"){
        exec """
-                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=$readTile
-                      -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat
-            """
-    } }
-
+	  `#### find out the minimum read length so we can set blat's tileSize accordingly` ;
+	  `#### we just use the first few thousand from the fasta file as a sample` ;
+	  minReadLength=`head -n 100000 $input | awk ' NR % 2 == 0 '|  awk '{print length}' | sort -n | head -1` ;
+	  if [ $readTile -eq "0" ] ; then  
+               if [ \$minReadLength -le "100" ] ; then 
+	           readTile=15 ; 
+               else readTile=18 ; 
+               fi ;
+	  else readTile=$readTile ;
+          fi ;
+	  echo "Using tileSize of \$readTile" ;
+          function run_blat {
+                time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
+                      -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat ;
+	  } ;
+	  run_blat \$readTile;
+	  `### test for the Blat tileSize bug (version 35) ###` ;
+	  if [[ `cat $base/log_blat` == *"Internal error genoFind.c"* ]] ; then 
+	     echo "Blat error with tileSize=\$readTile" ;
+	     echo "Let's try again with tileSize=15" ;
+ 	     run_blat 15;
+	  fi ;
+          """
+    } } 
 }
 
 //Parse the blat alignment table and filter for candidate fusions (uses an R script)
@@ -346,10 +362,11 @@ get_spanning_reads = {
     produce(input.txt.prefix+".reads"){
        from("txt","bam"){
 	   exec """ 
-               samtools view  $input2  | cut -f 3,4,8  > $base/${base}.temp ;
+               samtools view $input2 | cut -f 3,4,8  > $base/${base}.temp ;
+	       samtools view $input2 | cut -f 10 | awk '{print length}' > $base/${base}.readLengths ;
                R --vanilla --args $base/$base $input1 $base/${base}.temp 
-                 $output $readLength $overHang < $R_get_spanning_reads_script ;
-	       rm $base/${base}.temp 
+                 $output $base/${base}.readLengths $overHang < $R_get_spanning_reads_script ;
+	       rm $base/${base}.temp $base/${base}.readLengths
 	   """
 	}
     }
@@ -413,7 +430,7 @@ get_final_list = {
 //Make a fasta file with the candidates
 compile_all_results = {
     var type : ""
-    produce(outputName+".fasta",outputName+".csv",outputName+".psl"){
+    produce(outputName+".fasta",outputName+".csv"){
        exec """
           R --vanilla --args $outputName $inputs < $R_compile_results_script ;
 	  function get_sequence { 
@@ -428,7 +445,7 @@ compile_all_results = {
 	     string_length=`echo \${#sequence}` ;
 	     end=`echo \$sequence | cut -c \$((\$break+2))-$string_length ` ;
 	     echo ${start}${middle}${end} >> ${outputName}.fasta ;
-	     grep \${13} \$1/\$1_genome.psl >> ${outputName}.psl ;
+	     `# grep \${13} \$1/\$1_genome.psl >> ${outputName}.psl ;` ;
 	  } ;
 	  rm -f ${outputName}.fasta ;	  
 	  cat ${outputName}.csv | tr "," "\\t" | sed 's/\\"//g' | while read line ; do get_sequence \$line ; done ;
