@@ -14,11 +14,11 @@ Now, create the directory where you want the JAFFA output files to be written, a
 
 We will start by demonstrating the assembly mode. Type the following on the command line:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
+bpipe run <JAFFA dir>/JAFFA_assembly.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
 Or, if you only have the demo files in <data dir>, you can just type:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA.groovy <data dir>/*
+bpipe run <JAFFA dir>/JAFFA.groovy <data dir>/*
 }}}
 
 Bpipe will giving you information about each stage in the pipeline as it run it. Let go through these in some detail.
@@ -44,7 +44,7 @@ If everything runs smoothly, you should see two new files created in your workin
 Create and change into another directory for the "Direct" mode example.
 To run, type:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
+bpipe run <JAFFA dir>/JAFFA_direct.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
 
 You'll see a few different stages in this pipeline, compared to the previous:
@@ -57,5 +57,5 @@ You'll see a few different stages in this pipeline, compared to the previous:
 
 Hybrid give you the best of both assembly and direct. Again, create and change into a new working directory, then run it like so:
 {{{
-bpipe run -p readLength=76 <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
+bpipe run <JAFFA dir>/JAFFA_hybrid.groovy <data dir>/BT474-demo_*.fastq.gz <data dir>/MCF7-demo_*.fastq.gz
 }}}
