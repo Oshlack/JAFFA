@@ -9,7 +9,6 @@
  ** Last Update: 6th Feb 2014 
  *********************************************************/ 
 
-
 //these are the commands we will check for at the start of every run.
 commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools"
 
