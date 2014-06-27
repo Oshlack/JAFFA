@@ -25,7 +25,7 @@ Hybrid mode on 100bp paired-end reads
 
 * How to view the read coverage over a fusion transcript in IGV 
 
-  # From the file, jaffa_results.csv, determine the "sample", "contig" and "contig break" of the fusions of interest. The contig must start with "Locus..", i.e. be an Oases assembled contig (and not a read ID).
+  # From the file, jaffa_results.csv, determine the "sample", "contig" and "contig break" of the fusion of interest. The contig must start with "Locus..", i.e. be an Oases assembled contig (and not a read ID).
   # Load IGV
   # In IGV click on "Load Genome from File" and then navigate to the directory called `<sample`>. Click on the file `<sample>`.fusions.fa
   # In the drop-down box which usually contains the chromosome names (or using the text box next to it, put in the name of `<contig>`)
