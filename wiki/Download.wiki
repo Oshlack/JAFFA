@@ -1,6 +1,6 @@
 = Current =
 
-Download <a href="https://drive.google.com/uc?export=download&id=0B1FwZagazjpcLTFSYWY4THNHdlE">  JAFFA_0.9.tar.gz
+Download <a href="https://drive.google.com/uc?export=download&id=0B1FwZagazjpcWUpKRnhVUWNpSFE"> JAFFA_0.91.tar.gz
 </a> 
 
 <wiki:comment>
@@ -8,7 +8,7 @@ or check it out with svn:
 {{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-0.81 jaffa-0.81 }}}
 </wiki:comment>
 
-This version works out the read length itself and includes a few bug fixes and checks. 
+This version works out the read length itself and includes a few bug fixes and checks. Thanks to Aliaksei Holik for correcting the bug in the spanning pair calculation.
 
 You will also need the supporting data:
 [https://docs.google.com/uc?export=download&id=0B1FwZagazjpcN1NCOWhnU2hCSjQ JAFFA_REFERENCE_FILES_0.80.tar.gz] - Files for the GENCODE reference transcriptome, version 17 (works with all versions of JAFFA)
@@ -16,6 +16,9 @@ You will also need the supporting data:
 
 = Older =
 
+<a href="https://drive.google.com/uc?export=download&id=0B1FwZagazjpcLTFSYWY4THNHdlE"> JAFFA_0.9.tar.gz 
+</a>
+ 
 <a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcLXhWSkhQUEFDOEE" onclick=”ga('send','even','download','click',0.81);”>JAFFA_0.81.tar.gz
 </a>
 
