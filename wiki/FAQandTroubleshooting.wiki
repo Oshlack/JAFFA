@@ -23,6 +23,15 @@ Hybrid mode on 100bp paired-end reads
   * RAM: 4-60 GB
   * Time: 4-100 CPU hours
 
+* How to view the read coverage over a fusion transcript in IGV 
+
+  # From the file, jaffa_results.csv, determine the "sample", "contig" and "contig break" of the fusions of interest. The contig must start with "Locus.." 
+  # Load IGV
+  # In IGV click on "Load Genome from File" and then navigate to the directory called `<sample`>. Click on the file `<sample>`.fusions.fa
+  # In the drop-down box which usually contains the chromosome (or using the text box next to it, put in the name of `<contig>`
+  # Load the reads by clicking "Load from File". In the directory `<sample`>, select the file named `<sample`>.sorted.bam
+  # To highlight the breakpoint go to "Regions", "Regions Navigator" and put in `<contig break`> as the start and `<contig break`> +1 as the end. 
+
 = Troubleshooting =
 
 * BLAT fails with error: _Internal error genoFind.c 2250_ *
