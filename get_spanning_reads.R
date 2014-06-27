@@ -24,11 +24,13 @@ get_spanning_pairs<-function(x){
 	alignments=alignments_table[sal[[trans]],]
 	read_lengths=alignments[,4]
 	mean_length=mean(read_lengths)
+	if(is.na(mean_length))
+		return(0) #case for no aligments
 	if((pos<mean_length*2)||((contig_length-pos)<mean_length*2))
 		return("-") #flag short contigs
 	this_below=alignments$V2<(pos-read_lengths)
 	pair_above=alignments$V3>pos
-	dim(alignments[this_below&pair_above,])[1]
+	sum(this_below&pair_above)
 }
 fusions$spanning_pairs=apply(fusions,1,get_spanning_pairs)
 
@@ -39,7 +41,7 @@ get_spanning_reads<-function(x){
 	read_lengths=alignments[,4]
 	below_fusion=alignments$V2>(pos+hang-read_lengths)
 	above_fusion=alignments$V2<(pos-hang)
-        dim(alignments[below_fusion&above_fusion,])[1]
+        sum(below_fusion&above_fusion)
 }
 fusions$spanning_reads=apply(fusions,1,get_spanning_reads)
 
