@@ -1,12 +1,12 @@
 = Current =
 
 
-Download < a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpccE42aVpjSGQzSFk"> JAFFA_1.0.tar.gz</a>
-
+Download 
+<a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpccE42aVpjSGQzSFk">JAFFA_1.0.tar.gz
+</a>
 
 or check it out with svn:
 {{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-1.0 jaffa-1.0 }}}
-
 
 This version is identical to 0.91. Improvements of 0.9 are that it works out the read length itself and includes a few bug fixes and checks. Thanks to Aliaksei Holik for correcting the bug in the spanning pairs calculation.
 
