@@ -38,7 +38,7 @@ Hybrid mode on 100bp paired-end reads
 
 Check the tile size limit of the version of BLAT you have installed. JAFFA assumes a tile size up to 18, but some version of BLAT (e.g. v. 35) do not support tile sizes this large. You can get around this easily by running with the option "-p contigTile=X -p readTile=X" replacing X with the maximum supported tile size. The tile size does not impact on the accuracy of results in most cases, but a larger size will make the alignment steps faster.
 
-* JAFFA is not properly parallelising the samples or you get an error like `"`The pattern provided `%_*`.fastq.gz did not match any of the files provided as input [checks]`"`*
+* JAFFA is not properly parallelising the samples or you get an error like `"`The pattern provided `%_*`.fastq.gz did not match any of the files provided as input `[`checks`]"`*
 
 You may need to change the value of the variable `fastqInputFormat` which is set to `%_*`.fastq.gz by default. What this does is to search for files of the form `%_*`.fastq.gz in your input list. Both the `%` and `*` are wildcards (like the `'*'` in bash). However bpipe will parallelise based on differences in the `%` part of the name. For example, if these are your files:
 
@@ -53,5 +53,3 @@ Then you should run bpipe like this:
 
 {{{ bpipe run -p fastqInputFormat="%_1_*.fq.gz" }}}
  
-
-
