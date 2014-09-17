@@ -1,14 +1,16 @@
 /*********************************************************************************
- ** This file defines all the JAFFA pipeline stages (used in JAFFA.groovy, JAFFA_hybrid.groovy and
- ** JAFFA_no_assemble.groovy). See our website for details on running, 
+ ** This file defines all the JAFFA pipeline stages (used in JAFFA_assembly.groovy, JAFFA_hybrid.groovy and
+ ** JAFFA_direct.groovy). See our website for details on running, 
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 25th June 2014
+ ** Last Update: 16th September 2014
  ********************************************************************************/
-VERSION=1.0
+VERSION=1.01
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
+
+load codeBase+"/tools.groovy"
 
 /**********  Parameters that must be check by the user: ***********************/
 /*** Modify them below, or set them when you run bpipe (with the -p option)   */
@@ -28,7 +30,7 @@ hgFasta=codeBase+"/hg19.fa"  //genome sequence
 // this would group the read files into pairs like we want.
 fastqInputFormat="%_*.fastq.gz"
 
-// Simlar to above for running JAFFA_no_assemble with a fasta file.
+// Simlar to above for running JAFFA_direct with a fasta file.
 // You should not need to change this unless the suffix is ".fa" instead of ".fasta"
 fastaSuffix="fasta"  
 fastaInputFormat="%."+fastaSuffix
@@ -46,7 +48,7 @@ minQScore=0 //heads and tails of reads will be trimmed if their quality score fa
 //best assembly results)
 
 // assembly options (we founds these setting to work well on 50bp reads)
-Ks="19,23,27,31,35" //kmer lengths to use for the assembly
+Ks="19,36,4" //kmer lengths to use for the assembly: 19,23,27,31,15
 Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
@@ -60,10 +62,11 @@ maxIntron=0 //don't expect intron when mapping to the transcriptome
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
 finalGapSize=10000 //minimum distance for the final filtering
-exclude="NoSupport" //fusions marked with these classifications will be thrown away. Can be a list. 
+exclude="NoSupport,PotentialRegularTranscript" //fusions marked with these classifications will be 
+					       //thrown away. Can be a comma seperated list. 
 
 //mapping and counting the coverage
-MapCommand="bowtie2 -k1 --no-mixed --no-discordant --mm"
+mapParms="-k1 --no-mixed --no-discordant --mm"
 overHang=15 //how many bases are require on either side of a break to count the read.
 
 /********** Variables that shouldn't need to be changed ***********************/
@@ -111,17 +114,17 @@ run_check = {
     produce("checks"){
     exec """
        echo "Running JAFFA version $VERSION" ;
-       echo "Checking for the required software..." ;
-       for i in $commands ; do which $i 2>/dev/null || { echo "CAN'T FIND $i" ; 
-            echo "PLEASE INSTALL IT... STOPPING NOW" ; exit 1  ; } ; done ;
-       echo "Now checking for required data files..." ;
-       for i in $transFasta $transTable $hgFasta ; 
-            do ls $i 2>/dev/null || { echo "CAN'T FIND $i..." ; 
+       echo "Checking for required data files..." ;
+       for $i in $transFasta $transTable $hgFasta ; 
+            do ls $i 2>/dev/null || { echo "CAN'T FIND ${i}..." ; 
 	    echo "PLEASE DOWNLOAD and/or FIX PATH... STOPPING NOW" ; exit 1  ; } ; done ;
        echo "All looking good" ;
        echo "running JAFFA version $VERSION.. checks passed" > $output 
     """
     }
+//       echo "Checking for the required software..." ;
+//       for i in $commands ; do which \${$i} 2>/dev/null || { echo "CAN'T FIND \${$i}" ; 
+//            echo "PLEASE INSTALL IT... STOPPING NOW" ; exit 1  ; } ; done ;
 }
 
 //Make a directory for each sample
@@ -167,7 +170,7 @@ prepare_reads = {
           if(readLayout=="single"){
 	     produce(base+"_trim.fastq"){ 
              exec """
-                 trimmomatic SE -threads $threads -phred$scores $input.gz $output
+                 $trimmomatic SE -threads $threads -phred$scores $input.gz $output
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
                   """
               }
@@ -176,7 +179,7 @@ prepare_reads = {
 	     // need to check here for whether the files are zipped - FIX
 	     //trim & fix the file names so Trinity handles the paired-ends reads correctly 
              exec """
-             trimmomatic PE -threads $threads -phred$scores $input1 $input2 
+             $trimmomatic PE -threads $threads -phred$scores $input1 $input2 
                          ${base}/tempp1.fq ${base}/tempu1.fq ${base}/tempp2.fq ${base}/tempu2.fq 
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
               
@@ -207,7 +210,7 @@ cat_reads = {
 //Remove duplicated reads
 remove_dup = { 
     output.dir=input.split("/")[0]
-    exec "fastx_collapser -Q${scores} -i $input.fastq -o $output.fasta"
+    exec "$fastx_collapser -Q${scores} -i $input.fastq -o $output.fasta"
 }
 
 //Remove any reads which map completely to a reference transcript
@@ -216,7 +219,7 @@ get_unmapped = {
     output.dir=base
     produce(base+".fasta"){
 	exec """
-	     $MapCommand --very-fast --un $output -p $threads -x $transFasta.prefix -f -U $input
+	     $bowtie2 $mapParams --very-fast --un $output -p $threads -x $transFasta.prefix -f -U $input
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
 	     rm -f ${output.dir}/temp.sam
         """
@@ -230,10 +233,10 @@ get_assembly_unmapped = {
     output.dir=base
     produce(base+"-unmapped.fasta"){
         exec """
-             $MapCommand --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
+             $bowtie2 $mapParams --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
-	     bowtie2-build ${base}/${base}.fasta ${base}/${base} ;
-             $MapCommand --very-fast --un $output -p $threads -x ${base}/${base} -f -U ${base}/${base}.temp
+	     ${bowtie2}-build ${base}/${base}.fasta ${base}/${base} ;
+             $bowtie2 $mapParams --very-fast --un $output -p $threads -x ${base}/${base} -f -U ${base}/${base}.temp
                           -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_assembly ;
              rm -f ${output.dir}/temp.sam ${base}/${base}.temp;
         """
@@ -245,7 +248,8 @@ run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
     produce(base+".fasta"){
-       exec "time $oases_assembly_script $base $output $Ks $Kmerge $transLength $inputs"
+       exec "time $oases_assembly_script $velveth $velvetg $oases \
+                  $base $output $Ks $Kmerge $transLength $threads $inputs"
     }
 }
 
@@ -257,7 +261,7 @@ align_transcripts_to_annotation = {
     from(".fasta"){
        exec """
           function run_blat {
-                time blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
+                time $blat $transFasta $inputs -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat ;
 	  } ;
 	  run_blat $contigTile;
@@ -291,7 +295,7 @@ align_reads_to_annotation = {
           fi ;
 	  echo "Using tileSize of \$readTile" ;
           function run_blat {
-                time blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
+                time $blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
                       -maxIntron=$maxIntron $output 2>&1 | tee $base/log_blat ;
 	  } ;
 	  run_blat \$readTile;
@@ -311,7 +315,7 @@ filter_transcripts = {
     output.dir=base
     produce(input.prefix+".txt"){ from(input.prefix+".psl"){
        exec """
-               time R --vanilla --args $input $output $gapSize $transTable < 
+               time $R --vanilla --args $input $output $gapSize $transTable < 
 	       $R_filter_transcripts_script &> $base/log_filter 
             """
     }}
@@ -325,7 +329,7 @@ extract_fusion_sequences = {
        from("txt","fasta"){
           exec """
            cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
-           fasta_formatter -i $input2 | grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
+           $fasta_formatter -i $input2 | grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
            rm ${output}.temp ;
           """
        }
@@ -345,14 +349,14 @@ map_reads = {
 	  else
 	     input_string="-1 $input2 -2 $input3"
 	  exec """
-             bowtie2-build $input1 $input1.prefix ;
-	     $MapCommand --no-unal -p $threads -x $input1.prefix $input_string -S ${prefix}.sam 2>&1 | tee $base/log_candidates_map;
-             samtools view -S -b ${prefix}.sam > ${prefix}.bam ; samtools sort ${prefix}.bam ${prefix}.sorted ;
-             samtools index $output ${output}.bai ; rm ${prefix}.sam ${prefix}.bam ;  
+             ${bowtie2}-build $input1 $input1.prefix ;
+	     $bowtie2 $mapParams --no-unal -p $threads -x $input1.prefix $input_string | 
+             $samtools view -S -b - | $samtools sort - ${prefix}.sorted ;
+             $samtools index $output
           """
           }
     }
-}  // $MapCommand --no-unal -p $threads -x $input1.prefix -1 $input2 -2 $input3 -S | samtools view -bSu - | samtools sort -o - - > $output ;
+} 
  
 
 //Calculate the number of reads which span the breakpoint of the fusions
@@ -362,9 +366,9 @@ get_spanning_reads = {
     produce(input.txt.prefix+".reads"){
        from("txt","bam"){
 	   exec """ 
-               samtools view $input2 | cut -f 3,4,8  > $base/${base}.temp ;
-	       samtools view $input2 | cut -f 10 | awk '{print length}' > $base/${base}.readLengths ;
-               R --vanilla --args $base/$base $input1 $base/${base}.temp 
+               $samtools view $input2 | cut -f 3,4,8  > $base/${base}.temp ;
+	       $samtools view $input2 | cut -f 10 | awk '{print length}' > $base/${base}.readLengths ;
+               $R --vanilla --args $base/$base $input1 $base/${base}.temp 
                  $output $base/${base}.readLengths $overHang < $R_get_spanning_reads_script ;
 	       rm $base/${base}.temp $base/${base}.readLengths
 	   """
@@ -408,7 +412,7 @@ align_transcripts_to_genome = {
     output.dir=base
     produce(base+"_genome.psl"){
 	from(".fusions.fa"){
-            exec "blat $hgFasta $input1 $output 2>&1 | tee $base/log_genome_blat"
+            exec "$blat $hgFasta $input1 $output 2>&1 | tee $base/log_genome_blat"
 	}
     }
 }
@@ -420,7 +424,7 @@ get_final_list = {
     produce(base+".summary"){
 	from("psl","reads"){
 	    	exec """
-	               R --vanilla --args $input1 $input2 $transTable $finalGapSize $exclude $output < $R_get_final_list 
+	               $R --vanilla --args $input1 $input2 $transTable $finalGapSize $exclude $output < $R_get_final_list 
 	        """
 	 }
     }
@@ -432,7 +436,7 @@ compile_all_results = {
     var type : ""
     produce(outputName+".fasta",outputName+".csv"){
        exec """
-          R --vanilla --args $outputName $inputs < $R_compile_results_script ;
+          $R --vanilla --args $outputName $inputs < $R_compile_results_script ;
 	  function get_sequence { 
 	     if [ \$1 == "sample" ] ; then return ; fi ;
 	     fusions_file=\$1/\$1${type}.fusions.fa ;

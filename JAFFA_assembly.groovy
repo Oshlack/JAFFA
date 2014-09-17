@@ -10,7 +10,7 @@
  *********************************************************/ 
 
 //these are the commands we will check for at the start of every run.
-commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools"
+//commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"

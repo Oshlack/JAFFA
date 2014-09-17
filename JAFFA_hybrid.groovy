@@ -12,7 +12,7 @@
  ** Last Update: 2nd April 2014
  *********************************************************/
 
-commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools fastx_collapser"
+//commands="trimmomatic oases velveth velvetg R bowtie2 blat fasta_formatter samtools fastx_collapser"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
