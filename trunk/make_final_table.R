@@ -283,7 +283,7 @@ cand$classification[ cand$aligns & spanP & spanR ]<-"HighConfidence"
 cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRegularTranscript"
 
 #remove any group in the exclude list
-exclude=unlist(strsplit(exclude," "))
+exclude=unlist(strsplit(exclude,","))
 cand=cand[ !cand$classification %in% exclude, ]
 
 write.table(cand,output_file,row.names=F,quote=F,sep="\t")

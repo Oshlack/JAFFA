@@ -9,7 +9,7 @@
  ** Last Update: 6th Feb 2014
  *********************************************************/
 
-commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
+//commands="trimmomatic R fastx_collapser bowtie2 blat fasta_formatter"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
