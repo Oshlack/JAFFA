@@ -241,8 +241,8 @@ cat_reads = {
 get_unmapped = {
     def base=input.split("/")[0]
     output.dir=base
-    from("*_leftover_reads*.gz"){
     produce(base+".fasta",base+"_discordant_pairs.bam"){
+    from("*_leftover_reads*.gz"){
     if(readLayout=="single"){
         exec """
 	   $bowtie2 -k1 -p $threads --un $base/unmapped.fastq -x $transFasta.prefix -U $input |
@@ -265,16 +265,13 @@ get_unmapped = {
   }
 }
 
-//        $bowtie2 $mapParams --very-fast --un-conc $base/discord.fastq -p $threads -x $transFasta.prefix -1 $input1 -2 $input2
-//              -S /dev/null 2>&1 | tee $base/log_initial_map_to_reference ;
-
 //Like above: remove reads that don't map to the transcriptome, but this time use the assembled
 //transcriptome as well as the reference
 get_assembly_unmapped = {
     def base=input.split("/")[0]
     output.dir=base
-    from("*_leftover_reads*.gz"){
-       produce(base+"-unmapped.fasta",base+"_discordant_pairs.bam"){
+    produce(base+"-unmapped.fasta",base+"_discordant_pairs.bam"){
+      from("*_leftover_reads*.gz"){
         if(readLayout=="single"){
         exec """
            $bowtie2 -k1 -p $threads --un $base/unmapped_ref.fastq -x $transFasta.prefix -U $input |
@@ -288,7 +285,7 @@ get_assembly_unmapped = {
            $samtools index $output2 ;
        """ 
     }
-/**    exec """
+    exec """
            ${bowtie2}-build ${base}/${base}.fasta ${base}/${base} ;
            $bowtie2 -k1 -p $threads --un $base/unmapped_assembly.fastq -x ${base}/${base} -U ${base}/unmapped_ref.fastq
                   -S /dev/null 2>&1 | tee $base/log_initial_map_to_assembly ;
@@ -296,7 +293,7 @@ get_assembly_unmapped = {
         $reformat in=$base/unmapped_assembly.fastq out=$base/temp.fasta threads=$threads ;
         $dedupe in=$base/temp.fasta out=$output1 threads=$threads ;
 	rm $base/temp.fasta $base/unmapped_assembly.fastq $base/unmapped_ref.fastq
-        """ **/
+        """
     }}
 }
 
@@ -304,8 +301,8 @@ get_assembly_unmapped = {
 run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
-    from("*_filtered_reads.fastq*gz"){
     produce(base+".fasta"){
+     from("*_filtered_reads.fastq*gz"){
        exec "time $oases_assembly_script $velveth $velvetg $oases \
                   $base $output $Ks $Kmerge $transLength $threads $inputs"
     }

@@ -1,4 +1,4 @@
-This is JAFFA version 1.01
+This is JAFFA version 1.02
 
 To install under linux x86_64 run:
 ./install_linux64.sh
@@ -6,7 +6,7 @@ To install under linux x86_64 run:
 Check that all paths are filled in the file tools.groovy. Note that you will need to install 
 R yourself (or have it preinstalled on your system).
 
-If bpipe installed centerally on your system you can run the pipeline like so:
+If bpipe is installed centerally on your system you can run the pipeline like so:
 bpipe run [option] < JAFFA_assembly.groovy | hybrid | direct > input files
 
 If bpipe was installed into tools/bin you will need to run the pipeline like so:
