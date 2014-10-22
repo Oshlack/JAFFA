@@ -6,7 +6,7 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
  ** Last Update: 16th September 2014
  ********************************************************************************/
-VERSION=1.01
+VERSION=1.02
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
@@ -42,8 +42,8 @@ outputName="jaffa_results"
 
 // trimming
 scores=33 //PHRED quality score type
-minlen=30 //reads shorted that this after trimmed are thrown out.
-minQScore=0 //heads and tails of reads will be trimmed if their quality score falls below this.
+minlen=50 //reads shorted that this after trimmed are thrown out.
+minQScore=10 //heads and tails of reads will be trimmed if their quality score falls below this.
 //note: by default the 0 above means that no trimming is done (we found this gave the
 //best assembly results)
 
@@ -66,19 +66,27 @@ exclude="NoSupport,PotentialRegularTranscript" //fusions marked with these class
 					       //thrown away. Can be a comma seperated list. 
 
 //mapping and counting the coverage
-mapParms="-k1 --no-mixed --no-discordant --mm"
+mapParams="-k1 --no-mixed --no-discordant --mm"
 overHang=15 //how many bases are require on either side of a break to count the read.
 
 /********** Variables that shouldn't need to be changed ***********************/
 
+//location of the genome with genes masked out - used to filter the reads
+maskedGenome=codeBase+"/Masked_hg19"
+
 //location of transcriptomic data
-transFasta=codeBase+"/hg19_genCode.fa"  // transcript cDNA sequences
-transTable=codeBase+"/hg19_genCode.tab" // table of gene coordinates
+transFasta=codeBase+"/hg19_genCode19.fa"  // transcript cDNA sequences
+transTable=codeBase+"/hg19_genCode19.tab" // table of gene coordinates
+
+//known fusions database
+knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
 
 //name of scripts
 R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
 R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
+R_get_spanning_reads_direct_script1=codeBase+"/get_spanning_reads_for_direct_1.R"
+R_get_spanning_reads_direct_script2=codeBase+"/get_spanning_reads_for_direct_2.R"
 R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
 
@@ -115,16 +123,13 @@ run_check = {
     exec """
        echo "Running JAFFA version $VERSION" ;
        echo "Checking for required data files..." ;
-       for $i in $transFasta $transTable $hgFasta ; 
+       for i in $transFasta $transTable $knownTable $hgFasta ${maskedGenome}.1.bt2 ; 
             do ls $i 2>/dev/null || { echo "CAN'T FIND ${i}..." ; 
 	    echo "PLEASE DOWNLOAD and/or FIX PATH... STOPPING NOW" ; exit 1  ; } ; done ;
        echo "All looking good" ;
        echo "running JAFFA version $VERSION.. checks passed" > $output 
     """
     }
-//       echo "Checking for the required software..." ;
-//       for i in $commands ; do which \${$i} 2>/dev/null || { echo "CAN'T FIND \${$i}" ; 
-//            echo "PLEASE INSTALL IT... STOPPING NOW" ; exit 1  ; } ; done ;
 }
 
 //Make a directory for each sample
@@ -162,25 +167,39 @@ make_dir_using_fasta_name = {
    }
 }
 
-//Primarily a read trimming step - currently actually just unzips the reads.
+//Read trimming, ID fixing and filtering out reads 
+//that map to chrM, introns and intergenetic regions
+
 prepare_reads = {
 	def base=input.split("/")[0]
 	output.dir=base //set the output directory
 	from("*.gz"){
           if(readLayout=="single"){
-	     produce(base+"_trim.fastq"){ 
+	     produce(base+"_filtered_reads.fastq.gz",
+		     base+"_leftover_reads.fastq.gz"){
              exec """
-                 $trimmomatic SE -threads $threads -phred$scores $input.gz $output
+                 $trimmomatic SE -threads $threads -phred$scores $input.gz $base/${base}_trim.fastq
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
+              $bowtie2 $mapParams --very-fast
+               	        --al-gz $output1 --un $base/temp_trans_unmap_reads.fastq
+               		-p $threads -x $transFasta.prefix -U $base/${base}_trim.fastq
+			-S /dev/null ;
+              $bowtie2 $mapParams --very-fast --un-gz $output2 -p $threads -x $maskedGenome
+               	        -U $base/temp_trans_unmap_reads.fastq -S /dev/null ;
+              cat $output2 >> $output1 ;
+              rm $base/temp_trans_unmap_reads.fastq ${base}/${base}_trim.fastq 
                   """
               }
 	  } else {
-	     produce(base+"_trim1.fastq",base+"_trim2.fastq"){ 
+            produce(base+"_filtered_reads.fastq.1.gz",
+		    base+"_filtered_reads.fastq.2.gz",
+		    base+"_leftover_reads.fastq.1.gz",
+		    base+"_leftover_reads.fastq.2.gz"){
 	     // need to check here for whether the files are zipped - FIX
 	     //trim & fix the file names so Trinity handles the paired-ends reads correctly 
              exec """
              $trimmomatic PE -threads $threads -phred$scores $input1 $input2 
-                         ${base}/tempp1.fq ${base}/tempu1.fq ${base}/tempp2.fq ${base}/tempu2.fq 
+                         ${base}/tempp1.fq /dev/null ${base}/tempp2.fq /dev/null 
                          LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
               
               function fix_ids { 
@@ -193,9 +212,19 @@ prepare_reads = {
               ; } ;
 	      fix_ids ${base}/tempp1.fq 1 > ${base}/${base}_trim1.fastq ;
 	      fix_ids ${base}/tempp2.fq 2 > ${base}/${base}_trim2.fastq ;
-              rm ${base}/tempu1.fq ${base}/tempu2.fq ${base}/tempp1.fq ${base}/tempp2.fq ;
+              rm ${base}/tempp1.fq ${base}/tempp2.fq ;
+              $bowtie2 $mapParams --very-fast 
+	         --al-conc-gz ${output1.prefix.prefix}.gz --un-conc $base/temp_trans_unmap_reads.fastq 
+	       	 -p $threads -x $transFasta.prefix 
+	       	 -1 ${base}/${base}_trim1.fastq -2 ${base}/${base}_trim2.fastq -S /dev/null ;
+	      $bowtie2 $mapParams --very-fast --un-conc-gz ${output3.prefix.prefix}.gz -p $threads -x $maskedGenome 
+               	 -1 $base/temp_trans_unmap_reads.1.fastq -2 $base/temp_trans_unmap_reads.2.fastq -S /dev/null ;
+	      cat $output3 >> $output1 ;
+	      cat $output4 >> $output2 ;
+	      rm $base/temp_trans_unmap_reads.1.fastq $base/temp_trans_unmap_reads.2.fastq
+	         ${base}/${base}_trim1.fastq ${base}/${base}_trim2.fastq ;
            """ 
-	   }
+	  }
        }
    }
 }
@@ -207,49 +236,79 @@ cat_reads = {
     exec "cat $input1.fastq $input2.fastq > $output.fastq"
 }
 
-//Remove duplicated reads
-remove_dup = { 
-    output.dir=input.split("/")[0]
-    exec "$fastx_collapser -Q${scores} -i $input.fastq -o $output.fasta"
-}
 
-//Remove any reads which map completely to a reference transcript
+//Get read which either align discordantly or not at all
 get_unmapped = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+".fasta"){
-	exec """
-	     $bowtie2 $mapParams --very-fast --un $output -p $threads -x $transFasta.prefix -f -U $input
-                          -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
-	     rm -f ${output.dir}/temp.sam
-        """
+    from("*_leftover_reads*.gz"){
+    produce(base+".fasta",base+"_discordant_pairs.bam"){
+    if(readLayout=="single"){
+        exec """
+	   $bowtie2 -k1 -p $threads --un $base/unmapped.fastq -x $transFasta.prefix -U $input |
+       	   $samtools view -F 4 -S -b - | $samtools sort - $output2.prefix ;
+           $samtools index $output2 ;
+       """
+     }else{
+        exec """
+	   $bowtie2 -k1 -p $threads --un $base/unmapped.fastq -x $transFasta.prefix -U $input1,$input2 |
+       	   $samtools view -F 4 -S -b - | $samtools sort - $output2.prefix ;
+           $samtools index $output2 ;
+	"""
+     }
+     exec """
+	$reformat in=$base/unmapped.fastq out=$base/temp.fasta threads=$threads ;
+	$dedupe in=$base/temp.fasta out=$output1 threads=$threads ; 
+	rm $base/temp.fasta $base/unmapped.fastq
+       """
     }
+  }
 }
+
+//        $bowtie2 $mapParams --very-fast --un-conc $base/discord.fastq -p $threads -x $transFasta.prefix -1 $input1 -2 $input2
+//              -S /dev/null 2>&1 | tee $base/log_initial_map_to_reference ;
 
 //Like above: remove reads that don't map to the transcriptome, but this time use the assembled
 //transcriptome as well as the reference
 get_assembly_unmapped = {
     def base=input.split("/")[0]
     output.dir=base
-    produce(base+"-unmapped.fasta"){
+    from("*_leftover_reads*.gz"){
+       produce(base+"-unmapped.fasta",base+"_discordant_pairs.bam"){
+        if(readLayout=="single"){
         exec """
-             $bowtie2 $mapParams --very-fast --un ${base}/${base}.temp -p $threads -x $transFasta.prefix -f -U $input
-                          -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_reference ;
-	     ${bowtie2}-build ${base}/${base}.fasta ${base}/${base} ;
-             $bowtie2 $mapParams --very-fast --un $output -p $threads -x ${base}/${base} -f -U ${base}/${base}.temp
-                          -S ${output.dir}/temp.sam 2>&1 | tee $base/log_initial_map_to_assembly ;
-             rm -f ${output.dir}/temp.sam ${base}/${base}.temp;
-        """
+           $bowtie2 -k1 -p $threads --un $base/unmapped_ref.fastq -x $transFasta.prefix -U $input |
+           $samtools view -F 4 -S -b - | $samtools sort - $output2.prefix ;
+           $samtools index $output2 ;
+       """
+    }else{
+        exec """
+           $bowtie2 -k1 -p $threads --un $base/unmapped_ref.fastq -x $transFasta.prefix -U $input1,$input2 |
+           $samtools view -F 4 -S -b - | $samtools sort - $output2.prefix ;
+           $samtools index $output2 ;
+       """ 
     }
+/**    exec """
+           ${bowtie2}-build ${base}/${base}.fasta ${base}/${base} ;
+           $bowtie2 -k1 -p $threads --un $base/unmapped_assembly.fastq -x ${base}/${base} -U ${base}/unmapped_ref.fastq
+                  -S /dev/null 2>&1 | tee $base/log_initial_map_to_assembly ;
+
+        $reformat in=$base/unmapped_assembly.fastq out=$base/temp.fasta threads=$threads ;
+        $dedupe in=$base/temp.fasta out=$output1 threads=$threads ;
+	rm $base/temp.fasta $base/unmapped_assembly.fastq $base/unmapped_ref.fastq
+        """ **/
+    }}
 }
 
 //Run the de novo assembly
 run_assembly = {
     def base=input.split("/")[0]
     output.dir=base
+    from("*_filtered_reads.fastq*gz"){
     produce(base+".fasta"){
        exec "time $oases_assembly_script $velveth $velvetg $oases \
                   $base $output $Ks $Kmerge $transLength $threads $inputs"
+    }
     }
 }
 
@@ -328,13 +387,14 @@ extract_fusion_sequences = {
     produce(input.prefix+".fusions.fa"){ from(input.prefix+".psl"){
        from("txt","fasta"){
           exec """
-           cat $input1 | cut -f 1 | sed \'s/^/^>/g\' > ${output}.temp ;
-           $fasta_formatter -i $input2 | grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
+           cat $input1 | cut -f 1 | sed \'s/^/>/g\' > ${output}.temp ;
+	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | cut -f1 | 
+	     grep -Fx -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
            rm ${output}.temp ;
           """
        }
     }}
-}
+} //grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
 
 //Map the reads back to the candidate fusion sequences
 map_reads = {
@@ -343,7 +403,7 @@ map_reads = {
     produce(base+".sorted.bam"){
 	def prefix=base+"/"+base
 	def input_string=""
-	from("fusions.fa","*.fastq"){
+	from("fusions.fa","*_filtered_reads*gz"){
           if(readLayout=="single")
 	     input_string="-U $input2"
 	  else
@@ -382,14 +442,32 @@ make_simple_reads_table = {
 	def base=input.split("/")[0]
 	output.dir=base
 	produce(input.txt.prefix+".reads"){
-	from("txt"){
+	from("txt","*_discordant_pairs.bam"){
            exec """
-               echo  -e "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads" > $output ; 
-               awk '{ print \$1"\t"\$2"\t"\$3"\t"\$4"\t"0"\t"1}' $input | sort -u  >> $output
+	       $samtools view -H $input2 | grep "@SQ" | cut -f2 | sed 's/SN://g' > $base/temp_gene_ids ;
+	       R --no-save --args $input1 $transTable $base/temp_gene_ids $base/paired_contigs.temp 
+	       	 	      < $R_get_spanning_reads_direct_script1 ;
+	       function get_spanning_pairs {
+	               gene=`echo \$1 | cut -f1 -d"?"` ;
+    		       g1=`echo \$1 | cut -f2 -d"?"` ;
+    		       g2=`echo \$1 | cut -f3 -d "?"` ;
+    		       $samtools view $input2 \$g1 | cut -d "/" -f1 | sort -u > $base/g1 ;
+    		       $samtools view $input2 \$g2 | cut -d "/" -f1 | sort -u > $base/g2 ;
+    		       left=`cat $base/g1 | wc -l` ;
+    		       right=`cat $base/g2 | wc -l` ;
+    		       both=`cat $base/g1 $base/g2 | sort -u | wc -l` ;
+    		       echo -e "\$gene\t\$(( \$left + \$right - \$both ))" ;
+               } ;
+	       cat $base/paired_contigs.temp | while read line ; do 
+	       	   get_spanning_pairs "\$line" >> $base/spanning_pair_counts.temp ; 
+	       done ;
+	       R --no-save --args $input1 $base/spanning_pair_counts.temp $output < $R_get_spanning_reads_direct_script2 ;
+	       rm $base/temp_gene_ids $base/spanning_pair_counts.temp $base/paired_contigs.temp $base/g1 $base/g2
            """
 	    }
 	}
-}
+} 
+
 
 //This stage is only used the by hybrid mode.
 //It concatenates the fusions sequence files, then the read files.
@@ -424,7 +502,7 @@ get_final_list = {
     produce(base+".summary"){
 	from("psl","reads"){
 	    	exec """
-	               $R --vanilla --args $input1 $input2 $transTable $finalGapSize $exclude $output < $R_get_final_list 
+	               $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $output < $R_get_final_list 
 	        """
 	 }
     }

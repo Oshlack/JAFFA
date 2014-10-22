@@ -1,5 +1,4 @@
 
-library(GenomicRanges)
 library(IRanges)
 
 args = commandArgs(trailingOnly = TRUE)

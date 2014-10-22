@@ -17,7 +17,8 @@
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
 
-get_unmapped_as_fasta = segment { cat_reads + remove_dup + get_assembly_unmapped }
+//get_unmapped_as_fasta = segment { cat_reads + remove_dup + get_assembly_unmapped }
+get_unmapped_as_fasta = segment { get_assembly_unmapped }
 
 if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
