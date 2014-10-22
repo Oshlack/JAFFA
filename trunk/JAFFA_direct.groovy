@@ -20,7 +20,10 @@ body = segment { filter_transcripts +
                  make_simple_reads_table +
                  get_final_list }
 
-get_unmapped_as_fasta = segment { prepare_reads + cat_reads + remove_dup + get_unmapped }
+//get_unmapped_as_fasta = segment { prepare_reads + cat_reads + remove_dup + get_unmapped }
+
+get_unmapped_as_fasta = segment { prepare_reads + get_unmapped }
+
 
 // below is the pipeline for a fasta file
 if(args[0].endsWith(fastaSuffix)) {
@@ -35,7 +38,7 @@ if(args[0].endsWith(fastaSuffix)) {
 } else {
   if(readLayout=="single"){ fastqInputFormat="%.gz" }
   run { run_check + fastqInputFormat * [
-       	    make_dir_using_fastq_names +
+      	    make_dir_using_fastq_names +
 	    get_unmapped_as_fasta +
 	    align_reads_to_annotation +
 	    body ] + compile_all_results 

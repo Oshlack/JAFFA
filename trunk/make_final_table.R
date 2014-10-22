@@ -23,9 +23,10 @@ args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
 trans_table_file=args[3]  # a reference annotation file
-gapmin=as.numeric(args[4]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[5]		  # which "classifications" to remove"
-output_file=args[6]       # name of the output file, will be <X>.summary
+known_table_file=args[4]
+gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[6]		  # which "classifications" to remove"
+output_file=args[7]       # name of the output file, will be <X>.summary
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
@@ -270,6 +271,14 @@ merge_result<-function(x){
 }
 result=do.call(rbind.data.frame,lapply(r,merge_result))
 cand<-result[!is.na(result$rearrangement),]
+
+################################################################
+# check if this is a recurrent fusions
+known_fusions=read.delim(known_table_file,header=F,stringsAsFactors=F)
+# sort alphabetically to it can be compared to the candidates (whose names are also sorted)
+known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
+cand$known<-"-"
+cand$known[ cand$fusion_genes %in% known_fusions ]<-"Yes"
 
 ########### now classify the candidates #########################
 
