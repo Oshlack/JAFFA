@@ -42,7 +42,7 @@ outputName="jaffa_results"
 
 // trimming
 scores=33 //PHRED quality score type
-minlen=50 //reads shorted that this after trimmed are thrown out.
+minlen=35 //reads shorted that this after trimmed are thrown out.
 minQScore=10 //heads and tails of reads will be trimmed if their quality score falls below this.
 //note: by default the 0 above means that no trimming is done (we found this gave the
 //best assembly results)
