@@ -32,6 +32,7 @@ output_file=args[7]       # name of the output file, will be <X>.summary
 OVERHANG_MAX=20
 REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flagged as regular
 TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
+MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning reads will be remove
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
@@ -286,7 +287,8 @@ cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"
 spanP=cand$spanning_pairs>0
 spanR=cand$spanning_reads>0
-cand$classification[ spanP & spanR ]<-"LowConfidence"
+spanRL=cand$spanning_reads>=MIN_LOW_SPANNING_READS
+cand$classification[ spanP & spanRL ]<-"LowConfidence"
 cand$classification[ cand$aligns & (spanP | spanR ) ]<-"MediumConfidence"
 cand$classification[ cand$aligns & spanP & spanR ]<-"HighConfidence"
 cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRegularTranscript"
