@@ -25,7 +25,7 @@ function bpipe_install {
 function velveth_install {
     wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz
     tar -zxvf velvet_1.2.10.tgz ; rm velvet_1.2.10.tgz
-    make -C velvet_1.2.10/ MAXKMERLENGTH=37 OPENMP=1 LONGSEQUENCES=1
+    make -C velvet_1.2.10/ MAXKMERLENGTH=37 LONGSEQUENCES=1 #OPENMP=1
     ln -s $PWD/velvet_1.2.10/velvetg $PWD/bin/
     ln -s $PWD/velvet_1.2.10/velveth $PWD/bin/
 }
