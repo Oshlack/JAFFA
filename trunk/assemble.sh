@@ -10,8 +10,8 @@ Kseq=`echo $Kall_original | awk 'BEGIN {FS=","} {print $1,$3,$2 }'`
 Kall=`seq $Kseq` #convert to a list of numbers
 Kmerge=$7
 transLength=$8
-export OMP_THREAD_LIMIT=$9
-export OMP_NUM_THREADS=$9
+#export OMP_THREAD_LIMIT=$9
+#export OMP_NUM_THREADS=$9
 inputs="../../${10}"
 if [ $# -eq 11 ] ; then
    inputs="$inputs ../../${11}"
