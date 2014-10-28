@@ -10,6 +10,7 @@ Kseq=`echo $Kall_original | awk 'BEGIN {FS=","} {print $1,$3,$2 }'`
 Kall=`seq $Kseq` #convert to a list of numbers
 Kmerge=$7
 transLength=$8
+export OMP_THREAD_LIMIT=$9
 export OMP_NUM_THREADS=$9
 inputs="../../${10}"
 if [ $# -eq 11 ] ; then
@@ -38,8 +39,6 @@ $velveth directory $Kall_original -fastq -separate $inputs >> log_velveth
 for k in $Ks ; do
     echo "Running Assembly for k="$k
     echo "directory_${k}" >> log_${k}
-#    echo "running $velveth" >> log_${k}
-#    $velveth directory_${k} $k -fastq -separate $inputs >> log_${k}
     echo "running $velvetg" >> log_${k}
     $velvetg directory_$k -read_trkg yes >> log_${k}
     echo "running $oases" >> log_${k}
@@ -76,6 +75,3 @@ else
    rm -rf ${base}/oases/mergedAssembly
 fi
 
-#cd ../../
-#echo "cat ${base}/oases/*/contigs.fa > ${output}"
-#cat ${base}/oases/*/contigs.fa > ${output}
