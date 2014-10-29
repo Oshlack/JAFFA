@@ -487,7 +487,7 @@ align_transcripts_to_genome = {
     output.dir=base
     produce(base+"_genome.psl"){
 	from(".fusions.fa"){
-            exec "$blat $hgFasta $input1 $output 2>&1 | tee $base/log_genome_blat"
+            exec "$blat $hgFasta $input1 -minScore=$minScore $output 2>&1 | tee $base/log_genome_blat"
 	}
     }
 }
