@@ -159,42 +159,45 @@ get_frame_info<-function(x){
 		####  if we don't find a match then return..   
 		if(sum(correct_pos&correct_chrom)==0) return()
 		gene=transTable[correct_pos&correct_chrom,]
-#		show(gene)
 
 		#are we looking for the starts or the ends of the exons?
 		if(x[j,]$genome_dir==x[j,]$is_start){ #use the ends
-		   exon_pos=lapply(strsplit(gene$exonEnd,","),as.integer)
+		   exon_pos=lapply(strsplit(gene$exonEnds,","),as.integer)
 		} else {
-		   exon_pos=lapply(strsplit(gene$exonStart,","),function(y){ as.integer(y) + 1 } )
+		   exon_pos=lapply(strsplit(gene$exonStarts,","),function(y){ as.integer(y) + 1 } )
 		}
 		#get the exon positions for each transcripts
-		#starts=strsplit(gene$exonStart,",")
-		#ends=strsplit(gene$exonEnd,",")
-		dists=lapply(1:length(exon_pos),function(y){     #starts),function(y){ 
-		   min(abs(as.integer(exon_pos[[y]])-pos))        #c(starts[[y]],ends[[y]]))-pos)) 
+		dists=lapply(1:length(exon_pos),function(y){ 
+		   min(abs(as.integer(exon_pos[[y]])-pos)) 
                 })
 		# select the transcript with the closest exon to the break point
-		trans=which.min(unlist(dists))
-#		show(dists)
-#		show(trans)
-		gene=gene[trans,]
-		gene_name=gene$name2 #get the gene symbol
-		#which exon in this trans
-		dist=exon_pos[[trans]]-pos
-		closest=which(abs(dist)==min(abs(dist)))[1]
-		overhang<-dist[closest]   
-		closestExon=closest 
-		is_actually_the_start=((gene$strand=="+")==x[j,]$genome_dir)==x[j,]$is_start
-		frames=as.integer(unlist(strsplit(as.character(gene$exonFrames),",")))
-		frame=frames[closestExon]
-		if(is_actually_the_start & frame>=0 ){ #then get the frame of the next exon (if this exon is coding)
-		   if(gene$strand=="+") dir=1 else dir=-1
-		   nextExon=closestExon + dir
-		   if((nextExon < 1) | (nextExon > length(frames))){ 
-		      frame=-1 # return non-coding frame if we hit the end of the transcript
-		   } else { frame=frames[nextExon] }
+		best_trans=which(unlist(dists)==min(unlist(dists)))
+		get_frame<-function(trans){
+		   gene=gene[trans,]
+		   gene_name=gene$name2 #get the gene symbol
+		   #which exon in this trans
+		   dist=exon_pos[[trans]]-pos
+		   closest=which(abs(dist)==min(abs(dist)))[1]
+		   overhang<-dist[closest]   
+		   closestExon=closest 
+		   is_actually_the_start=((gene$strand=="+")==x[j,]$genome_dir)==x[j,]$is_start
+		   frames=as.integer(unlist(strsplit(as.character(gene$exonFrames),",")))
+		   frame=frames[closestExon]
+		   if(is_actually_the_start & frame>=0 ){ #then get the frame of the next exon (if this exon is coding)
+		      if(gene$strand=="+") dir=1 else dir=-1
+		      nextExon=closestExon + dir
+		      if((nextExon < 1) | (nextExon > length(frames))){ 
+		         frame=-1 # return non-coding frame if we hit the end of the transcript
+		      } else { frame=frames[nextExon] }
+		   }
+		   return(data.frame(x[j,],overhang,frame,is_actually_the_start,gene_name));
 		}
-		return(data.frame(x[j,],overhang,frame,is_actually_the_start,gene_name));
+		all_possible_frames=do.call("rbind",lapply(best_trans,get_frame))
+		fs=all_possible_frames$frame
+		#pick the isoform with the most common frame that's coding
+		fm=-1
+		if(any(fs!=-1)){ fm=names(tail(sort(table(fs[fs!=-1])),n=1)) }
+		return(all_possible_frames[match(fm,fs),])
 	}
    	res=do.call(rbind.data.frame,lapply(1:(dim(x)[1]),do_one_row))   
 	if(dim(res)[1]!=2) return()
