@@ -386,12 +386,12 @@ extract_fusion_sequences = {
           exec """
            cat $input1 | cut -f 1 | sed \'s/^/>/g\' > ${output}.temp ;
 	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | cut -f1 | 
-	     grep -Fx -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
+	     grep -Fx -A1 -f ${output}.temp | grep -v \"^\\-\\-\" > $output ;
            rm ${output}.temp ;
           """
        }
     }}
-} //grep -A1 -f ${output}.temp | grep -v \"\\-\\-\" > $output ;
+} 
 
 //Map the reads back to the candidate fusion sequences
 map_reads = {
@@ -464,6 +464,19 @@ make_simple_reads_table = {
 	    }
 	}
 } 
+
+make_fasta_reads_table = {
+   def base=input.split("/")[0]
+   output.dir=base
+   produce(input.txt.prefix+".reads"){
+      from("txt"){
+         exec """
+            echo  -e "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads" > $output ; 
+               awk '{ print \$1"\t"\$2"\t"\$3"\t"\$4"\t"0"\t"1}' $input | sort -u  >> $output
+         """
+      }
+   }
+}
 
 
 //This stage is only used the by hybrid mode.
