@@ -6,17 +6,15 @@ In this wiki we describe how to install JAFFA and give some basic instructions t
 = Installing =
 
   # [Download] the JAFFA tar ball and reference file.
-
   # unzip and untar both files in the same place: 
 {{{
 tar -zxvf <filename> 
 }}}
   # Download the human genome version hg19, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`), provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy` or pass it when you run the JAFFA command.
-  # Before running JAFFA, there are quite a few other programs which must be installed. To make your life easier we have provided a script to automate this using wget. Run it in JAFFA's directory.
+  # Before running JAFFA, there are quite a few other programs which must be installed. To make your life easier we have provided a script to automate this using wget. Run it in JAFFA's directory. When it's finished, check that all paths are filled in the file tools.groovy
 {{{
 ./install_linux64.sh
-}}}
-Check that all paths are filled in the file tools.groovy
+}}} 
   # If you don't already have it, you will need to install [http://www.r-project.org/ R]. Note that the R package, IRanges, must be installed. 
   # Configure the JAFFA pipeline options for your data. This can be done either by editing the `JAFFA_stages.groovy` file, or by passing the parameters to bpipe when you run JAFFA.
     * _`readLayout`_ - change to "single" if you have single-end reads otherwise paired-end is assumed.
@@ -29,7 +27,7 @@ The input to JAFFA should be either reads which have been gzipped. i.e. with an 
 
 = Running =
 
-Create and change into the directory where you intend to run JAFFA. You then have a choice of three JAFFA running modes: Assembly, Hybrid and  Direct. Which mode to use will depend on your read length.
+Create and change into the directory where you intend the output files of JAFFA to be placed. You then have a choice of three JAFFA running modes: Assembly, Hybrid and  Direct. Which mode to use will depend on your read length.
 
 == When to use which mode? ==
 
@@ -43,7 +41,6 @@ JAFFA will call Velvet and Oases to assemble the reads. It will then search for 
 {{{
 <path to JAFFA>/tools/bin/bpipe run <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
 }}}
-Output files will be created in the directory where you ran this command.
 
 == Direct ==
 JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
