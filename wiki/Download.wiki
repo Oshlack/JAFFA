@@ -1,9 +1,7 @@
 = Current =
 
 
-Download 
-
-[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.03.tar.gz JAFFA_1.03.tar.gz ]
+Download [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.03.tar.gz JAFFA_1.03.tar.gz ]
 
 or check it out with svn:
 {{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-1.03 jaffa-1.03 }}}
@@ -15,12 +13,7 @@ This version is improves on 1.0, in a number of ways:
   * we now threshold on 2 spanning reads for "LowConfidence" fusions (previously this was 1), to help remove library prep false positives.
 
 You will also need the supporting data:
-
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_GENCODE19.tar.gz] Files for the GENCODE reference transcriptome, version 19 (should work with all versions of JAFFA)
-
-
-
-[https://docs.google.com/uc?export=download&id=0B1FwZagazjpcN1NCOWhnU2hCSjQ JAFFA_REFERENCE_FILES_0.80.tar.gz] - Files for the GENCODE reference transcriptome, version 17 (works with all versions of JAFFA)
 
 
 = Older =
@@ -30,3 +23,4 @@ You will also need the supporting data:
 <a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcLTFSYWY4THNHdlE">JAFFA_0.9.tar.gz 
 </a>
  
+[https://docs.google.com/uc?export=download&id=0B1FwZagazjpcN1NCOWhnU2hCSjQ JAFFA_REFERENCE_FILES_0.80.tar.gz] - Files for the GENCODE reference transcriptome, version 17
