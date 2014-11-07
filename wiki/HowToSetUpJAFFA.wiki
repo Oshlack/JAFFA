@@ -11,7 +11,7 @@ In this wiki we describe how to install JAFFA and give some basic instructions t
 {{{
 tar -zxvf <filename> 
 }}}
-  # Download the human genome version hg19, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`) or, provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy`.
+  # Download the human genome version hg19, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`), provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy` or pass it when you run the JAFFA command.
   # Before running JAFFA, there are quite a few other programs which must be installed. To make your life easier we have provided a script to automate this using wget. Run it in JAFFA's directory.
 {{{
 ./install_linux64.sh
