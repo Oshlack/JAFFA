@@ -17,7 +17,7 @@ tar -zxvf <filename>
 ./install_linux64.sh
 }}}
 Check that all paths are filled in the file tools.groovy
-  # If you don't already have it, you will need to install [http://www.r-project.org/ R]. Note that R package, IRanges, must be installed. 
+  # If you don't already have it, you will need to install [http://www.r-project.org/ R]. Note that the R package, IRanges, must be installed. 
   # Configure the JAFFA pipeline options for your data. This can be done either by editing the `JAFFA_stages.groovy` file, or by passing the parameters to bpipe when you run JAFFA.
     * _`readLayout`_ - change to "single" if you have single-end reads otherwise paired-end is assumed.
    * _`hgFasta`_ - this is the path to the human genome. If you leave this unchanged it will default to the directory of the JAFFA package
