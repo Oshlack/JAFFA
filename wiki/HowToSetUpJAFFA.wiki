@@ -2,23 +2,6 @@
 
 In this wiki we describe how to install JAFFA and give some basic instructions to start running it. JAFFA is designed to be run on the bash command-line in linux. Having an understanding of bash (and R) would be useful to understand what the pipeline is doing, but isn't essential.
 
-= Required software =
-Before installing JAFFA, there are quite a few other programs which must be installed.
-
-  * [https://code.google.com/p/bpipe/ Bpipe] - This is a framework for managing pipeline. It's convenient because it allows multiple jobs to be run in parallel, easy restarting of jobs and a lot of other great features. JAFFA has been written using bpipe to control the pipeline stages.
-
-  * [http://www.bioconductor.org/ R] (with the bioconductor package {{{GenomicRanges}}} ) - Some of our filtering and data processing steps have been written as R scripts. In the future we may rewrite these into python to improve performance and remove the requirement of having R installed. But for the moment R is required.
-
-  * [http://samtools.sourceforge.net/ Samtools]
-  * [http://genome.ucsc.edu/FAQ/FAQblat.html#blat3 BLAT]
-  * [http://hannonlab.cshl.edu/fastx_toolkit/ Fastx tools]
-  * [http://www.ebi.ac.uk/~zerbino/oases/ Oases ] and  [http://www.ebi.ac.uk/~zerbino/velvet/ Velvet] - Assemblers. You don't need to install these if you are using the "Direct" mode (JAFFA_direct.groovy)
-  * [http://www.usadellab.org/cms/?page=trimmomatic Trimmomatic]
-  * [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml bowtie2] 
-
-Note that may of these tool (like the assembler, trimming software and mapper) can be replaced in the pipeline with other options. 
-
-The first step of the JAFFA pipeline is to check that the required software has been installed. You should get a warning if any of the commands are not found.
 
 = Installing =
 
@@ -26,10 +9,15 @@ The first step of the JAFFA pipeline is to check that the required software has 
 
   # unzip and untar both files in the same place: 
 {{{
-gunzip <filename> 
-tar -xvf <file.tar> 
+tar -zxvf <filename> 
 }}}
-  # Download the human genome, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`) or, provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy`.
+  # Download the human genome version hg19, [http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz hg19], from UCSC if you don't already have it. JAFFA expects a single fasta file. So if you download the files above, you'll need to  unzip and untar then combine all the chromosomal fasta files together. e.g. `cat chr*.fa > hg19.fa`. By default JAFFA will be expecting this file to be in the root of the JAFFA code directory. You can either copy it there, create a symbolic link to it (`ln -s <path_to_hg19> <path_to_JAFFA_directory>`) or, provide the path to your `hg19.fa` file in the pipeline file `JAFFA_stages.groovy`.
+  # Before running JAFFA, there are quite a few other programs which must be installed. To make your life easier we have provided a script to automate this using wget. Run it in JAFFA's directory.
+{{{
+./install_linux64.sh
+}}}
+Check that all paths are filled in the file tools.groovy
+  # If you don't already have it, you will need to install [http://www.r-project.org/ R]. Note that R package, IRanges, must be installed. 
   # Configure the JAFFA pipeline options for your data. This can be done either by editing the `JAFFA_stages.groovy` file, or by passing the parameters to bpipe when you run JAFFA.
     * _`readLayout`_ - change to "single" if you have single-end reads otherwise paired-end is assumed.
    * _`hgFasta`_ - this is the path to the human genome. If you leave this unchanged it will default to the directory of the JAFFA package
@@ -46,31 +34,32 @@ Create and change into the directory where you intend to run JAFFA. You then hav
 == When to use which mode? ==
 
   * For reads *shorter than 70bp* use the Assembly mode. The reads are too short to be used as contigs directly.
-  * For longer reads ( *70 and 200 bp*), the hybrid mode is the most sensitive. However, because it involves assembly, it requires a lot of memory and CPU time. If computational resources are a constraint, we recommend using the direct method. 
-  * For long reads (e.g. *several hundred bases*), there is no advantage in assembling, therefore we recommend the direct mode.
+  * For longer reads ( *70 and 95 bp*), the hybrid mode is the most sensitive. However, because it involves assembly, it requires a lot of memory and CPU time. If computational resources are a constraint, we recommend using the direct method. 
+  * For long reads (e.g. *100 bp up*), there is no advantage in assembling, therefore we recommend the direct mode.
 
 
 == Assembly ==
 JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs.
 {{{
-bpipe run <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
+<path to JAFFA>/tools/bin/bpipe run <path to JAFFA>/JAFFA.groovy <path_to_directory with fastq files>/*.gz
 }}}
+Output files will be created in the directory where you ran this command.
 
 == Direct ==
 JAFFA will map reads to the known reference transcriptome and extract reads which do not map. It will then search for fusions from amongst the unmapped reads.
 {{{
-bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fastq files>/*.gz
+<path to JAFFA>/tools/bin/bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fastq files>/*.gz
 }}}
 In this mode, you can only search for fusions in pre-assembled transcriptomes, but providing a fasta file as input. In this case we skip the step where we filter for unmapped sequences.
 {{{
-bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fasta file>/*.fasta
+<path to JAFFA>/tools/bin/bpipe run <path to JAFFA>/JAFFA_direct.groovy <path_to_directory with fasta file>/*.fasta
 }}}
 
 == Hybrid ==
 
 This is a combination of the previous two modes. First JAFFA will call Velvet and Oases to assemble the reads. It will then search for fusions from amongst the assembled contigs. Next it will map reads to both the known reference transcriptome and the assembled transcriptome. It will then search for fusions from amongst the unmapped reads. 
 {{{
-bpipe run <path to JAFFA>/JAFFA_hybrid.groovy <path_to_directory with fastq files>/*.gz
+<path to JAFFA>/tools/bin/bpipe run <path to JAFFA>/JAFFA_hybrid.groovy <path_to_directory with fastq files>/*.gz
 }}}
 
 == Stages in the pipeline ==
