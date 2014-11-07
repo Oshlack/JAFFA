@@ -9,8 +9,8 @@ or check it out with svn:
 This version is improves on 1.0, in a number of ways:
   * Reads that map to intronic, intergenic, and chrM regions are now first filtered out before running the pipeline. This improves the RAM and time requirements for the assembly and hybrid modes.
   * For the direct mode we now calculate spanning pairs
-  * fusions classed as "PotentialRegularTranscripts" are no longer reported
-  * we now threshold on 2 spanning reads for "LowConfidence" fusions (previously this was 1), to help remove library prep false positives.
+  * fusions classed as PotentialRegularTranscripts are no longer reported
+  * we now threshold on 2 spanning reads for LowConfidence fusions (previously this was 1), to help remove library prep false positives.
 
 You will also need the supporting data:
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_GENCODE19.tar.gz] Files for the GENCODE reference transcriptome, version 19 (should work with all versions of JAFFA)
@@ -20,7 +20,6 @@ You will also need the supporting data:
 
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.0.tar.gz JAFFA_1.0.tar.gz ] -This version is identical to 0.91. Improvements of 0.9 are that it works out the read length itself and includes a few bug fixes and checks. Thanks to Aliaksei Holik for correcting the bug in the spanning pairs calculation.
 
-<a href="https://docs.google.com/uc?export=download&id=0B1FwZagazjpcLTFSYWY4THNHdlE">JAFFA_0.9.tar.gz 
-</a>
- 
-[https://docs.google.com/uc?export=download&id=0B1FwZagazjpcN1NCOWhnU2hCSjQ JAFFA_REFERENCE_FILES_0.80.tar.gz] - Files for the GENCODE reference transcriptome, version 17
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_0.9.tar.gz JAFFA_0.9.tar.gz ]
+
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_0.80.tar.gz JAFFA_REFERENCE_FILES_0.80.tar.gz ] - Files for the GENCODE reference transcriptome version 17
