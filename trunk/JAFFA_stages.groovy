@@ -154,8 +154,6 @@ make_dir_using_fastq_names = {
 make_dir_using_fasta_name = {
    from("*.fasta"){
       def inputPath=file(input.toString()).absolutePath
-     // def stringList = input.prefix.split("/")
-     // base=stringList[(stringList.size()-1)]
       def base = get_base_name_single(input.prefix)
       output.dir=base
       produce(base+".fasta"){
@@ -528,19 +526,20 @@ compile_all_results = {
 	  function get_sequence { 
 	     if [ \$1 == "sample" ] ; then return ; fi ;
 	     fusions_file=\$1/\$1${type}.fusions.fa ;
-	     new_id=\$1---\$2---\${13} ;
+	     new_id=\$1---\$2---\$3 ;
              echo ">\$new_id" >> ${outputName}.fasta ;
-	     break=\${14} ; 
-	     sequence=`grep -A1 "^>\${13}" \$fusions_file | grep -v "^>"` ;
+	     break=\$4 ; 
+	     sequence=`grep -A1 "^>\$3" \$fusions_file | grep -v "^>"` ;
 	     start=`echo \$sequence | cut -c 1-\$((\${break}-1))` ;
 	     middle=`echo \$sequence | cut -c \$break-\$((\${break}+1)) | tr '[:upper:]' '[:lower:]'` ;
 	     string_length=`echo \${#sequence}` ;
 	     end=`echo \$sequence | cut -c \$((\$break+2))-$string_length ` ;
 	     echo ${start}${middle}${end} >> ${outputName}.fasta ;
-	     `# grep \${13} \$1/\$1_genome.psl >> ${outputName}.psl ;` ;
+	     `# grep \$3 \$1/\$1_genome.psl >> ${outputName}.psl ;` ;
 	  } ;
-	  rm -f ${outputName}.fasta ;	  
-	  cat ${outputName}.csv | tr "," "\\t" | sed 's/\\"//g' | while read line ; do get_sequence \$line ; done ;
+	  rm -f ${outputName}.fasta ;
+	  cat ${outputName}.temp | while read line ; do get_sequence \$line ; done ;
+	  rm ${outputName}.temp ;
 	  echo "Done writing ${outputName}.fasta" ;
 	  echo "All Done" 
         """
