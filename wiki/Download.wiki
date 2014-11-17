@@ -6,7 +6,7 @@ Download [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.03.t
 or check it out with svn:
 {{{ svn checkout http://jaffa-project.googlecode.com/svn/tags/version-1.03 jaffa-1.03 }}}
 
-This version is improves on 1.0, in a number of ways:
+This version improves on 1.0, in a number of ways:
   * Reads that map to intronic, intergenic, and chrM regions are now first filtered out before running the pipeline. This improves the RAM and time requirements for the assembly and hybrid modes.
   * For the direct mode we now calculate spanning pairs
   * fusions classed as PotentialRegularTranscripts are no longer reported
