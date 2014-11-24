@@ -6,7 +6,7 @@ blat_table=args[1]
 output_file=args[2]
 gap_size=as.numeric(args[3])
 
-MAX_OVERLAP=15 #maximum number of bases that two genes can share at the break-point
+MAX_OVERLAP=15 #maximum+1 number of bases that two genes can share at the break-point (<15)
 
 #get the gene names
 ref_to_symbols=read.table(args[4],header=T,comment.char="/",stringsAsFactors=F) #we want to read the first comment line
@@ -82,7 +82,7 @@ multi_gene<-function(x){
          temp_pos=which(sapply( 1:(length(runValue(cov))-2),pattern_match))+1
 	 temp_pos=suppressWarnings(temp_pos[which(runLength(cov)[temp_pos]==min(runLength(cov)[temp_pos]))[1]])
          ov=runLength(cov)[temp_pos] #how big is the overlap between genes
-      	 if(!is.na(ov) & ov<MAX_OVERLAP & ov>0){ #when two gene overlap by more than 15 bases it probably an assembler mistake
+      	 if(!is.na(ov) & ov<MAX_OVERLAP & ov>0){ #when two gene overlap by more than 14 bases it probably an assembler mistake
 	       # set the fusion point to the first base which has
 	       # a coverage of 2 ??
 	       base_before=sum(runLength(cov)[1:(temp_pos-1)])
