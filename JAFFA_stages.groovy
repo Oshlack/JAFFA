@@ -256,7 +256,7 @@ get_unmapped = {
      }
      exec """
 	$reformat in=$base/unmapped.fastq out=$base/temp.fasta threads=$threads ;
-	$dedupe in=$base/temp.fasta out=$output1 threads=$threads || mv $base/temp.fasta $output1 ; 
+	$dedupe in=$base/temp.fasta out=$output1 threads=$threads absorbcontainment=f ; 
 	rm $base/temp.fasta $base/unmapped.fastq 2> /dev/null
        """
     }
@@ -289,7 +289,7 @@ get_assembly_unmapped = {
                   -S /dev/null 2>&1 | tee $base/log_initial_map_to_assembly ;
 
         $reformat in=$base/unmapped_assembly.fastq out=$base/temp.fasta threads=$threads ;
-        $dedupe in=$base/temp.fasta out=$output1 threads=$threads ;
+        $dedupe in=$base/temp.fasta out=$output1 threads=$threads absorbcontainment=f ;
 	rm $base/temp.fasta $base/unmapped_assembly.fastq $base/unmapped_ref.fastq
         """
     }}
