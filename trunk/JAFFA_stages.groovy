@@ -4,9 +4,9 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 7th November 2014
+ ** Last Update: 24th November 2014
  ********************************************************************************/
-VERSION=1.03
+VERSION=1.04
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
@@ -256,8 +256,8 @@ get_unmapped = {
      }
      exec """
 	$reformat in=$base/unmapped.fastq out=$base/temp.fasta threads=$threads ;
-	$dedupe in=$base/temp.fasta out=$output1 threads=$threads ; 
-	rm $base/temp.fasta $base/unmapped.fastq
+	$dedupe in=$base/temp.fasta out=$output1 threads=$threads || mv $base/temp.fasta $output1 ; 
+	rm $base/temp.fasta $base/unmapped.fastq 2> /dev/null
        """
     }
   }
