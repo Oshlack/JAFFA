@@ -382,8 +382,8 @@ extract_fusion_sequences = {
     produce(input.prefix+".fusions.fa"){ from(input.prefix+".psl"){
        from("txt","fasta"){
           exec """
-           cat $input1 | cut -f 1 | sed \'s/^/>/g\' > ${output}.temp ;
-	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | cut -f1 | 
+           cat $input1 | awk '{print $1}' | sed \'s/^/>/g\' > ${output}.temp ;
+	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | awk '{print $1}' 
 	     grep -Fx -A1 -f ${output}.temp | grep -v \"^\\-\\-\" > $output ;
            rm ${output}.temp ;
           """
