@@ -383,7 +383,7 @@ extract_fusion_sequences = {
        from("txt","fasta"){
           exec """
            cat $input1 | awk '{print \$1}' | sed \'s/^/>/g\' > ${output}.temp ;
-	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | awk '{print \$1}' 
+	   $reformat in=$input2 out=stdout.fasta fastawrap=0 | awk '{print \$1}' |
 	     grep -Fx -A1 -f ${output}.temp | grep -v \"^\\-\\-\" > $output ;
            rm ${output}.temp ;
           """
