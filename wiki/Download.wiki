@@ -1,8 +1,6 @@
 = Current =
 
-
-https://drive.google.com/file/d/0B1FwZagazjpcd3VXNDItejdZUW8/view?usp=sharing
-Download [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.04.tar.gz JAFFA_1.04.tar.gz ] - This version fixes an issue that caused the direct mode to be slow on some large dataset. 
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.04.tar.gz JAFFA_1.04.tar.gz ] - This version fixes an issue that caused the direct mode to be slow on some large dataset. 
 
 You will also need the supporting data:
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_GENCODE19.tar.gz] Files for the GENCODE reference transcriptome, version 19 (should work with all versions of JAFFA)
@@ -10,7 +8,7 @@ You will also need the supporting data:
 
 = Older =
 
-[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.03.tar.gz JAFFA_1.03.tar.gz ] - Major improvements of 1.0 such as:
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.03.tar.gz JAFFA_1.03.tar.gz ] - Major improvements over 1.0 such as:
   * Reads that map to intronic, intergenic, and chrM regions are now first filtered out before running the pipeline. This improves the RAM and time requirements for the assembly and hybrid modes.
   * For the direct mode we now calculate spanning pairs
   * fusions classed as PotentialRegularTranscripts are no longer reported
