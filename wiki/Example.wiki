@@ -5,8 +5,7 @@
 To help get you started, here, we provide a small demo of how to run JAFFA.
 
 The demo is based on RNA-Seq from two breast cancer cell-lines: BTF-474 (SRA accession: SRR925695)
-and MCF-7 (SRA accession: SRR925723). We have filtered these datasets for reads that map to know fusions, just to make the file sizes smaller and the demonstration a bit faster. This demo should only take a few minutes, whereas a full dataset may take hours. You can find the files [https://docs.google.com/uc?export=download&id=0B1FwZagazjpcRnV4OFVUZlFIeUk here]. 
-[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/Demo_Data.tar.gz here ].
+and MCF-7 (SRA accession: SRR925723). We have filtered these datasets for reads that map to know fusions, just to make the file sizes smaller and the demonstration a bit faster. This demo should only take a few minutes, whereas a full dataset may take hours. You can find the files [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/Demo_Data.tar.gz here ].
 
 The reads are 76bp paired end, which means we can show all three modes of JAFFA: assembly, direct and hybrid.
 
