@@ -1,11 +1,10 @@
 #!/bin/bash
 
 ## This script will install the tools required for the JAFFA pipeline.
-## The script will first check whether the required tool is install and if
-## not it will be fetched from the web and placed into the tools/ subdirectory
-## paths to all installed tools can be found in the file tools.groovy at the
+## It will fetched each tool from the web and placed into the tools/ subdirectory.
+## Paths to all installed tools can be found in the file tools.groovy at the
 ## end of execution of this script. These paths can be changed if a different
-## version of software is required.
+## version of software is required. Note that R must be installed manually
 ##
 ## Last Modified: 22nd October by Nadia Davidson
 
@@ -44,14 +43,6 @@ function trimmomatic_install {
     chmod +x Trimmomatic-0.32/trimmomatic.sh
     ln -s $PWD/Trimmomatic-0.32/trimmomatic.sh $PWD/bin/trimmomatic
 }
-
-#function samtools_install {
-#    wget http://sourceforge.net/projects/samtools/files/samtools/0.1.18/samtools-0.1.18.tar.bz2
-#    tar -jxvf samtools-0.1.18.tar.bz2
-#    rm samtools-0.1.18.tar.bz2
-#    make -C samtools-0.1.18/
-#    ln -s $PWD/samtools-0.1.18/bin/* $PWD/bin/
-#}
 
 function samtools_install {
    wget http://sourceforge.net/projects/samtools/files/samtools/1.1/samtools-1.1.tar.bz2
@@ -121,7 +112,6 @@ fi
 echo "R=\"$R_path\"" >> ../tools.groovy
 
 echo "All done. Please check that the file, tools.groovy, lists all paths correctly."
-
 
 
 

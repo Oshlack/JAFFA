@@ -237,7 +237,7 @@ format_positions<-function(x){
 	#sort the break points
 	x$genome_chrom<-as.character(x$genome_chrom)
 	x$gene_name<-as.character(x$gene_name)
-	ord=order(x$gene_name)
+	ord=order(x$is_actually_the_start,decreasing=TRUE) 
 	chrom1=x$genome_chrom[ord[1]] ; chrom2=x$genome_chrom[ord[2]]
 	base1=x$genome_pos[ord[1]] ;  base2=x$genome_pos[ord[2]]
 	gap=as.numeric(as.character(x$gap[1])) ; rearrangement=x$rearrangement[1] 
@@ -279,8 +279,9 @@ cand<-result[!is.na(result$rearrangement),]
 ################################################################
 # check if this is a recurrent fusions
 known_fusions=read.delim(known_table_file,header=F,stringsAsFactors=F)
-# sort alphabetically to it can be compared to the candidates (whose names are also sorted)
-known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
+# sort alphabetically so it can be compared to the candidates 
+# (in case one is not ordered correctly)
+#known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
 cand$known<-"-"
 cand$known[ cand$fusion_genes %in% known_fusions ]<-"Yes"
 
