@@ -2,6 +2,17 @@
 
 = FAQ =
 
+* How can I use a genome other than hg19?
+
+Download the relevant reference files from [Download], then follow the installation instruction as you would for hg19. You can then either:
+  * Edit the `genome` and `annotation` fields in JAFFA_stages.groovy, or
+  * Provide the same details during run time with the bpipe options `-p genome=<genome> -p annotation=genCode<version>`
+Here is an example for mouse:
+{{{
+bpipe run -p genome=mm10 -p annotation=genCodeVM4 <path to JAFFA>/JAFFA_direct.groovy <fastq.gz files>
+}}}
+
+
 * How long will it take to run and how much RAM is needed?
 
 This will depend a lot on the depth of data (e.g. the number of bases sequenced) and on which JAFFA mode was run. The Direct mode is the least computationally expensive. Assembly and Hybrid modes can use much more memory and require longer to run because of the de novo assembly step. 
