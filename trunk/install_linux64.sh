@@ -86,18 +86,11 @@ function dedupe_install {
 echo "// Path to tools used by the JAFFA pipeline" > ../tools.groovy
 
 for c in $commands ; do 
-    echo "checking if $c is installed..." 
     c_path=`which bin/$c 2>/dev/null`
     if [ -z $c_path ] ; then 
 	echo "$c not found, fetching it"
 	${c}_install
 	c_path=`which bin/$c 2>/dev/null`
-    fi
-    if [ -z $c_path ] ; then 
-	echo ""
-	echo "WARNING!!! Could not install $c. You will need to install it manually!" ; 
-	echo "Then edit tools.groovy with the tool's path"
-	echo ""
     fi
     echo "$c=\"$c_path\"" >> ../tools.groovy
 done
@@ -111,7 +104,22 @@ if [ -z $R_path ] ; then
 fi
 echo "R=\"$R_path\"" >> ../tools.groovy
 
-echo "All done. Please check that the file, tools.groovy, lists all paths correctly."
+#loop through commands to check they are all installed
+echo "Checking that all required tools were installed:"
+Final_message="All commands installed successfully!"
+for c in $commands ; do
+    c_path=`which bin/$c 2>/dev/null`
+    if [ -z $c_path ] ; then
+	echo -n "WARNING: $c could not be found!!!! " 
+	echo "You will need to download and install $c manually, then add its path to tools.groovy"
+	Final_message="WARNING: One or more command did not install successfully. See warning messages above. \
+                       You will need to correct this before running JAFFA."
+    else 
+        echo "$c looks like it has been installed"
+    fi
+done
+echo "**********************************************************"
+echo $Final_message
 
 
 

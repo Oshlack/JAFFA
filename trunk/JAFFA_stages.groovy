@@ -6,7 +6,7 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
  ** Last Update: 24th November 2014
  ********************************************************************************/
-VERSION=1.04
+VERSION=1.05
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
@@ -20,10 +20,14 @@ readLayout="paired" //change to "single" or single-end reads
 threads=1 //Threads to use when running the pipeline on a single sample. ie. the total threads will be samples*threads
           //Note that oases doesn't support threads, so this option will probably not make much difference to performance
 
-// Genome, Transcriptome and related data paths. You have two options:
-// 1) put the full paths below. e.g. hgFasta=<path_to_genome> 
+// Genome, Transcriptome and related data paths. 
+genome="hg19"
+annotation="genCode19"
+
+// You have two options:
+// 1) put the full paths below. e.g. genomeFasta=<path_to_genome> 
 // or 2) leave as is and symlink the data files to the jaffa code directory. e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
-hgFasta=codeBase+"/hg19.fa"  //genome sequence
+genomeFasta=codeBase+"/"+genome+".fa"  //genome sequence
 
 // Input pattern (see bpipe documentation for how files are grouped and split )
 // group on start, split on end. eg. on ReadsA_1.fastq.gz, ReadA_2.fastq.gz
@@ -72,11 +76,11 @@ overHang=15 //how many bases are require on either side of a break to count the 
 /********** Variables that shouldn't need to be changed ***********************/
 
 //location of the genome with genes masked out - used to filter the reads
-maskedGenome=codeBase+"/Masked_hg19"
+maskedGenome=codeBase+"/Masked_"+genome
 
 //location of transcriptomic data
-transFasta=codeBase+"/hg19_genCode19.fa"  // transcript cDNA sequences
-transTable=codeBase+"/hg19_genCode19.tab" // table of gene coordinates
+transFasta=codeBase+"/"+genome+"_"+annotation+".fa"  // transcript cDNA sequences
+transTable=codeBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinates
 
 //known fusions database
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
@@ -123,7 +127,7 @@ run_check = {
     exec """
        echo "Running JAFFA version $VERSION" ;
        echo "Checking for required data files..." ;
-       for i in $transFasta $transTable $knownTable $hgFasta ${maskedGenome}.1.bt2 ; 
+       for i in $transFasta $transTable $knownTable $genomeFasta ${maskedGenome}.1.bt2 ${transFasta.prefix}.1.bt2 ; 
             do ls $i 2>/dev/null || { echo "CAN'T FIND ${i}..." ; 
 	    echo "PLEASE DOWNLOAD and/or FIX PATH... STOPPING NOW" ; exit 1  ; } ; done ;
        echo "All looking good" ;
@@ -498,7 +502,7 @@ align_transcripts_to_genome = {
     output.dir=base
     produce(base+"_genome.psl"){
 	from(".fusions.fa"){
-            exec "$blat $hgFasta $input1 -minScore=$minScore $output 2>&1 | tee $base/log_genome_blat"
+            exec "$blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee $base/log_genome_blat"
 	}
     }
 }
