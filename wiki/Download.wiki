@@ -2,10 +2,10 @@
 
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.05.tar.gz JAFFA_1.05.tar.gz ] - Fusion genes are now report the gene orientation (previously gene names were listed alphabetically)
 
-You will also need one of these files with supporting data:
-  *[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_GENCODE19.tar.gz] - Files for hg19 (default), or
-  *[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz] - Files for hg38 - comming soon, or
-  *[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz] Files for mouse (mm10)
+You will also need one of these supporting reference files:
+  * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_GENCODE19.tar.gz ] - Files for hg19 (default), or
+  * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz ] - Files for hg38 - comming soon, or
+  * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz ] Files for mouse (mm10)
 
 Please see [] for instruction to run JAFFA with either the hg38 or mm10 reference.
 
