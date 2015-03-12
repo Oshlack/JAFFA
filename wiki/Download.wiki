@@ -7,7 +7,7 @@ You will also need one of these supporting reference files:
   * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz JAFFA_REFERENCE_FILES_HG38_GENCODE20.tar.gz ] - Files for hg38 - COMING SOON, or
   * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz JAFFA_REFERENCE_FILES_MM10_GENCODEVM4.tar.gz ] Files for mouse (mm10)
 
-Please see [FAQandTroubleshooting] for instruction to run JAFFA with either the hg38 or mm10 reference.
+Please see [FAQandTroubleshooting] for instructions on running JAFFA with either the hg38 or mm10 reference.
 
 = Older =
 
