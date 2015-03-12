@@ -12,6 +12,8 @@ Here is an example for mouse:
 bpipe run -p genome=mm10 -p annotation=genCodeVM4 <path to JAFFA>/JAFFA_direct.groovy <fastq.gz files>
 }}}
 
+If you have a favourite genome that is currently not supported write us an email and we'll looking into either providing the reference files, or instruction on how to generate them yourself.
+
 
 * How long will it take to run and how much RAM is needed?
 
