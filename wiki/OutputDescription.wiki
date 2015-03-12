@@ -20,6 +20,7 @@ This is an excel readable table that summarises the fusions found. It has the fo
     * `HighConfidence` - aligns to exons and has at least one spanning read and one spanning pair
     * `MediumConfidence` - aligns to exons and has at least one spanning read or one spanning pair (but not both)
     * `LowConfidence` - does not align to exons but has at least two spanning read and one spanning pair
+  * *known* - Is the fusion reported in the Mitelman databse?
 
 In our validation tests, almost all true positives were classified as `HighConfidence` or `MediumConfidence`, and all false positives were classified as `LowConfidence`. Therefore we recommend focusing on the `High` and `Medium` candidates.
 
