@@ -16,5 +16,8 @@ Bpipe options:
   * _*-p_* - set a JAFFA option (see below)
 
 JAFFA options:
-  * _*readLayout* - used to specify single end reads (otherwise paired is assumed). e.g. "-p -readLayout="single" '
+  * _*readLayout* - used to specify single end reads (otherwise paired is assumed). e.g. "-p readLayout="single" '
+  * _*genome*_ and _*annotation*_ - should be used to change the reference from the default of hg19. e.g. "-p 
+genome=mm10 -p annotation=genCodeVM4"
+
   * see the variables at the head of `JAFFA_stages.groovy` for a full list
