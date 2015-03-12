@@ -6,7 +6,7 @@ JAFFA will output two files, named jaffa_results.csv and jaffa_results.fasta (by
 
 This is an excel readable table that summarises the fusions found. It has the following fields:
   * *sample* - This is the sample name. JAFFA takes the sample names from the input file names.
-  * *fusion genes* - The gene symbols for the genes involved in the fusion event. Note that the names are order alphabetically and not by transcriptional direction.
+  * *fusion genes* - The gene symbols for the genes involved in the fusion event. The names are order by transcriptional direction.
   * *chrom1*/*chrom2*/*base1*/*base2* - The position of the breakpoints in the human genome - hg19. Note that these are ordered by position and not by transcriptional direction.
   * *gap (kb)* - How far apart are the breakpoints in the genome? This is only really relevant for intrachromosomal events.
   * *spanning pairs* - The number of read-pairs, where each read in the pair aligns entirely on either side of the breakpoint. You might see a "-" in some of these. This indicates that no spanning pairs were found, but that the contig had only a small amount of flanking sequence to align reads to. i.e. the spanning pairs results may not be indicative of the true support for the fusion event.
