@@ -2,7 +2,7 @@
 
 = FAQ =
 
-* How can I use a genome other than hg19?
+==How can I use a genome other than hg19?==
 
 Download the relevant reference files from [Download], then follow the installation instruction as you would for hg19. You can then either:
   * Edit the `genome` and `annotation` fields in JAFFA_stages.groovy, or
@@ -15,7 +15,7 @@ bpipe run -p genome=mm10 -p annotation=genCodeVM4 <path to JAFFA>/JAFFA_direct.g
 If you have a favourite genome that is currently not supported write us an email and we'll looking into either providing the reference files, or instructions on how to generate them yourself.
 
 
-* How long will it take to run and how much RAM is needed?
+==How long will it take to run and how much RAM is needed?==
 
 This will depend a lot on the depth of data (e.g. the number of bases sequenced) and on which JAFFA mode was run. The Direct mode is the least computationally expensive. Assembly and Hybrid modes can use much more memory and require longer to run because of the de novo assembly step. 
 
@@ -36,10 +36,11 @@ Hybrid mode on 100bp paired-end reads
   * RAM: 4-75 GB
   * Time: 4-60 CPU hours
 
-* Is it possible for JAFFA (OASES) to set a hard memory limit?
+==Is it possible for JAFFA (OASES) to set a hard memory limit?==
 
 You can restrict the memory used by JAFFA through the bpipe option "--memory <n>GB". If the memory is exceeded (most likely during assembly), it will be killed by bpipe.
 
+==How to view the read coverage over a fusion transcript in IGV (assembly only)==
   # From the file, jaffa_results.csv, determine the "sample", "contig" and "contig break" of the fusion of interest. The contig must start with "Locus..", i.e. be an Oases assembled contig (and not a read ID).
   # Load IGV
   # In IGV click on "Load Genome from File" and then navigate to the directory called `<sample`>. Click on the file `<sample>`.fusions.fa
@@ -49,11 +50,11 @@ You can restrict the memory used by JAFFA through the bpipe option "--memory <n>
 
 = Troubleshooting =
 
-* BLAT fails with error: _Internal error genoFind.c 2250_ *
+==BLAT fails with error: _Internal error genoFind.c 2250_ ==
 
 Check the tile size limit of the version of BLAT you have installed. JAFFA assumes a tile size up to 18, but some version of BLAT (e.g. v. 35) do not support tile sizes this large. You can get around this easily by running with the option "-p contigTile=X -p readTile=X" replacing X with the maximum supported tile size. The tile size does not impact on the accuracy of results in most cases, but a larger size will make the alignment steps faster.
 
-* JAFFA is not properly parallelising the samples or you get an error like `"`The pattern provided `%_*`.fastq.gz did not match any of the files provided as input `[`checks`]"`*
+==JAFFA is not properly parallelising the samples or you get an error like `"`The pattern provided `%_*`.fastq.gz did not match any of the files provided as input `[`checks`]"`==
 
 You may need to change the value of the variable `fastqInputFormat` which is set to `%_*`.fastq.gz by default. What this does is to search for files of the form `%_*`.fastq.gz in your input list. Both the `%` and `*` are wildcards (like the `'*'` in bash). However bpipe will parallelise based on differences in the `%` part of the name. For example, if these are your files:
 
