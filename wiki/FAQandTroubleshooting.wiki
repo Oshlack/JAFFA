@@ -36,7 +36,9 @@ Hybrid mode on 100bp paired-end reads
   * RAM: 4-75 GB
   * Time: 4-60 CPU hours
 
-* How to view the read coverage over a fusion transcript in IGV 
+* Is it possible for JAFFA (OASES) to set a hard memory limit?
+
+You can restrict the memory used by JAFFA through the bpipe option "--memory <n>GB". If the memory is exceeded (most likely during assembly), it will be killed by bpipe.
 
   # From the file, jaffa_results.csv, determine the "sample", "contig" and "contig break" of the fusion of interest. The contig must start with "Locus..", i.e. be an Oases assembled contig (and not a read ID).
   # Load IGV
