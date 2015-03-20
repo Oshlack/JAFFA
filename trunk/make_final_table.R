@@ -281,7 +281,8 @@ cand<-result[!is.na(result$rearrangement),]
 known_fusions=read.delim(known_table_file,header=F,stringsAsFactors=F)
 # sort alphabetically so it can be compared to the candidates 
 # (in case one is not ordered correctly)
-#known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
+known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
+our_fusions=unlist(lapply(cand$fusion_genes,function(x){paste(sort(x),collapse=":")}))
 cand$known<-"-"
 cand$known[ cand$fusion_genes %in% known_fusions ]<-"Yes"
 

@@ -61,7 +61,7 @@ for k in $Ks ; do
       echo "Oases K-mer=${k} assembly failed" 
    else
       echo "Oases K-mer=${k} assembly succeeded" 
-      rm -rf ${base}/oases/directory_${k}
+#      rm -rf ${base}/oases/directory_${k}
    fi
 done
 
@@ -72,6 +72,6 @@ else
    echo "Oases mergeAssembly succeeded"
    #move the output if it was a success
    mv ${base}/oases/mergedAssembly/transcripts.fa ${output}
-   rm -rf ${base}/oases/mergedAssembly
+#   rm -rf ${base}/oases/mergedAssembly
 fi
 
