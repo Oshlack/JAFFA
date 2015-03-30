@@ -341,17 +341,13 @@ align_reads_to_annotation = {
     produce(input.prefix+".psl"){ 
     from(input.prefix+".fasta"){
        exec """
-	  `#### find out the minimum read length so we can set blat's tileSize accordingly` ;
+	  `#### find out the average read length so we can set blat's tileSize accordingly` ;
 	  `#### we just use the first few thousand from the fasta file as a sample` ;
-	  minReadLength=`b=0 ; head -n 1000 MiSeqSim.fasta | tail -n 999 | 
-	     while read line ; do 
-                if [[ \${line:0:1} == ">" ]] ; then echo \$b ; b=0 ; 
-	        else b2=`echo \$line | tr -d "\\n" | wc --chars` ; b=\$(( \$b + \$b2 )) ; 
-                fi ; 
-             done | sort -n | head -1`
-	  `#### minReadLength=`head -n 100000 $input | awk ' NR % 2 == 0 '|  awk '{print length}' | sort -n | head -1`` ;
+	  seqs=`head -n 1000 $input | grep "^>" | wc -l` ;
+	  chars=`head -n 1000 $input | grep -v ">" | tr -d "\\n" | wc --chars` ;
+	  aveReadLength=`expr \$chars / \$seqs` ;
 	  if [ $readTile -eq "0" ] ; then  
-               if [ \$minReadLength -le "100" ] ; then 
+               if [ \$aveReadLength -le "100" ] ; then 
 	           readTile=15 ; 
                else readTile=18 ; 
                fi ;
