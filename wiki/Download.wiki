@@ -18,7 +18,7 @@ Please see [FAQandTroubleshooting] for instructions on running JAFFA with either
 
 Simulations from our paper:
   * BEERS (no fusions) - [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/BEERS_1.fastq.gz BEERS_1.fastq.gz] [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/BEERS_2.fastq.gz BEERS_2.fastq.gz] 
-  * MiSeq (120 fusions) -[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/MiSeqSim_1.fastq.gz MiSeqSim_1.fastq.gz] [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/MiSeqSim_2.fastq.gz MiSeqSim_2.fastq.gz] 
+  * MiSeq (120 fusions) -  [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/MiSeqSim_1.fastq.gz MiSeqSim_1.fastq.gz] [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/MiSeqSim_2.fastq.gz MiSeqSim_2.fastq.gz] 
 
 = Older version of the code =
 
