@@ -1,6 +1,6 @@
 = Current =
 
-[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.05.tar.gz JAFFA_1.05.tar.gz] - Fusion gene names are now ordered by fusion gene orientation (previously gene names were listed alphabetically)
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.06.tar.gz JAFFA_1.06.tar.gz] - This version fixes a bug from 1.05, where recurrent fusions in the Mitelman database weren't being flagged correctly
 
 You will also need one of these supporting reference files:
   * [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_HG19_GENCODE19.tar.gz JAFFA_REFERENCE_FILES_HG19_GENCODE19.tar.gz] - Files for hg19 (JAFFA assumes this reference by default), or
@@ -10,6 +10,8 @@ You will also need one of these supporting reference files:
 Please see [FAQandTroubleshooting] for instructions on running JAFFA with either the hg38 or mm10 reference.
 
 = Older =
+
+[https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.05.tar.gz JAFFA_1.05.tar.gz] - Fusion gene names are now ordered by fusion gene orientation (previously gene names were listed alphabetically)
 
 [https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_1.04.tar.gz JAFFA_1.04.tar.gz ] - This version fixes an issue that caused the direct mode to be slow on some large dataset. 
 
