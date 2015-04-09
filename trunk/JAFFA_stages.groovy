@@ -4,9 +4,9 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
- ** Last Update: 24th November 2014
+ ** Last Update: 30th March 2015
  ********************************************************************************/
-VERSION=1.05
+VERSION=1.06
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
