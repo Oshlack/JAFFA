@@ -23,7 +23,7 @@ bpipe run [option] < JAFFA_assembly.groovy | hybrid | direct > input files
 If bpipe was installed into tools/bin you will need to run the pipeline like so:
 <path to JAFFA source>/tools/bin/bpipe run [option] < JAFFA_assembly.groovy | hybrid | direct > input files
 
-Please visit https://code.google.com/p/jaffa-project/ for more detailed running instructions.
+Please visit https://github.com/Oshlack/JAFFA/wiki for more detailed running instructions.
 Questions should be directed to the google group linked to on this page.
 
 Written and maintained by Nadia Davidson, Murdoch Childrens Research Institute, Parkville, Australia.
