@@ -6,7 +6,7 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
  ** Last Update: 30th March 2015
  ********************************************************************************/
-VERSION=1.06
+VERSION=1.07
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
