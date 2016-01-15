@@ -12,8 +12,8 @@ codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 
 load codeBase+"/tools.groovy"
 
-/**********  Parameters that must be check by the user: ***********************/
-/*** Modify them below, or set them when you run bpipe (with the -p option)   */
+/**********  Parameters that are likely to change between runs of JAFFA **************/
+/*** These are usually set with the -p option in bpipe, but may also be set here    **/ 
 
 readLayout="paired" //change to "single" or single-end reads
 
@@ -25,8 +25,9 @@ genome="hg19"
 annotation="genCode19"
 
 // You have two options:
-// 1) put the full paths below. e.g. genomeFasta=<path_to_genome> 
-// or 2) leave as is and symlink the data files to the jaffa code directory. e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
+// 1) put the full file name (including path) below. e.g. genomeFasta=<path_to_genome>/<genome_file_name>
+// or 2) leave as is and place or symlink the data files to the jaffa code directory. 
+// e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
 genomeFasta=codeBase+"/"+genome+".fa"  //genome sequence
 
 // Input pattern (see bpipe documentation for how files are grouped and split )
