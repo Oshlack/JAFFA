@@ -52,7 +52,7 @@ minQScore=0 //heads and tails of reads will be trimmed if their quality score fa
 //best assembly results)
 
 // assembly options (we founds these setting to work well on 50bp reads)
-Ks="19,36,4" //kmer lengths to use for the assembly: 19,23,27,31,15
+Ks="19,36,4" //kmer lengths to use for the assembly: 19,23,27,31,35
 Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
