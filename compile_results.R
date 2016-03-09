@@ -4,6 +4,7 @@ options(echo=F)
 args = commandArgs(trailingOnly = TRUE)
 out_name=args[1]
 sfiles=args[2:length(args)]
+sfiles=sapply(strsplit(sfiles,"/"),function(x){paste(x[(length(x)-1):length(x)],collapse="/")})
 dir=sapply(strsplit(sfiles,"/"),function(x){x[1]})
 message("Compiling the results from:")
 message(paste(dir,collapse=" "))
