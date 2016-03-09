@@ -1,30 +1,10 @@
 This is JAFFA version 1.06
 
-Installation under linux x86_64 (other systems not supported)
--------------------------------------------------------------
-1. Run:
-   ./install_linux64.sh
+For instructions to install and run under linux x86_64 (other systems not supported), please see https://github.com/Oshlack/JAFFA/wiki
 
-   Check that all paths are filled in the file tools.groovy. Note that you will need to install 
-   R yourself (or have it preinstalled on your system).
+Questions and bug reports should be directed to the google group linked to on that page.
 
-2. Download the supporting reference files into this directory:
-   wget --no-check-certificate https://googledrive.com/host/0B1FwZagazjpcQU9IaURTVzd6Ym8/JAFFA_REFERENCE_FILES_GENCODE19.tar.gz
-   tar -zxvf JAFFA_REFERENCE_FILES_GENCODE19.tar.gz
-
-3. Sym. link or copy the human reference genome into this directory
-
-Running
--------
-
-If bpipe is installed centrally on your system you can run the pipeline like so:
-bpipe run [option] < JAFFA_assembly.groovy | hybrid | direct > input files
-
-If bpipe was installed into tools/bin you will need to run the pipeline like so:
-<path to JAFFA source>/tools/bin/bpipe run [option] < JAFFA_assembly.groovy | hybrid | direct > input files
-
-Please visit https://github.com/Oshlack/JAFFA/wiki for more detailed running instructions.
-Questions should be directed to the google group linked to on this page.
+If you use JAFFA to analyse your data, please cite our paper, "Nadia M Davidson, Ian J Majewski and Alicia Oshlack, JAFFA: High sensitivity transcriptome-focused fusion gene detection, Genome Medicine 2015, 7:43", http://www.genomemedicine.com/content/7/1/43
 
 Written and maintained by Nadia Davidson, Murdoch Childrens Research Institute, Parkville, Australia.
-Last Updated March 30 2015
+Last Updated 13 January 2016
