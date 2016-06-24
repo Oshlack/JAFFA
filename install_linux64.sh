@@ -45,14 +45,14 @@ function trimmomatic_install {
 }
 
 function samtools_install {
-   wget http://sourceforge.net/projects/samtools/files/samtools/1.1/samtools-1.1.tar.bz2
+   wget --no-check-certificate http://sourceforge.net/projects/samtools/files/samtools/1.1/samtools-1.1.tar.bz2
    tar -jxvf samtools-1.1.tar.bz2
    rm samtools-1.1.tar.bz2
    make prefix=$PWD install -C samtools-1.1/
 }
 
 function bowtie2_install {
-    wget http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.3/bowtie2-2.2.3-linux-x86_64.zip
+    wget --no-check-certificate http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.3/bowtie2-2.2.3-linux-x86_64.zip
     unzip bowtie2-2.2.3-linux-x86_64.zip ; rm bowtie2-2.2.3-linux-x86_64.zip
     ln -s $PWD/bowtie2-2.2.3/bowtie2 $PWD/bin
     ln -s $PWD/bowtie2-2.2.3/bowtie2-build $PWD/bin
@@ -71,7 +71,7 @@ function fasta_formatter_install {
 }
 
 function dedupe_install {
-    wget http://sourceforge.net/projects/bbmap/files/BBMap_33.41_java7.tar.gz
+    wget --no-check-certificate http://sourceforge.net/projects/bbmap/files/BBMap_33.41_java7.tar.gz
     tar -zxvf BBMap_33.41_java7.tar.gz
     rm BBMap_33.41_java7.tar.gz
     for script in `ls $PWD/bbmap/*.sh` ; do
