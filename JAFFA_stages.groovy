@@ -9,8 +9,26 @@
 VERSION=1.07
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
-
 load codeBase+"/tools.groovy"
+
+
+/******** Path to reference files ********/
+// leave if references are in the Jaffa folder
+refBase = codeBase
+
+// Path to reference files that are elsewhere on the file system
+// refBase = "/path/to/reference/directory"
+
+// Path to reference files 
+// env = System.getenv()
+// refBase = env['GENOMES']
+
+// Should there be a folder structure for the reference files within the reference folder then
+// the below variables will allow for this flexibility
+fastaBase = refBase
+maskedBase = refBase
+transBase = refBase
+
 
 /**********  Parameters that are likely to change between runs of JAFFA **************/
 /*** These are usually set with the -p option in bpipe, but may also be set here    **/ 
@@ -21,14 +39,14 @@ threads=1 //Threads to use when running the pipeline on a single sample. ie. the
           //Note that oases doesn't support threads, so this option will probably not make much difference to performance
 
 // Genome, Transcriptome and related data paths. 
-genome="hg19"
-annotation="genCode19"
+genome="hg38"
+annotation="genCode22"
 
 // You have two options:
 // 1) put the full file name (including path) below. e.g. genomeFasta=<path_to_genome>/<genome_file_name>
 // or 2) leave as is and place or symlink the data files to the jaffa code directory. 
 // e.g. ln -s <path_to_genome> <path_to_jaffa_code_directory>
-genomeFasta=codeBase+"/"+genome+".fa"  //genome sequence
+genomeFasta=fastaBase+"/"+genome+".fa"  //genome sequence
 
 // Input pattern (see bpipe documentation for how files are grouped and split )
 // group on start, split on end. eg. on ReadsA_1.fastq.gz, ReadA_2.fastq.gz
@@ -77,11 +95,11 @@ overHang=15 //how many bases are require on either side of a break to count the 
 /********** Variables that shouldn't need to be changed ***********************/
 
 //location of the genome with genes masked out - used to filter the reads
-maskedGenome=codeBase+"/Masked_"+genome
+maskedGenome=maskedBase+"/Masked_"+genome
 
 //location of transcriptomic data
-transFasta=codeBase+"/"+genome+"_"+annotation+".fa"  // transcript cDNA sequences
-transTable=codeBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinates
+transFasta=transBase+"/"+genome+"_"+annotation+".fa"  // transcript cDNA sequences
+transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinates
 
 //known fusions database
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
