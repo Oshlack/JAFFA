@@ -16,9 +16,9 @@ commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe r
 
 #installation method
 function bpipe_install {
-   wget http://download.bpipe.org/versions/bpipe-0.9.8.6_rc2.tar.gz
-   tar -zxvf bpipe-0.9.8.6_rc2.tar.gz ; rm bpipe-0.9.8.6_rc2.tar.gz
-   ln -s $PWD/bpipe-0.9.8.6_rc2/bin/* $PWD/bin/
+   wget https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
+   tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz
+   ln -s $PWD/bpipe-0.9.9.2/bin/* $PWD/bin/
 }
 
 function velveth_install {
