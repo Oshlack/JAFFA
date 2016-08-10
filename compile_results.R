@@ -35,7 +35,7 @@ colnames(full_list)[colnames(full_list)=="transcript"]<-"contig"
 colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
 
 #reorder
-full_list=full_list[,c("sample","fusion genes","chrom1","base1","chrom2","base2",
+full_list=full_list[,c("sample","fusion genes","chrom1","base1","strand1","chrom2","base2","strand2",
 	     "gap (kb)","spanning pairs","spanning reads",
 	     "inframe","aligns","rearrangement",
 	     "contig","contig break","classification","known")]

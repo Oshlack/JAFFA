@@ -229,8 +229,10 @@ new_new_genome_pos=lapply(new_genome_pos,get_frame_info)
 #############  format nicely  ###########
 format_positions<-function(x){
 	if(length(x)==0){
-	   res=data.frame(NA,NA,NA,0,NA,NA,NA,NA,NA,NA)
-	   colnames(res)<-c("contig_break","chrom1","base1","chrom2","base2","gap","rearrangement","aligns","inframe","fusion_genes")
+	   res=data.frame(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
+	   colnames(res)<-c("contig_break","chrom1","base1","strand1",
+					   "chrom2","base2","strand2",
+			"gap","rearrangement","aligns","inframe","fusion_genes")
 	   return(res)
 	 }
 	#there should only be 2 or 0 genomic positions at this point.
@@ -240,11 +242,15 @@ format_positions<-function(x){
 	ord=order(x$is_actually_the_start,decreasing=TRUE) 
 	chrom1=x$genome_chrom[ord[1]] ; chrom2=x$genome_chrom[ord[2]]
 	base1=x$genome_pos[ord[1]] ;  base2=x$genome_pos[ord[2]]
+	## assume the strand is the same as the genes
+	strand1=transTable$strand[match(x$gene_name[ord[1]],transTable$name2)]
+	strand2=transTable$strand[match(x$gene_name[ord[2]],transTable$name2)]
 	gap=as.numeric(as.character(x$gap[1])) ; rearrangement=x$rearrangement[1] 
 	aligns=all(x$aligns) ; inframe=x$inFrame[1]
 	contig_break=min(x$brk)[1] 
 	fusion_genes=paste(x$gene_name[ord[1]],x$gene_name[ord[2]],sep=":")
-	return(data.frame(contig_break,chrom1,base1,chrom2,base2,gap,rearrangement,aligns,inframe,fusion_genes))
+	return(data.frame(contig_break,chrom1,base1,strand1,chrom2,base2,strand2,
+		          gap,rearrangement,aligns,inframe,fusion_genes))
 }
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
@@ -252,11 +258,8 @@ message("Merging with read coverage data...")
 
 #############  merge with read coverage and gene name information  ###########
 result=cbind(fusion_info[,c("transcript","spanning_pairs","spanning_reads")],do.call(rbind.data.frame,genome_info))
-#fix_names<-function(x){ paste(sort(unlist(strsplit(x,":"))),collapse=":") }
-#result$fusion_genes<-sapply(result$fusion_genes,fix_names)
 
 #group fusions by break-point
-#break_string=sapply(paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep=""),fix_names)
 break_string=paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep="")
 r=split(result,break_string) 
 merge_result<-function(x){
