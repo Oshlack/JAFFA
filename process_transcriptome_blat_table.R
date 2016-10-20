@@ -24,7 +24,7 @@ colnames(gene_positions)<-c("chrom","start","end")
 #load the .psl file and split based on de novo transcript ID
 rows<-read.table(file=blat_table,skip=5,stringsAsFactors=F, nrows=5)
 classes<-sapply(rows, class)
-blat_results=read.table(file=blat_table,skip=5,stringsAsFactors=F,colClasses = classes)
+blat_results=read.table(file=blat_table,skip=5,stringsAsFactors=F,colClasses = classes,comment.char="")
 
 split_results=split(1:length(blat_results$V10),blat_results$V10)
 
