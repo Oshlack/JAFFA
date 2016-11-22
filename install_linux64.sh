@@ -16,7 +16,7 @@ commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe r
 
 #installation method
 function bpipe_install {
-   wget https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
+   wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
    tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz
    ln -s $PWD/bpipe-0.9.9.2/bin/* $PWD/bin/
 }
@@ -30,10 +30,10 @@ function velveth_install {
 }
 
 function oases_install {
-    wget http://www.ebi.ac.uk/~zerbino/oases/oases_0.2.08.tgz
-    tar -zxvf oases_0.2.08.tgz ; rm oases_0.2.08.tgz
-    make -C oases_0.2.8/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet_1.2.10'
-    ln -s $PWD/oases_0.2.8/oases $PWD/bin/
+    wget -O oases_0.2.09.tgz https://github.com/dzerbino/oases/archive/0.2.09.tar.gz
+    tar -zxvf oases_0.2.09.tgz ; rm oases_0.2.09.tgz
+    make -C oases-0.2.09/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet_1.2.10'
+    ln -s $PWD/oases-0.2.09/oases $PWD/bin/
 }
 
 function trimmomatic_install {
