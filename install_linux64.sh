@@ -71,9 +71,9 @@ function fasta_formatter_install {
 }
 
 function dedupe_install {
-    wget --no-check-certificate http://sourceforge.net/projects/bbmap/files/BBMap_33.41_java7.tar.gz
-    tar -zxvf BBMap_33.41_java7.tar.gz
-    rm BBMap_33.41_java7.tar.gz
+    wget --no-check-certificate https://sourceforge.net/projects/bbmap/files/BBMap_36.59.tar.gz
+    tar -zxvf BBMap_36.59.tar.gz
+    rm BBMap_36.59.tar.gz
     for script in `ls $PWD/bbmap/*.sh` ; do
 	s=`basename $script`
 	s_pre=`echo $s | sed 's/.sh//g'`
