@@ -22,7 +22,6 @@ get_unmapped_as_fasta = segment { prepare_reads + get_unmapped }
 // below is the pipeline for a fasta file
 if(args[0].endsWith(fastaSuffix)) {
    run { run_check + fastaInputFormat * [
-	     make_dir_using_fasta_name + 
 	     align_transcripts_to_annotation +
 	     common_steps + 
 	     make_fasta_reads_table +
@@ -34,7 +33,6 @@ if(args[0].endsWith(fastaSuffix)) {
 } else {
   if(readLayout=="single"){ fastqInputFormat="%.gz" }
   run { run_check + fastqInputFormat * [
-      	    make_dir_using_fastq_names +
 	    get_unmapped_as_fasta +
 	    align_reads_to_annotation +
 	    common_steps +

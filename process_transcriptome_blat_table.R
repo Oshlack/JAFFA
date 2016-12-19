@@ -28,6 +28,11 @@ blat_results=read.table(file=blat_table,skip=5,stringsAsFactors=F,colClasses = c
 
 split_results=split(1:length(blat_results$V10),blat_results$V10)
 
+getEnsemblTranscriptID <- function(x) {
+   y <- regexpr("ENST\\d{11}(.\\d)?", x, ignore.case=FALSE)
+   substr(x, y, y+attr(y, "match.length")-1)
+}
+
 #filter out all transcripts which are only covered by one reference transcript
 j<<-1
 multi_gene<-function(x){
@@ -43,15 +48,14 @@ multi_gene<-function(x){
 
    #now get just the non-redundant set of transcripts 
    ranges=IRanges(starts,ends)
-   overs=findOverlaps(ranges,type="within",ignoreSelf=TRUE,ignoreRedundant=TRUE,select="arbitrary")
+   overs=findOverlaps(ranges,type="within",drop.self=TRUE,drop.redundant=TRUE,select="arbitrary")
    reduced=is.na(overs)
    regions=ranges[reduced]
 
    #where are these regions in the genome?
    genes=blat_results$V14[x[reduced]] 
    # here we are expecting the fasta ids to be in the format: ">hg19_annotation_geneName__otherStuff"
-   temp_names=sapply(strsplit(genes,"__"),function(y){y[1]})
-   gene_names=sapply(strsplit(temp_names,"_"),function(y){ paste(y[3:length(y)],collapse="_")  })
+   gene_names=sapply(genes,getEnsemblTranscriptID)
    gp=gene_positions[gene_names,]
    if(!any(!is.na(gp))){ #throw an error if we can't get the genomic range
         print(paste("Stopping because the gene,",gene_names,"can't be found in",args[4]))

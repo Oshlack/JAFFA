@@ -15,12 +15,10 @@
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
 
-prepare = segment { make_dir_using_fastq_names + prepare_reads }
-
 // The actual pipeline.
 if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
-     	       	      prepare +
+		      prepare_reads +
 		      run_assembly +
 		      align_transcripts_to_annotation.using(tile:contigTile) + 
 		      filter_transcripts + 
