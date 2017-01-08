@@ -35,7 +35,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV CLASSPATH .
 ENV CP ${CLASSPATH}
 ENV BASH_ENV /usr/share/lmod/lmod/init/bash
-ENV PATH /usr/bin:/bin:/usr/local/bin:/opt/bin
+ENV PATH /usr/bin:/bin:/usr/local/bin:/opt/bin:/opt/bbmap
 #ENV MODULEPATH
 
 # setup lmod
@@ -49,6 +49,7 @@ RUN make prefix=/usr/local install -C samtools-1.1
 # install bbmap
 RUN wget --max-redirect 5 https://sourceforge.net/projects/bbmap/files/latest/download?source=files -O - | tar -xz
 RUN make -C bbmap/jni -f makefile.linux
+RUN find /opt/bbmap -type f -exec ln -s '{}' /usr/local/bin/ \;
 
 # install oases and velvet
 RUN git clone --recursive https://github.com/dzerbino/oases.git
@@ -91,7 +92,7 @@ COPY tools.groovy JAFFA/tools.groovy
 RUN chmod 644 JAFFA/tools.groovy
 
 COPY convert_jaffa_to_bedpe.py /usr/local/bin/convert_jaffa_to_bedpe.py
-RUN chmod 644 /usr/local/bin/convert_jaffa_to_bedpe.py
+RUN chmod 755 /usr/local/bin/convert_jaffa_to_bedpe.py
 
 WORKDIR /usr/local/jaffa/batch
 CMD ["bpipe", "run", "-p", "fastqInputFormat=\"%_*.fq.gz\"", "/opt/JAFFA/JAFFA_direct.groovy", "/usr/local/jaffa/data/BT474-demo_1.fq.gz", "/usr/local/jaffa/data/BT474-demo_2.fq.gz"]

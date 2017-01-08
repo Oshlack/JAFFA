@@ -15,7 +15,7 @@ hints:
 #  InitialWorkDirRequirement:
 #    listing:
   DockerRequirement:
-    dockerPull: beccyl/jaffa
+    dockerPull: beccyl/jaffa:1.09_dev
     dockerOutputDirectory: /usr/local/jaffa/batch
 
 requirements:
