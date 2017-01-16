@@ -16,7 +16,7 @@ ref_contigs=read.delim(args[3],header=F,stringsAsFactors=F)[,1]
 ## replace the contig ids in the ref table
 ## ^ENST(ensembl gene) ENST\d{11}  ENST[:digit:]{11}
 getEnsemblTranscriptID <- function(x) {
-  y <- regexpr("ENST\\d{11}(.\\d)?", x, ignore.case=FALSE)
+  y <- regexpr("ENST\\d{11}(.\\d+)?", x, ignore.case=FALSE)
   substr(x, y, y+attr(y, "match.length")-1)
 }
 names(ref_contigs)<-sapply(ref_contigs,getEnsemblTranscriptID)
