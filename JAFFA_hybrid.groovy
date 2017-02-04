@@ -22,7 +22,6 @@ get_unmapped_as_fasta = segment { get_assembly_unmapped }
 
 if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
-   		      make_dir_using_fastq_names +
       		      prepare_reads + 
 		      run_assembly + //start the first part - assembly
 		      align_transcripts_to_annotation +
