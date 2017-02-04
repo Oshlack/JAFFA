@@ -43,7 +43,7 @@ multi_gene<-function(x){
 
    #now get just the non-redundant set of transcripts 
    ranges=IRanges(starts,ends)
-   overs=findOverlaps(ranges,type="within",ignoreSelf=TRUE,ignoreRedundant=TRUE,select="arbitrary")
+   overs=findOverlaps(ranges,type="within",drop.self=TRUE,drop.redundant=TRUE,select="arbitrary")
    reduced=is.na(overs)
    regions=ranges[reduced]
 
