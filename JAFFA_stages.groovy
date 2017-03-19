@@ -492,7 +492,7 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-                $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
+                set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
             ""","align_transcripts_to_genome"
         }
     }
