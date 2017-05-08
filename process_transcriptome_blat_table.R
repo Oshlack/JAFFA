@@ -29,7 +29,7 @@ blat_results=read.table(file=blat_table,skip=5,stringsAsFactors=F,colClasses = c
 split_results=split(1:length(blat_results$V10),blat_results$V10)
 
 getEnsemblTranscriptID <- function(x) {
-   y <- regexpr("ENS(\\w+)T\\d{11}(.\\d+)?", x, ignore.case=FALSE)
+   y <- regexpr("ENS(\\w+)?T\\d{11}(.\\d+)?", x, ignore.case=FALSE)
    substr(x, y, y+attr(y, "match.length")-1)
 }
 
