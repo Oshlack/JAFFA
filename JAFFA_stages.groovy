@@ -4,9 +4,9 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
- ** Last Update: 19th December 2016
+ ** Last Update: 8th May 2017
  ********************************************************************************/
-VERSION="1.09_dev"
+VERSION="1.09"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
