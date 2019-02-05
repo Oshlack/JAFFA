@@ -22,17 +22,17 @@ function bpipe_install {
 }
 
 function velveth_install {
-    wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz
-    tar -zxvf velvet_1.2.10.tgz ; rm velvet_1.2.10.tgz
-    make -C velvet_1.2.10/ MAXKMERLENGTH=37 LONGSEQUENCES=1 #OPENMP=1
-    ln -s $PWD/velvet_1.2.10/velvetg $PWD/bin/
-    ln -s $PWD/velvet_1.2.10/velveth $PWD/bin/
+    wget -O velvet-1.2.10.tar.gz https://github.com/dzerbino/velvet/archive/v1.2.10.tar.gz
+    tar -zxvf velvet-1.2.10.tar.gz ; rm velvet-1.2.10.tar.gz
+    make -C velvet-1.2.10/ MAXKMERLENGTH=37 LONGSEQUENCES=1 #OPENMP=1
+    ln -s $PWD/velvet-1.2.10/velvetg $PWD/bin/
+    ln -s $PWD/velvet-1.2.10/velveth $PWD/bin/
 }
 
 function oases_install {
     wget -O oases_0.2.09.tgz https://github.com/dzerbino/oases/archive/0.2.09.tar.gz
     tar -zxvf oases_0.2.09.tgz ; rm oases_0.2.09.tgz
-    make -C oases-0.2.09/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet_1.2.10'
+    make -C oases-0.2.09/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet-1.2.10'
     ln -s $PWD/oases-0.2.09/oases $PWD/bin/
 }
 
