@@ -111,6 +111,9 @@ R_get_spanning_reads_direct_script2=codeBase+"/get_spanning_reads_for_direct_2.R
 R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
 
+//helper scripts
+get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
+
 /******************* Here are the pipeline stages **********************/
 
 //lets start by checking the dependencies
@@ -524,23 +527,8 @@ compile_all_results = {
         exec """
             cd ${output.dir} ;
             $R --vanilla --args $outputName $inputs < $R_compile_results_script ;
-            function get_sequence {
-                if [ \$1 == "sample" ] ; then return ; fi ;
-                fusions_file=\$1/\$1${type}.fusions.fa ;
-                new_id=\$1---\$2---\$3 ;
-                    echo ">\$new_id" >> ${outputName}.fasta ;
-                break=\$4 ;
-                sequence=`grep -A1 "^>\$3" \$fusions_file | grep -v "^>"` ;
-                start=`echo \$sequence | cut -c 1-\$((\${break}-1))` ;
-                middle=`echo \$sequence | cut -c \$break-\$((\${break}+1)) | tr '[:upper:]' '[:lower:]'` ;
-                string_length=`echo \${#sequence}` ;
-                end=`echo \$sequence | cut -c \$((\$break+2))-$string_length ` ;
-                echo ${start}${middle}${end} >> ${outputName}.fasta ;
-                `# grep \$3 \$1/\$1_genome.psl >> ${outputName}.psl ;` ;
-            } ;
             rm -f ${outputName}.fasta ;
-            cat ${outputName}.temp | while read line ; do get_sequence \$line ; done ;
-            rm ${outputName}.temp ;
+            while read line; do $get_fusion_seqs \$line; done < ${outputName}.csv;
             echo "Done writing ${outputName}.fasta" ;
             echo "All Done"
         ""","compile_all_results"

@@ -55,8 +55,6 @@ v=split(full_list,full_list$classification)
 #then order on classification
 full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialRegularTranscript"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
-write.table(full_list[,c("sample","fusion genes","contig","contig break")],
-	    paste(out_name,".temp",sep=""),row.names=F,quote=F,col.names=F,sep="\t")
 
 message(paste("Done writing output ",out_name,".csv",sep=""))
 
