@@ -293,6 +293,12 @@ run_assembly = {
 }
 
 //Align the assembled transcripts against reference gene sequences using blat
+
+/**                    time $blat $transFasta $inputs
+                        -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
+                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ; 
+		   time $gmap -D $refBase -d hg38_genCode22 $input --format=1 --nosplicing --npaths=100 > $output ;
+**/
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
     output.dir=jaffa_output+branch
@@ -300,9 +306,7 @@ align_transcripts_to_annotation = {
         from(".fasta") {
             exec """
                 function run_blat {
-                    time $blat $transFasta $inputs
-                        -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
+		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input -outfmt "6 nident mismatch qseqid qstart qend sseqid qlen" -perc_identity 96 > $output ;
                 } ;
                 run_blat $contigTile;
                 `### test for the Blat tileSize bug (version 35) ###` ;
@@ -331,7 +335,7 @@ align_reads_to_annotation = {
         from(".fasta") {
             exec """
                 SEQ_COUNT=`head -n $SAMPLE_SIZE $input | grep "^>" | wc -l` ;
-                SUM_READ_LENGTHS=`head -n $SAMPLE_SIZE $input | grep -v ">" | tr -d "\\n" | wc --chars` ;
+                SUM_READ_LENGTHS=`head -n $SAMPLE_SIZE $input | grep -v ">" | tr -d "\\n" | wc -c` ;
                 AVERAGE_READ_LENGTH=`expr $SUM_READ_LENGTHS / $SEQ_COUNT` ;
                 if [ $readTile -eq "0" ] ; then
                     if [ $AVERAGE_READ_LENGTH -le $CUTOFF_READ_LENGTH ] ; then
@@ -342,8 +346,7 @@ align_reads_to_annotation = {
                 fi ;
                 echo "Using tileSize of \$readTile" ;
                 function run_blat {
-                    time $blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
+		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input -outfmt "6 nident mismatch qseqid qstart qend sseqid qlen" -perc_identity 96 > $output ;
                 } ;
                 run_blat \$readTile;
                 `### test for the Blat tileSize bug (version 35) ###` ;
@@ -356,6 +359,11 @@ align_reads_to_annotation = {
         }
     }
 }
+/**                    time $blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
+                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
+		   time $gmap -D $refBase -d hg38_genCode22 $input --format=1 --nosplicing --npaths=100 > $output ;
+
+**/
 
 //Parse the blat alignment table and filter for candidate fusions (uses an R script)
 filter_transcripts = {
@@ -378,9 +386,8 @@ extract_fusion_sequences = {
     produce(input.prefix+".fusions.fa") {
         from(".txt", ".fasta") {
             exec """
-                cat $input1 | awk '{print \$1}' | sed 's/^/>/g' > ${output}.temp ;
-                $reformat in=$input2 out=stdout.fasta fastawrap=0 | awk '{print \$1}' |
-                grep -F -A1 -f ${output}.temp | grep -v "^\\-\\-" > $output ;
+                cat $input1 | awk '{print \$1}' > ${output}.temp ;
+                $reformat in=$input2 out=stdout.fasta fastawrap=0 | $extract_seq_from_fasta ${output}.temp > $output ;
                 rm ${output}.temp ;
             ""","extract_fusion_sequences"
         }
@@ -495,11 +502,11 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-                set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
+		   time $gmap -D $refBase -d hg38 $input --format=1 > $output ;
             ""","align_transcripts_to_genome"
         }
     }
-}
+} //                set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
 
 //Do a bit more filtering and compile the final filtered list (uses an R script)
 get_final_list = {

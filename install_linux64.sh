@@ -12,7 +12,11 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta blastn"
+
+function extract_seq_from_fasta_install {
+    g++ -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
+}
 
 #installation method
 function bpipe_install {
