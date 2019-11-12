@@ -74,7 +74,7 @@ Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
 // for aligning to known genes using blat
-minIdTrans=98 //98% similar when we blat to the human transcriptome
+minIdTrans=96 //96% similar when we blat to the human transcriptome
 minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
 contigTile=18 //big tile size makes blat fast
 readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
@@ -113,6 +113,9 @@ oases_assembly_script=codeBase+"/assemble.sh"
 
 //helper scripts
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
+
+//blastn output format
+blast_out_fmt="6 nident mismatch qseqid qstart qend sseqid qlen"
 
 /******************* Here are the pipeline stages **********************/
 
@@ -306,7 +309,8 @@ align_transcripts_to_annotation = {
         from(".fasta") {
             exec """
                 function run_blat {
-		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input -outfmt "6 nident mismatch qseqid qstart qend sseqid qlen" -perc_identity 96 > $output ;
+		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		        -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
                 } ;
                 run_blat $contigTile;
                 `### test for the Blat tileSize bug (version 35) ###` ;
@@ -346,7 +350,8 @@ align_reads_to_annotation = {
                 fi ;
                 echo "Using tileSize of \$readTile" ;
                 function run_blat {
-		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input -outfmt "6 nident mismatch qseqid qstart qend sseqid qlen" -perc_identity 96 > $output ;
+		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		      -outfmt $blast_out_fmt -perc_identity $minIdTrans > $output ;
                 } ;
                 run_blat \$readTile;
                 `### test for the Blat tileSize bug (version 35) ###` ;
@@ -511,12 +516,13 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-	        set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
+		   time $gmap -D $refBase -d hg38 $input --format=1 --min-identity=$minIdTrans --nthreads=$threads > $output ;
             ""","align_transcripts_to_genome"
         }
     }
 }
-//		   time $gmap -D $refBase -d hg38 $input --format=1 > $output ;
+
+//	        set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
 
 //Do a bit more filtering and compile the final filtered list (uses an R script)
 get_final_list = {
