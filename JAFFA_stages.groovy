@@ -6,7 +6,7 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
  ** Last Update: 8th May 2017
  ********************************************************************************/
-VERSION="1.10_dev"
+VERSION="1.20_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -417,6 +417,7 @@ map_reads = {
 } 
  
 //Calculate the number of reads which span the breakpoint of the fusions
+//Used for assembly mode
 get_spanning_reads = {
     doc "Calculate the number of reads which span the breakpoint of the fusions"
     output.dir=jaffa_output+branch
@@ -440,9 +441,17 @@ make_simple_reads_table = {
     output.dir=jaffa_output+branch
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
-            exec """
-                $samtools view -H $input2 | grep "@SQ" | cut -f2 | sed 's/SN://g' > ${output.dir}/temp_gene_ids ;
-                $R --no-save --args $input1 $transTable ${output.dir}/temp_gene_ids ${output.dir}/paired_contigs.temp
+	   exec """
+	      $samtools view $input2 | $make_simple_read_table $input1 $transTable > $output
+	   ""","make_simple_reads_table"
+	   }
+    }
+}
+
+
+/**            exec """
+                echo "1" ; time $samtools view -H $input2 | grep "@SQ" | cut -f2 | sed 's/SN://g' > ${output.dir}/temp_gene_ids ;
+                echo "2" ; time $R --no-save --args $input1 $transTable ${output.dir}/temp_gene_ids ${output.dir}/paired_contigs.temp
                     < $R_get_spanning_reads_direct_script1 ;
                 function get_spanning_pairs {
                     gene=`echo \$1 | cut -f1 -d"?"` ;
@@ -455,15 +464,15 @@ make_simple_reads_table = {
                     both=`cat ${output.dir}/g1 ${output.dir}/g2 | sort -u | wc -l` ;
                     echo -e "\$gene\t\$(( \$left + \$right - \$both ))" ;
                 } ;
-                cat ${output.dir}/paired_contigs.temp | while read line ; do
+                echo "3" ; time cat ${output.dir}/paired_contigs.temp | while read line ; do
                     get_spanning_pairs "\$line" >> ${output.dir}/spanning_pair_counts.temp ;
                 done ;
-                $R --no-save --args $input1 ${output.dir}/spanning_pair_counts.temp $output < $R_get_spanning_reads_direct_script2 ;
-                rm ${output.dir}/temp_gene_ids ${output.dir}/spanning_pair_counts.temp ${output.dir}/paired_contigs.temp ${output.dir}/g1 ${output.dir}/g2
-            ""","make_simple_reads_table"
-        }
+                echo "4" ; time $R --no-save --args $input1 ${output.dir}/spanning_pair_counts.temp $output < $R_get_spanning_reads_direct_script2 ;
+                
+            ""","make_simple_reads_table" 
+        } //rm ${output.dir}/temp_gene_ids ${output.dir}/spanning_pair_counts.temp ${output.dir}/paired_contigs.temp ${output.dir}/g1 ${output.dir}/g2
     }
-} 
+} **/
 
 make_fasta_reads_table = {
     doc "Make fasta reads table"
@@ -502,11 +511,12 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-		   time $gmap -D $refBase -d hg38 $input --format=1 > $output ;
+	        set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
             ""","align_transcripts_to_genome"
         }
     }
-} //                set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
+}
+//		   time $gmap -D $refBase -d hg38 $input --format=1 > $output ;
 
 //Do a bit more filtering and compile the final filtered list (uses an R script)
 get_final_list = {

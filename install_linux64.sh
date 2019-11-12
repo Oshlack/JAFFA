@@ -12,13 +12,22 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta blastn"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn gmap"
 
-function extract_seq_from_fasta_install {
-    g++ -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
+#installation methods
+
+function blastn_install {
+    cp ncbi-blast-2.9.0+/bin/blastn bin/blastn
 }
 
-#installation method
+function extract_seq_from_fasta_install {
+    g++ -O3 -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
+}
+
+function make_simple_read_table_install {
+    g++ -std=c++11 -O3 -o bin/make_simple_read_table ../src/make_simple_read_table.c++
+}
+
 function bpipe_install {
    wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
    tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz

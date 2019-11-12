@@ -37,7 +37,7 @@ struct fusion_candidate {
   string read ;
   int break_min ;
   int break_max ;
-  string fusion ;
+  pair<string,string> fusion ;
 };
 
 // the real stuff starts here.
@@ -54,12 +54,12 @@ int main(int argc, char **argv){
   ifstream file;
   file.open(argv[1]);
   if(!(file.good())){
-    cout << "Unable to open file " << argv[1] << endl;
+    cerr << "Unable to open file " << argv[1] << endl;
     exit(1);
   }
   string line;
   vector<fusion_candidate>  candidate_table;
-  vector< string > fusion_list;
+  vector< pair<string,string> > fusion_list;
   // read in the table of candidate fusions
   while ( getline (file,line) ){ 
     fusion_candidate new_cand;
@@ -67,7 +67,15 @@ int main(int argc, char **argv){
     line_stream >> new_cand.read;
     line_stream >> new_cand.break_min;
     line_stream >> new_cand.break_max;
-    line_stream >> new_cand.fusion;
+    string temp;
+    line_stream >> temp;
+    smatch m; //extract the gene id and sort alphabetically
+    regex_search(temp,m,regex("(.*):(.*)"));
+    if(m[1].str()<m[2].str())
+      new_cand.fusion=make_pair(m[1].str(), m[2].str());
+    else
+      new_cand.fusion=make_pair(m[2].str(), m[1].str());
+    //sort
     fusion_list.push_back(new_cand.fusion);
     candidate_table.push_back(new_cand);
   }
@@ -75,13 +83,14 @@ int main(int argc, char **argv){
   // remove duplicates in the fusion list
   sort( fusion_list.begin(), fusion_list.end() );
   fusion_list.erase( unique( fusion_list.begin(), fusion_list.end() ), fusion_list.end() );
+  cerr << "Done reading in candidate fusions" << endl;
 
   /** 
    ** Now read in the gene to transcript ID mapping 
    **/
   file.open(argv[2]);
   if(!(file.good())){
-    cout << "Unable to open file " << argv[2] << endl;
+    cerr << "Unable to open file " << argv[2] << endl;
     exit(1);
   }
   //assume the first line is the header
@@ -108,6 +117,7 @@ int main(int argc, char **argv){
     gene_trans_map[gene].push_back(trans);
   }
   file.close();
+  cerr << "Done reading in transcript IDs" << endl;
 
   /** 
    ** Now read in the mapped reads
@@ -131,6 +141,7 @@ int main(int argc, char **argv){
     trans_read_map_fixed[m[0].str()]=tr_itr->second;
   }
   trans_read_map.clear();
+  cerr << "Done reading in bam file" << endl;
 
   /**
    ** now loop over each gene and get all the reads aligning to it
@@ -160,45 +171,45 @@ int main(int argc, char **argv){
   }
   trans_read_map_fixed.clear();
   gene_trans_map.clear();
+  cerr << "Done assigning reads to genes" << endl;
 
   /**
    ** Calculate the counts for each fusion
    **/
   //loop over the fusion list
-  map<string,int> spanning_reads;
+  map<pair<string,string >, int> spanning_reads;
   for(int f=0; f<fusion_list.size(); f++){
-    //break up the names to get the start and end:
-    smatch m;
-    regex_search(fusion_list.at(f),m,regex("(.*):(.*)"));
     //check from intersection of read ids.
+    vector<string> g1_r1=gene_reads[fusion_list.at(f).first].first;
+    vector<string> g1_r2=gene_reads[fusion_list.at(f).first].second;
+    vector<string> g2_r1=gene_reads[fusion_list.at(f).second].first;
+    vector<string> g2_r2=gene_reads[fusion_list.at(f).second].second;
+    //    cout << fusion_list.at(f) << endl;
     int total=0;
-    vector<string> g1_r1=gene_reads[m[1].str()].first;
-    vector<string> g1_r2=gene_reads[m[1].str()].second;
-    vector<string> g2_r1=gene_reads[m[2].str()].first;
-    vector<string> g2_r2=gene_reads[m[2].str()].second;
-    //cout << g1_r1.size() << "\t" << g1_r2.size() << "\t" << g2_r1.size()  <<"\t"<<g2_r2.size() << endl;
-    //cout << g1_r1.at(0) << "\t" << g1_r2.at(0) << "\t" << g2_r1.at(0)  <<"\t"<<g2_r2.at(0) << endl;
     for(vector<string>::iterator i = g1_r1.begin(); i!=g1_r1.end(); ++i){
-      //cout << *i << endl;
-      if (find(g2_r2.begin(), g2_r2.end(), *i) != g2_r2.end())
+      if (find(g2_r2.begin(), g2_r2.end(), *i) != g2_r2.end()){
+	//cout << *i << endl;
 	total++;
+      }
     }
     for(vector<string>::iterator i = g2_r1.begin(); i!=g2_r1.end(); ++i){
-      //cout << *i << endl;
-      if (find(g1_r2.begin(), g1_r2.end(), *i) != g1_r2.end())
+      if (find(g1_r2.begin(), g1_r2.end(), *i) != g1_r2.end()){
+	//cout << *i << endl;
 	total++;
+      }
     }
     spanning_reads[fusion_list.at(f)]=total;
-    cout << m[1].str() << "\t" << m[2].str() << "\t" << total << endl;
+    //cout << total << endl;
   }
+  cerr << "Done calculating spanning pairs" << endl;
 
-  cout << "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads";
+  cout << "transcript\tbreak_min\tbreak_max\tfusion_genes\tspanning_pairs\tspanning_reads" << endl;
   vector<fusion_candidate>::iterator cand_itr=candidate_table.begin();
   for(;cand_itr!=candidate_table.end(); cand_itr++){
     cout << cand_itr->read << "\t" ;
     cout << cand_itr->break_min << "\t" ;
     cout << cand_itr->break_max << "\t" ;
-    cout << cand_itr->fusion << "\t" ;
+    cout << cand_itr->fusion.first << ":" << cand_itr->fusion.second << "\t" ;
     cout << spanning_reads[cand_itr->fusion] << "\t" ;
     cout << "1" << endl;
   }
