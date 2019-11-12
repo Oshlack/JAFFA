@@ -272,7 +272,7 @@ merge_result<-function(x){
    x=x[order(x$fusion_genes),]
    x_rep=x[1,]
    if(is_short){ x_rep$spanning_pairs= "-" } else {
-      x_rep$spanning_pairs=sum(x$spanning_pairs) }
+      x_rep$spanning_pairs=max(x$spanning_pairs) }
    x_rep$spanning_reads=sum(x$spanning_reads)
    x_rep
 }
