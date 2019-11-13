@@ -12,11 +12,14 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn gmap"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn"
 
 #installation methods
 
 function blastn_install {
+    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.9.0+-x64-linux.tar.gz
+    tar -xvf ncbi-blast-2.9.0+-x64-linux.tar.gz
+    rm ncbi-blast-2.9.0+-x64-linux.tar.gz
     cp ncbi-blast-2.9.0+/bin/blastn bin/blastn
 }
 

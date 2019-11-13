@@ -73,12 +73,13 @@ Ks="19,36,4" //kmer lengths to use for the assembly: 19,23,27,31,35
 Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
-// for aligning to known genes using blat
+// for aligning to known genes using blastn
 minIdTrans=96 //96% similar when we blat to the human transcriptome
+// for aligning to the genome with blat
 minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
-contigTile=18 //big tile size makes blat fast
-readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
-maxIntron=0 //don't expect intron when mapping to the transcriptome
+//contigTile=18 //big tile size makes blat fast
+//readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
+//maxIntron=0 //don't expect intron when mapping to the transcriptome
 
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
@@ -106,8 +107,6 @@ knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent 
 R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
 R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
-R_get_spanning_reads_direct_script1=codeBase+"/get_spanning_reads_for_direct_1.R"
-R_get_spanning_reads_direct_script2=codeBase+"/get_spanning_reads_for_direct_2.R"
 R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
 
@@ -115,7 +114,7 @@ oases_assembly_script=codeBase+"/assemble.sh"
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
 
 //blastn output format
-blast_out_fmt="6 nident mismatch qseqid qstart qend sseqid qlen"
+blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
 
 /******************* Here are the pipeline stages **********************/
 
@@ -295,30 +294,15 @@ run_assembly = {
     }
 }
 
-//Align the assembled transcripts against reference gene sequences using blat
-
-/**                    time $blat $transFasta $inputs
-                        -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ; 
-		   time $gmap -D $refBase -d hg38_genCode22 $input --format=1 --nosplicing --npaths=100 > $output ;
-**/
+//Align the assembled transcripts against reference gene sequences using blastn
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
     output.dir=jaffa_output+branch
     produce(input.prefix+".psl") {
         from(".fasta") {
             exec """
-                function run_blat {
-		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
-		        -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
-                } ;
-                run_blat $contigTile;
-                `### test for the Blat tileSize bug (version 35) ###` ;
-                if [[ `cat ${output.dir}/log_blat` == *"Internal error genoFind.c"* ]] ; then 
-                    echo "Blat error with tileSize=$contigTile" ;
-                    echo "Let's try again with tileSize=15" ;
-                    run_blat 15;
-                fi ;
+		time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		     -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
             ""","align_transcripts_to_annotation"
         }
     } 
@@ -329,46 +313,15 @@ align_transcripts_to_annotation = {
 align_reads_to_annotation = {
     doc "Align reads to annotation"
     output.dir=jaffa_output+branch
-    var CUTOFF_READ_LENGTH : 100
-    var DEFAULT_TILE_SIZE : 15
-    var DEFAULT_LARGE_TILE_SIZE : 18
-    var SAMPLE_SIZE : 1000
     produce(input.prefix+".psl") {
-        // find out the average read length so we can set blat's tileSize accordingly
-        // we just use the first few thousand from the fasta file as a sample
         from(".fasta") {
             exec """
-                SEQ_COUNT=`head -n $SAMPLE_SIZE $input | grep "^>" | wc -l` ;
-                SUM_READ_LENGTHS=`head -n $SAMPLE_SIZE $input | grep -v ">" | tr -d "\\n" | wc -c` ;
-                AVERAGE_READ_LENGTH=`expr $SUM_READ_LENGTHS / $SEQ_COUNT` ;
-                if [ $readTile -eq "0" ] ; then
-                    if [ $AVERAGE_READ_LENGTH -le $CUTOFF_READ_LENGTH ] ; then
-                        readTile=$DEFAULT_TILE_SIZE ;
-                    else readTile=$DEFAULT_LARGE_TILE_SIZE ;
-                    fi ;
-                else readTile=$readTile ;
-                fi ;
-                echo "Using tileSize of \$readTile" ;
-                function run_blat {
 		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
-		      -outfmt $blast_out_fmt -perc_identity $minIdTrans > $output ;
-                } ;
-                run_blat \$readTile;
-                `### test for the Blat tileSize bug (version 35) ###` ;
-                if [[ `cat ${output.dir}/log_blat` == *"Internal error genoFind.c"* ]] ; then
-                   echo "Blat error with tileSize=\$readTile" ;
-                   echo "Let's try again with tileSize=15" ;
-                   run_blat $DEFAULT_TILE_SIZE;
-                fi ;
+		      -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
             ""","align_reads_to_annotation"
         }
     }
 }
-/**                    time $blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
-		   time $gmap -D $refBase -d hg38_genCode22 $input --format=1 --nosplicing --npaths=100 > $output ;
-
-**/
 
 //Parse the blat alignment table and filter for candidate fusions (uses an R script)
 filter_transcripts = {
@@ -454,31 +407,6 @@ make_simple_reads_table = {
 }
 
 
-/**            exec """
-                echo "1" ; time $samtools view -H $input2 | grep "@SQ" | cut -f2 | sed 's/SN://g' > ${output.dir}/temp_gene_ids ;
-                echo "2" ; time $R --no-save --args $input1 $transTable ${output.dir}/temp_gene_ids ${output.dir}/paired_contigs.temp
-                    < $R_get_spanning_reads_direct_script1 ;
-                function get_spanning_pairs {
-                    gene=`echo \$1 | cut -f1 -d"?"` ;
-                    g1=`echo \$1 | cut -f2 -d"?"` ;
-                    g2=`echo \$1 | cut -f3 -d "?"` ;
-                    $samtools view $input2 \$g1 | cut -d "/" -f1 | sort -u > ${output.dir}/g1 ;
-                    $samtools view $input2 \$g2 | cut -d "/" -f1 | sort -u > ${output.dir}/g2 ;
-                    left=`cat ${output.dir}/g1 | wc -l` ;
-                    right=`cat ${output.dir}/g2 | wc -l` ;
-                    both=`cat ${output.dir}/g1 ${output.dir}/g2 | sort -u | wc -l` ;
-                    echo -e "\$gene\t\$(( \$left + \$right - \$both ))" ;
-                } ;
-                echo "3" ; time cat ${output.dir}/paired_contigs.temp | while read line ; do
-                    get_spanning_pairs "\$line" >> ${output.dir}/spanning_pair_counts.temp ;
-                done ;
-                echo "4" ; time $R --no-save --args $input1 ${output.dir}/spanning_pair_counts.temp $output < $R_get_spanning_reads_direct_script2 ;
-                
-            ""","make_simple_reads_table" 
-        } //rm ${output.dir}/temp_gene_ids ${output.dir}/spanning_pair_counts.temp ${output.dir}/paired_contigs.temp ${output.dir}/g1 ${output.dir}/g2
-    }
-} **/
-
 make_fasta_reads_table = {
     doc "Make fasta reads table"
     output.dir=jaffa_output+branch
@@ -516,13 +444,11 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-		   time $gmap -D $refBase -d hg38 $input --format=1 --min-identity=$minIdTrans --nthreads=$threads > $output ;
+	       time set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat ;
             ""","align_transcripts_to_genome"
         }
     }
 }
-
-//	        set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
 
 //Do a bit more filtering and compile the final filtered list (uses an R script)
 get_final_list = {
