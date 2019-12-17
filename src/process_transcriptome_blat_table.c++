@@ -33,9 +33,9 @@ using namespace std;
 // the help information which is printed when a user puts in the wrong
 // combination of command line options.
 void print_usage(){
-  cout << endl;
-  cout << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> > <out table>" << endl;
-  cout << endl;
+  cerr << endl;
+  cerr << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> > <out table>" << endl;
+  cerr << endl;
 }
 
 static const int MAX_OVERLAP=15 ;
@@ -124,14 +124,6 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
-  /**  for(int i=0; i<this_al.size() ; i++){
-    cout << "Before: " << i << " " << this_al[i].start << "\t" << this_al[i].end << endl;
-  }
-  cout << "****" << endl;
-  for(int i=0; i<regions.size() ; i++){
-    cout << "After: " << i << " " << regions[i].start << "\t" << regions[i].end << endl;
-  }
-  cout << "****" << endl;**/
 
   //what do these alignment correspond to in the genome?
   vector< string > gene_names; //actually these are the transcript IDs
@@ -209,7 +201,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
       if( (c-pos_left-1) < 15 ){ //print break point...**/
 	//get the gene symbols
 	string start_gene, end_gene;
-	cout << new_ranges[0].t_id << "\t" << pos_left << "\t" << c << "\t" 
+	cout << new_ranges[0].t_id << "\t" << pos_left << "\t" << c+1 << "\t" 
 	     << gene_name_lookup[new_ranges[cov[pos_left][1]].q_id] 
 	     << ":" << gene_name_lookup[new_ranges[cov[c][1]].q_id]
 	     << "\t" << new_ranges[0].t_length << endl;
@@ -312,7 +304,7 @@ int main(int argc, char **argv){
   int i=0;
   for(; itr!=split_results.end(); itr++){
     multi_gene(itr->second, gene_positions);
-    if(i%100 == 0  ) cout << i << endl;
+    if(i%100 == 0  ) cerr << i << endl;
     i++;
   }
   cerr << i << " possible chimera's processed" << endl;
