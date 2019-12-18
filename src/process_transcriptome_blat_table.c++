@@ -104,8 +104,14 @@ template <typename T> vector<T> reduce(vector<T> unreduced){
   return result;
 }
 
+/**template <typename T> void print_vec(vector<T> vec){
+  for(int i=0; i < vec.size(); i++)
+    cout << vec[i].start << "-" << vec[i].end << endl;
+  cout << "****" << endl;
+  }**/
 
-void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_positions){
+
+void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_positions, int gap_size){
 
   //if it only matches one transcript, return
   if(this_al.size()<2) return;
@@ -121,7 +127,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   for(int a=0; a < this_al.size() ; a++){
     if(this_al[a].start==min && this_al[a].end==max) return;
   }
-  
+
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
 
@@ -148,6 +154,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     split_chroms[gp_chrom].push_back(i);
     gp.push_back(gene_positions.at(trans));
   }
+  //  print_vec(gp);
   
   vector<Alignment> new_ranges;
   map< string, vector<int> >::iterator sc_itr = split_chroms.begin();
@@ -159,7 +166,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
       //add extra bases to the end of each gene to check if they are close togther/same gene?
       vector<Position> ir;
       for(int s=0; s<sc.size(); ++s){
-	Position new_pos(gp[sc[s]].chrom,gp[sc[s]].start,gp[sc[s]].end,"");
+	Position new_pos(gp[sc[s]].chrom,gp[sc[s]].start,gp[sc[s]].end+gap_size,"");
 	ir.push_back(new_pos);
       }
       vector<Position> iru = reduce(ir);
@@ -193,22 +200,23 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   bool left_found=false;
   int pos_left; //position just prior to overlap
   for(int c=1; c < new_ranges[0].t_length; ++c){ //will only find the first instance
-    //    cout << cov[c] << "," ;
     if(cov[c][0]==2 && cov[c-1][0]==1){
       left_found=true;
       pos_left=c-1;
     } else if(cov[c-1][0]==2 && cov[c][0]==1 && left_found ){
-      if( (c-pos_left-1) < 15 ){ //print break point...**/
 	//get the gene symbols
 	string start_gene, end_gene;
-	cout << new_ranges[0].t_id << "\t" << pos_left << "\t" << c+1 << "\t" 
-	     << gene_name_lookup[new_ranges[cov[pos_left][1]].q_id] 
-	     << ":" << gene_name_lookup[new_ranges[cov[c][1]].q_id]
-	     << "\t" << new_ranges[0].t_length << endl;
-      }
+	string gene1=gene_name_lookup[new_ranges[cov[pos_left][1]].q_id];
+	string gene2=gene_name_lookup[new_ranges[cov[c][1]].q_id];
+	if( (c-pos_left-1) < 15 &&
+	    gene1!=gene2){ //print break point...**/
+	  cout << new_ranges[0].t_id << "\t" << pos_left << "\t" << c+1 << "\t" 
+	       << gene_name_lookup[new_ranges[cov[pos_left][1]].q_id]
+	       << ":" << gene_name_lookup[new_ranges[cov[c][1]].q_id]
+	       << "\t" << new_ranges[0].t_length << endl;
+	}
     } else if(cov[c][0]!=2) left_found=false;
   }
-
 }
 
 
@@ -219,6 +227,9 @@ int main(int argc, char **argv){
     print_usage();
     exit(1);
   }
+
+  //minimum gap size in genome is argv[2]
+  int gap_size=atoi(argv[2]);
 
   //get the gene names and positions
   /** 
@@ -259,7 +270,6 @@ int main(int argc, char **argv){
       if(i==n_start) start=atoi(temp.c_str()); 
       if(i==n_end) end=atoi(temp.c_str()); 
     }
-    //    symbols[trans]=gene;
     Position new_pos (chrom, start, end, gene);
     gene_positions[trans]=new_pos;
   }
@@ -303,11 +313,11 @@ int main(int argc, char **argv){
   map< string , vector<Alignment>>:: iterator itr =  split_results.begin();
   int i=0;
   for(; itr!=split_results.end(); itr++){
-    multi_gene(itr->second, gene_positions);
+    multi_gene(itr->second, gene_positions, gap_size);
     if(i%100 == 0  ) cerr << i << endl;
     i++;
   }
-  cerr << i << " possible chimera's processed" << endl;
+  cerr << i << " alignments processed. Finished." << endl;
 
   return(0);
 }
