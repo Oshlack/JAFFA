@@ -104,11 +104,11 @@ template <typename T> vector<T> reduce(vector<T> unreduced){
   return result;
 }
 
-/**template <typename T> void print_vec(vector<T> vec){
+template <typename T> void print_vec(vector<T> vec){
   for(int i=0; i < vec.size(); i++)
     cout << vec[i].start << "-" << vec[i].end << endl;
   cout << "****" << endl;
-  }**/
+}
 
 
 void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_positions, int gap_size){
@@ -154,7 +154,6 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     split_chroms[gp_chrom].push_back(i);
     gp.push_back(gene_positions.at(trans));
   }
-  //  print_vec(gp);
   
   vector<Alignment> new_ranges;
   map< string, vector<int> >::iterator sc_itr = split_chroms.begin();
@@ -170,14 +169,14 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 	ir.push_back(new_pos);
       }
       vector<Position> iru = reduce(ir);
-      //merge alignments if the genes in the genome are close together
+    //merge alignments if the genes in the genome are close together
       //loop over reduced regions. Collect transcripts that overlaps and merge alignment
       for(int r=0 ; r < iru.size() ; ++r){
 	vector<Alignment> regions_w;
 	for(int s=0; s < ir.size() ; ++s){
 	  if(ir[s].start>=iru[r].start && ir[s].end<=iru[r].end)
-	    regions_w.push_back(regions[s]);
-	} //add to merged set of alignemtn ranges
+	    regions_w.push_back(regions[sc[s]]);
+	} //add to merged set of alignment ranges
 	vector<Alignment> reduced_region_w=reduce(regions_w);
 	new_ranges.insert( new_ranges.end(), reduced_region_w.begin(), reduced_region_w.end() );
       }
