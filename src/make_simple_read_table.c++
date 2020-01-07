@@ -19,6 +19,8 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 #include <regex>
 #include <stdlib.h>
@@ -28,9 +30,9 @@ using namespace std;
 // the help information which is printed when a user puts in the wrong
 // combination of command line options.
 void print_usage(){
-  cout << endl;
-  cout << "Usage: cat <bam file> | make_simple_read_table <candidate_fusion_table> <trans_gene_map> >  <out table>" << endl;
-  cout << endl;
+  cerr << endl;
+  cerr << "Usage: cat <bam file> | cut -f1-3 | make_simple_read_table <candidate_fusion_table> <trans_gene_map> >  <out table>" << endl;
+  cerr << endl;
 }
 
 struct fusion_candidate {
@@ -60,6 +62,7 @@ int main(int argc, char **argv){
   string line;
   vector<fusion_candidate>  candidate_table;
   vector< pair<string,string> > fusion_list;
+  vector< string > genes_of_interest;
   // read in the table of candidate fusions
   while ( getline (file,line) ){ 
     fusion_candidate new_cand;
@@ -78,11 +81,15 @@ int main(int argc, char **argv){
     //sort
     fusion_list.push_back(new_cand.fusion);
     candidate_table.push_back(new_cand);
+    genes_of_interest.push_back(m[1].str());
+    genes_of_interest.push_back(m[2].str());
   }
   file.close();
   // remove duplicates in the fusion list
   sort( fusion_list.begin(), fusion_list.end() );
   fusion_list.erase( unique( fusion_list.begin(), fusion_list.end() ), fusion_list.end() );
+  sort( genes_of_interest.begin(), genes_of_interest.end() );
+  genes_of_interest.erase( unique( genes_of_interest.begin(), genes_of_interest.end() ), genes_of_interest.end() );
   cerr << "Done reading in candidate fusions" << endl;
 
   /** 
@@ -103,7 +110,7 @@ int main(int argc, char **argv){
     if(temp=="name") n_name=i;
     if(temp=="name2") n_name2=i;
   }
-  map<string, vector<string> > gene_trans_map ;
+  unordered_map<string, vector<string> > gene_trans_map ;
   while ( getline (file,line) ){
     istringstream line_stream(line);
     string gene;
@@ -114,7 +121,9 @@ int main(int argc, char **argv){
       if(i==n_name) trans=temp;
       if(i==n_name2) gene=temp;
     }
-    gene_trans_map[gene].push_back(trans);
+    //only include genes in candidate fusions
+    if(find(genes_of_interest.begin(), genes_of_interest.end(), gene) != genes_of_interest.end())
+      gene_trans_map[gene].push_back(trans);
   }
   file.close();
   cerr << "Done reading in transcript IDs" << endl;
@@ -122,51 +131,59 @@ int main(int argc, char **argv){
   /** 
    ** Now read in the mapped reads
    **/
-  map<string,vector<string> > trans_read_map;
+  unordered_map< string, vector<string > > trans_read_map;
   vector<string> trans_names;
-  while ( getline (cin,line) ){
-    string temp1;
-    string temp2;
-    istringstream line_stream(line);
-    line_stream >> temp1;
-    line_stream >> temp2; line_stream >> temp2;
-    trans_read_map[temp2].push_back(temp1);
+  int i=0;
+  string temp1;
+  string temp2;
+  string temp3;
+  while(!cin.eof()){
+    cin >> temp1 >> temp2 >> temp3 ;
+    trans_read_map[temp3].push_back(temp1);
+    if(i%1000000==0)
+      cerr << i << " alignments read" << endl;
+    i++;
   }
+  cerr << "Done reading in bam file" << endl;
   // Loop over all the trans_read_map and fix the names:
-  map<string,vector<string> > trans_read_map_fixed;
-  map<string,vector<string> >::iterator tr_itr=trans_read_map.begin();
+  unordered_map<string,vector<string> > trans_read_map_fixed;
+  unordered_map<string,vector<string> >::iterator tr_itr=trans_read_map.begin();
   for(;tr_itr!=trans_read_map.end() ; tr_itr++){
     smatch m;
     regex_search(tr_itr->first,m,regex("ENST\\d{11}(.\\d+)?"));
     trans_read_map_fixed[m[0].str()]=tr_itr->second;
   }
   trans_read_map.clear();
-  cerr << "Done reading in bam file" << endl;
+  cerr << "Done getting trans ids" << endl;
 
   /**
    ** now loop over each gene and get all the reads aligning to it
    **/
-  map<string, pair<vector < string> , vector< string > > > gene_reads;
-  map<string,vector<string> >::iterator gt_itr=gene_trans_map.begin();
+  unordered_map<string, pair<vector < string> , vector< string > > > gene_reads;
+  unordered_map<string,vector<string> >::iterator gt_itr=gene_trans_map.begin();
   //loop over genes and get transcripts id
   for(;gt_itr!=gene_trans_map.end(); gt_itr++){
     vector<string> reads;
     //for all transcripts look up the reads
     for(int t=0; t < gt_itr->second.size(); t++){
-       vector<string> reads_to_add = trans_read_map_fixed[gt_itr->second.at(t)];
+      vector<string> reads_to_add = trans_read_map_fixed[gt_itr->second.at(t)];
       reads.insert(reads.end(), reads_to_add.begin(), reads_to_add.end());
     }
-    // remove redundance
+    // remove redundancy
     sort( reads.begin(), reads.end() );
     reads.erase( unique( reads.begin(), reads.end() ), reads.end() );   
     //now loop over the reads and separate the read start and ends
     for(int r=0; r<reads.size(); r++){
-      smatch m;
+      /**smatch m;
       regex_search(reads.at(r),m,regex("(.*)/([12])$"));
-      if(m[2].str()=="1")
-	gene_reads[gt_itr->first].first.push_back(m[1].str());
+      if(m[2].str()=="1")**/
+      //separate the read id and pair end
+      string read_id=reads.at(r).substr(0,reads.at(r).size()-1); 
+      char read_end=reads.at(r).back();
+      if(read_end=='1') // First of pair (assumes the read IDs ends with 1).
+	gene_reads[gt_itr->first].first.push_back(read_id); //m[1].str());
       else
-	gene_reads[gt_itr->first].second.push_back(m[1].str());
+	gene_reads[gt_itr->first].second.push_back(read_id); //m[1].str());
     }
   }
   trans_read_map_fixed.clear();
@@ -179,25 +196,37 @@ int main(int argc, char **argv){
   //loop over the fusion list
   map<pair<string,string >, int> spanning_reads;
   for(int f=0; f<fusion_list.size(); f++){
+    //cout << "Up to " << f << endl;
     //check from intersection of read ids.
     vector<string> g1_r1=gene_reads[fusion_list.at(f).first].first;
     vector<string> g1_r2=gene_reads[fusion_list.at(f).first].second;
     vector<string> g2_r1=gene_reads[fusion_list.at(f).second].first;
     vector<string> g2_r2=gene_reads[fusion_list.at(f).second].second;
-    //    cout << fusion_list.at(f) << endl;
+    //cout << fusion_list.at(f) << endl;
     int total=0;
-    for(vector<string>::iterator i = g1_r1.begin(); i!=g1_r1.end(); ++i){
+    //cout << g1_r1.size() << " " << g2_r2.size() << endl;
+    unordered_set<string> temp_set1(g1_r1.begin(),g1_r1.end());
+    temp_set1.insert(g2_r2.begin(), g2_r2.end());
+    //cout << "Number=" << g1_r1.size() + g2_r2.size() - temp_set1.size() <<  endl;
+    total+=g1_r1.size() + g2_r2.size() - temp_set1.size();
+    /**    for(vector<string>::iterator i = g1_r1.begin(); i!=g1_r1.end(); ++i){
       if (find(g2_r2.begin(), g2_r2.end(), *i) != g2_r2.end()){
 	//cout << *i << endl;
 	total++;
       }
-    }
-    for(vector<string>::iterator i = g2_r1.begin(); i!=g2_r1.end(); ++i){
+      }**/
+    //    cout <<"Total=" << total << endl;
+    //  cout << g2_r1.size() << " " << g1_r2.size() << endl;
+    unordered_set<string> temp_set2(g2_r1.begin(),g2_r1.end());
+    temp_set2.insert(g1_r2.begin(), g1_r2.end());
+    //    cout << "Number=" << g1_r2.size() + g2_r1.size() - temp_set2.size() <<  endl;
+    total+=g1_r2.size() + g2_r1.size() - temp_set2.size();
+    /**    for(vector<string>::iterator i = g2_r1.begin(); i!=g2_r1.end(); ++i){
       if (find(g1_r2.begin(), g1_r2.end(), *i) != g1_r2.end()){
 	//cout << *i << endl;
 	total++;
       }
-    }
+      }**/
     spanning_reads[fusion_list.at(f)]=total;
     //cout << total << endl;
   }
