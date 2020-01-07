@@ -6,7 +6,7 @@
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
  ** Last Update: 8th May 2017
  ********************************************************************************/
-VERSION="1.20_dev"
+VERSION="2.0_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -104,7 +104,7 @@ transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinat
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
 
 //name of scripts
-R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
+//R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
 R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
 R_compile_results_script=codeBase+"/compile_results.R"
@@ -330,8 +330,7 @@ filter_transcripts = {
     produce(input.prefix+".txt") {
         from(".psl") {
             exec """
-                time $R --vanilla --args $input $output $gapSize $transTable <
-                    $R_filter_transcripts_script &> ${output.dir}/log_filter
+	    $process_transcriptome_blat_table $input $gapSize $transTable > $output
             ""","filter_transcripts"
         }
     }
@@ -400,7 +399,7 @@ make_simple_reads_table = {
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
 	   exec """
-	      $samtools view $input2 | $make_simple_read_table $input1 $transTable > $output
+	      $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable > $output
 	   ""","make_simple_reads_table"
 	   }
     }
