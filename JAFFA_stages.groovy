@@ -4,7 +4,6 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
- ** Last Update: 8th May 2017
  ********************************************************************************/
 VERSION="2.0_dev"
 
@@ -443,7 +442,11 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-	       time set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	       if [ ! -s $input ]; then
+	          touch $output ;
+	       else
+	          time set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	       fi ;
             ""","align_transcripts_to_genome"
         }
     }
@@ -456,7 +459,11 @@ get_final_list = {
     produce(branch+".summary") {
         from(".psl", ".reads") {
             exec """
-                $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $output < $R_get_final_list
+	        if [ ! -s $input1 ] ; then
+		   touch $output ;
+ 		else 
+                   $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $output < $R_get_final_list ;
+		 fi;
             ""","get_final_list"
         }
     }
