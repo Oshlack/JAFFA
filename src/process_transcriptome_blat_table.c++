@@ -207,8 +207,8 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
       string gene2=gene_name_lookup[new_ranges[i+1].q_id];
       if(gene1!=gene2){
 	cout << new_ranges[i].t_id << "\t" 
-	   << std::min(new_ranges[i].end,new_ranges[i+1].start) << "\t" 
-	   << std::max(new_ranges[i].end,new_ranges[i+1].start) << "\t"
+	   << std::min(new_ranges[i].end,new_ranges[i+1].start)-1 << "\t" 
+	   << std::max(new_ranges[i].end,new_ranges[i+1].start)+1 << "\t"
 	   << gene1 << ":" << gene2 << "\t"
 	   << new_ranges[i].t_length << endl;
       }
