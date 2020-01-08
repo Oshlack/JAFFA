@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <regex>
 #include <stdlib.h>
+#include <algorithm>    
 
 using namespace std;
 
@@ -182,22 +183,44 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
       }
     }
   }
+  sort(new_ranges.begin(), new_ranges.end(),[](Alignment const& lhs,Alignment const& rhs) { return lhs.start < rhs.start; });
 
   //calculate the transcript coverage over the read/assembled transcript
   //look for the hallmark of a fusion. We should see a coverage pattern
   //of 1 2 1 (1 gene , 2 genes overlap a few bases, then the other gene)
 
   //quick and dirty method. make an array the length of the read/assembled transcript
-  int cov[new_ranges[0].t_length][2]={0}; //stores coverage and index to range that coverages region
+  /**int cov[new_ranges[0].t_length][2]={0}; //stores coverage and index to range that coverages region
   for(int i=0; i< new_ranges.size(); ++i){
     for(int s=new_ranges[i].start-1 ; s<new_ranges[i].end; ++s){
       cov[s][0]++; //coverage at base s of read/assembled transcript
       cov[s][1]=i; //index to "new_ranges" range that covers base
     }
+    }**/
+  
+  // find overlaps? continue until we find one the meets the criteria (small or no overlap)
+  const int OVERLAP_BUFFER=15; //maximum number of bases that both genes can share
+  for(int i=0; i< new_ranges.size()-1; ++i){
+    if(abs(new_ranges[i].end-new_ranges[i+1].start)<OVERLAP_BUFFER ){
+      // check they aren't from the same gene
+      string gene1=gene_name_lookup[new_ranges[i].q_id];
+      string gene2=gene_name_lookup[new_ranges[i+1].q_id];
+      if(gene1!=gene2){
+	cout << new_ranges[i].t_id << "\t" 
+	   << std::min(new_ranges[i].end,new_ranges[i+1].start) << "\t" 
+	   << std::max(new_ranges[i].end,new_ranges[i+1].start) << "\t"
+	   << gene1 << ":" << gene2 << "\t"
+	   << new_ranges[i].t_length << endl;
+      }
+    }
   }
+
+
+  /**
   //loop over the coverage
   bool left_found=false;
   int pos_left; //position just prior to overlap
+  bool print_and_exit=false;
   for(int c=1; c < new_ranges[0].t_length; ++c){ //will only find the first instance
     if(cov[c][0]==2 && cov[c-1][0]==1){
       left_found=true;
@@ -208,14 +231,18 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 	string gene1=gene_name_lookup[new_ranges[cov[pos_left][1]].q_id];
 	string gene2=gene_name_lookup[new_ranges[cov[c][1]].q_id];
 	if( (c-pos_left-1) < 15 &&
-	    gene1!=gene2){ //print break point...**/
+	    gene1!=gene2) //print break point...
+	  print_and_exit=true;
+	
+	if(print_and_exit){
 	  cout << new_ranges[0].t_id << "\t" << pos_left << "\t" << c+1 << "\t" 
 	       << gene_name_lookup[new_ranges[cov[pos_left][1]].q_id]
 	       << ":" << gene_name_lookup[new_ranges[cov[c][1]].q_id]
 	       << "\t" << new_ranges[0].t_length << endl;
 	}
     } else if(cov[c][0]!=2) left_found=false;
-  }
+  } **/
+
 }
 
 
