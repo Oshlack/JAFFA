@@ -12,10 +12,6 @@
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
 
-common_steps = segment { filter_transcripts +
-                 extract_fusion_sequences +
-                 align_transcripts_to_genome }
-
 get_fasta = {
    doc "Converting fastqs to fasta"
    output.dir=jaffa_output+branch
@@ -24,17 +20,53 @@ get_fasta = {
    }
 }
 
-minIdTrans="80"
-maxIntron=100
-contigTile=11
-readTile=11
-fastqInputFormat="%.fastq.gz"
-readLayout="single"
-run { run_check + fastqInputFormat * [
-	    get_fasta +
-	    align_reads_to_annotation +
-	    common_steps +
-	    make_fasta_reads_table +
-	    get_final_list ] + compile_all_results 
+minimap2_transcriptome = {
+   doc "Aligning candidates to transcriptome using minimap2"
+   output.dir=jaffa_output+branch
+   produce(branch+".paf",branch+".psl"){
+        exec """
+           time $minimap2 -x map-ont -c $refBase/hg38_genCode22.k14.mmi $input > $output1 ;
+           cat $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,\$10-\$4+\$3,\$1,\$3,\$4,\$6,\$2 }' > $output2
+        """
+   }
 }
 
+minimap2_genome = {
+   doc "Aligning candidates to genome using minimap2"
+   output.dir=jaffa_output+branch
+   produce(branch+"_genome.paf",branch+"_genome.psl"){
+	exec """
+	   time $minimap2 -x splice -c $refBase/hg38.k14.mmi $input > $output1 ;
+	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
+	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", \$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," }' >> $output2
+        """
+   }
+}
+
+
+blast_options="-perc_identity=0 -evalue=0.0001"
+blat_options="-tileSize=11 -stepSize=7 -minIdentity=0 -minScore=100"
+blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen evalue\""
+
+readLayout="single"
+fastqInputFormat="%.gz"
+
+common_steps = segment { 
+   minimap2_transcriptome + //align_reads_to_annotation +
+   filter_transcripts +
+   extract_fusion_sequences +
+   minimap2_genome + //align_transcripts_to_genome +
+   make_fasta_reads_table +
+   get_final_list }
+
+
+// below is the pipeline for a fasta file
+if(args[0].endsWith(fastaSuffix)) {
+   run { run_check + fastaInputFormat * [
+	    common_steps ] + compile_all_results 
+   } //or fastq.gz will be converted to fasta.
+} else {
+   run { run_check + fastqInputFormat * [
+	    get_fasta + common_steps ] + compile_all_results 
+   }
+}
