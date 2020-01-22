@@ -55,13 +55,16 @@ class Alignment {
 public:
   int score ;
   string t_id;
-  int t_length ;
+  int t_length;
   string q_id;
   int start;
   int end;
-  //  bool operator<( const Alignment & other){ return(this.start < other.start);}; 
-  Alignment( int sc, string id_t, int length_t, int start_t, int end_t, string id_q) :
-    start(start_t), end(end_t), score(sc), t_id(id_t), t_length(length_t), q_id(id_q){};
+  int t_start;
+  int t_end;
+  string strand;
+
+  Alignment( int sc, string id_t, int length_t, int start_q, int end_q, string id_q, int start_t, int end_t, string strnd ) :
+    start(start_q), end(end_q), score(sc), t_id(id_t), t_length(length_t), q_id(id_q), t_start(start_t), t_end(end_t), strand(strnd) {};
 };
 
 
@@ -197,7 +200,13 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 	   << std::min(new_ranges[i].end,new_ranges[i+1].start)-1 << "\t" 
 	   << std::max(new_ranges[i].end,new_ranges[i+1].start)+1 << "\t"
 	   << gene1 << ":" << gene2 << "\t"
-	   << new_ranges[i].t_length << endl;
+	     << new_ranges[i].t_length << "\t" 
+	     << new_ranges[i].q_id << "\t" << new_ranges[i].t_start << "\t" << new_ranges[i].t_end << "\t"
+	     << new_ranges[i].strand << "\t"
+	     << new_ranges[i+1].q_id << "\t" << new_ranges[i+1].t_start << "\t" << new_ranges[i+1].t_end << "\t"
+	     << new_ranges[i+1].strand << "\t"
+	     << endl;
+	
       }
     }
   }
@@ -283,19 +292,23 @@ int main(int argc, char **argv){
       cerr << "Warning: unexpected number of columns in psl file, "
 	   << filename << endl; continue ; 
     }
-    Alignment al(atoi(columns[0].c_str()),
-		 columns[2],
-		 atoi(columns[6].c_str()),
+    Alignment al(atoi(columns[9].c_str()),
+		 columns[0],
+		 atoi(columns[1].c_str()),
+		 atoi(columns[2].c_str()),
 		 atoi(columns[3].c_str()),
-		 atoi(columns[4].c_str()),
-		 columns[5]);
+		 columns[5],
+		 atoi(columns[7].c_str()),
+		 atoi(columns[8].c_str()),
+		 columns[4]
+		 );
     
-    split_results[columns[2]].push_back(al);
+    split_results[columns[0]].push_back(al);
   }
   file.close();
 
   //now loop over all the alignments to find candidate fusions
-  map< string , vector<Alignment>>:: iterator itr =  split_results.begin();
+  map< string , vector<Alignment> >:: iterator itr =  split_results.begin();
   int i=0;
   for(; itr!=split_results.end(); itr++){
     multi_gene(itr->second, gene_positions, gap_size);
