@@ -73,9 +73,14 @@ Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
 // for aligning to known genes using blastn
-minIdTrans=96 //96% similar when we blat to the human transcriptome
+//96% similar when we blat to the human transcriptome
+blast_options="-perc_identity 96"
+//for aligning candidate fusions against the genome
+blat_options="-minIdentity=96 -minScore=30"
+
+//minIdTrans=96 
 // for aligning to the genome with blat
-minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
+//minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
 //contigTile=18 //big tile size makes blat fast
 //readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
 //maxIntron=0 //don't expect intron when mapping to the transcriptome
@@ -91,6 +96,9 @@ mapParams="-k1 --no-mixed --no-discordant --mm"
 overHang=15 //how many bases are require on either side of a break to count the read.
 
 /********** Variables that shouldn't need to be changed ***********************/
+
+//blastn output format
+blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
 
 //location of the genome with genes masked out - used to filter the reads
 maskedGenome=maskedBase+"/Masked_"+genome
@@ -112,8 +120,7 @@ oases_assembly_script=codeBase+"/assemble.sh"
 //helper scripts
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
 
-//blastn output format
-blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
+
 
 /******************* Here are the pipeline stages **********************/
 
@@ -147,7 +154,7 @@ prepare_reads = {
             exec """
                 $trimmomatic SE -threads $threads -phred$scores $input.gz
                     ${output.dir}/${branch}_trim.fastq
-                    LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
+                    LEADING:$minScore TRAILING:$minQScore MINLEN:$minlen ;
                 $bowtie2 $mapParams --very-fast
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
@@ -301,7 +308,7 @@ align_transcripts_to_annotation = {
         from(".fasta") {
             exec """
 		time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
-		     -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
+		     -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_transcripts_to_annotation"
         }
     } 
@@ -316,7 +323,7 @@ align_reads_to_annotation = {
         from(".fasta") {
             exec """
 		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
-		      -outfmt $blast_out_fmt -perc_identity $minIdTrans -num_threads $threads > $output ;
+		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_reads_to_annotation"
         }
     }
@@ -445,7 +452,7 @@ align_transcripts_to_genome = {
 	       if [ ! -s $input ]; then
 	          touch $output ;
 	       else
-	          time set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	          time set -o pipefail; $blat $genomeFasta $input1 $blat_options $output 2>&1 | tee ${output.dir}/log_genome_blat ;
 	       fi ;
             ""","align_transcripts_to_genome"
         }
