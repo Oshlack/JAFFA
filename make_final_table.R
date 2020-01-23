@@ -37,7 +37,7 @@ MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
 transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char="/")
-blat_table<-read.delim(blat_table_file,stringsAsFactors=F,skip=5,header=F)
+blat_table<-read.delim(blat_table_file,stringsAsFactors=F,header=F) #,skip=5)
 sgb=split(blat_table,blat_table$V10)
 
 #############  check the contig location in the genome ###########
@@ -258,6 +258,12 @@ message("Merging with read coverage data...")
 
 #############  merge with read coverage and gene name information  ###########
 result=cbind(fusion_info[,c("transcript","spanning_pairs","spanning_reads")],do.call(rbind.data.frame,genome_info))
+#in case no reads passed the genome alignment filters:
+if(all(is.na(result$chrom1))){ 
+   message("No genome alignments which look like fusions")
+   file.create(output_file) 
+   quit()
+}
 
 #group fusions by break-point
 break_string=paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep="")
@@ -293,7 +299,7 @@ cand$known[ our_fusions %in% known_fusions ]<-"Yes"
 
 cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"
-spanP=cand$spanning_pairs>0
+spanP=TRUE #cand$spanning_pairs>0
 spanR=cand$spanning_reads>0
 spanRL=cand$spanning_reads>=MIN_LOW_SPANNING_READS
 cand$classification[ spanP & spanRL ]<-"LowConfidence"

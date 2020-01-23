@@ -78,13 +78,6 @@ blast_options="-perc_identity 96"
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
 
-//minIdTrans=96 
-// for aligning to the genome with blat
-//minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
-//contigTile=18 //big tile size makes blat fast
-//readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
-//maxIntron=0 //don't expect intron when mapping to the transcriptome
-
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
 finalGapSize=10000 //minimum distance for the final filtering
@@ -98,7 +91,9 @@ overHang=15 //how many bases are require on either side of a break to count the 
 /********** Variables that shouldn't need to be changed ***********************/
 
 //blastn output format
-blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
+//blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
+blast_out_fmt="\"6 qseqid qlen qstart qend sstrand sseqid slen sstart send nident length bitscore\""
+
 
 //location of the genome with genes masked out - used to filter the reads
 maskedGenome=maskedBase+"/Masked_"+genome
@@ -304,7 +299,7 @@ run_assembly = {
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
     output.dir=jaffa_output+branch
-    produce(input.prefix+".psl") {
+    produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
 		time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
@@ -319,7 +314,7 @@ align_transcripts_to_annotation = {
 align_reads_to_annotation = {
     doc "Align reads to annotation"
     output.dir=jaffa_output+branch
-    produce(input.prefix+".psl") {
+    produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
 		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
@@ -334,7 +329,7 @@ filter_transcripts = {
     doc "Filter transcripts"
     output.dir=jaffa_output+branch
     produce(input.prefix+".txt") {
-        from(".psl") {
+        from(".paf") {
             exec """
 	    $process_transcriptome_blat_table $input $gapSize $transTable > $output
             ""","filter_transcripts"
@@ -452,7 +447,7 @@ align_transcripts_to_genome = {
 	       if [ ! -s $input ]; then
 	          touch $output ;
 	       else
-	          time set -o pipefail; $blat $genomeFasta $input1 $blat_options $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	          time set -o pipefail; $blat $genomeFasta $input1 $blat_options -noHead $output 2>&1 | tee ${output.dir}/log_genome_blat ;
 	       fi ;
             ""","align_transcripts_to_genome"
         }
