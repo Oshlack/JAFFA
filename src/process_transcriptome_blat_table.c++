@@ -155,6 +155,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
       return;
     } 
     string gp_chrom=gene_positions.at(trans).chrom; 
+    if(gp_chrom=="chrM") return; //likely false chimera from library prep or other artificat if fusion involved chrM
     split_chroms[gp_chrom].push_back(i);
     gp.push_back(gene_positions.at(trans));
   }
