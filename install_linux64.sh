@@ -12,9 +12,17 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2"
 
 #installation methods
+
+function minimap2_install {
+   wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17.tar.bz2
+   tar -xvf minimap2-2.17.tar.bz2 ; rm minimap2-2.17.tar.bz2
+   make -C minimap2-2.17
+   cp minimap2-2.17/minimap2 bin/
+}
+
 
 function blastn_install {
     wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.9.0+-x64-linux.tar.gz
