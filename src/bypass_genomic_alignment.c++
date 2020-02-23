@@ -108,6 +108,51 @@ public:
 };
 
 
+/** this function will print a "fake" .psl format alignment of the
+    read to the genome of approx. 100bp. Alignments close
+    to exon boundaries will be adjusted. **/
+void print_alignment(string read, int read_length, 
+		     int r_start, int r_end, string chrom, 
+		     int base, int offset, 
+		     string read_trans_strand, 
+		     string trans_genome_strand, 
+		     bool is_start){
+
+  const int FLANK=100;
+  const int FAKE_CHROM_LENGTH=1000000000;
+
+  if(offset>=10) offset=0; // only adjust towards exon boundary if the distance to exon boundary is <10bp
+  
+  //set the start and end positions in the read
+  int read_start=r_start-FLANK;
+  int read_end=r_start+offset;
+  if((read_trans_strand=="+")!=is_start){ //adjust for reverse compliments
+    read_start=r_end-offset;
+    read_end=r_end+FLANK;
+  }
+  //set the start and end positions in the genome
+  int  genome_start=base-FLANK;
+  int  genome_end=base+offset;
+  if((trans_genome_strand=="+")!=is_start){ //adjust for reverse compliments
+    genome_start=base-offset;
+    genome_end=base+FLANK;
+  }
+
+  string strand="+";
+  if(trans_genome_strand!=read_trans_strand) strand="-";
+  
+  //output in psl format
+  cout << FLANK+offset << "\t0\t0\t0\t0\t0\t0\t0\t"
+       << strand << "\t" << read << "\t" << read_length << "\t"
+       << read_start << "\t" << read_end << "\t"
+       << chrom << "\t" << FAKE_CHROM_LENGTH << "\t" 
+       << genome_start << "\t" << genome_end << "\t" 
+       << "1" << "\t" << FLANK+offset << ",\t"
+       << read_start << ",\t" << genome_start <<","
+       << endl;
+
+}
+
 int main(int argc, char **argv){
 
   if(argc!=3){
@@ -179,23 +224,35 @@ int main(int argc, char **argv){
     line_stream >> trans_id2 >> trans_start2 ;
     int overlap ; string strand;
     line_stream >> r_start >> r_end >> strand ;
+    
 
+    int base, offset;
+    string trans;
+    smatch m; 
 
-    string chrom1, chrom2;
-    int base1, base2;
-    int offset1, offset2;
-
-    smatch m; //extract the id
+    //extract the id for start of the fusion gene
     regex_search(trans_id1,m,regex("_(EN[^_]*)__"));
-    trans_positions[m[1].str()].get_position(trans_end1+1, true, base1, offset1); //to fix...
-    chrom1=trans_positions[m[1].str()].chrom;
+    trans=m[1].str();
+    trans_positions[trans].get_position(trans_end1, true, base, offset); //to fix...
+    print_alignment(read, r_size,
+		    r_start, r_end,
+		    trans_positions[trans].chrom,
+		    base, offset, 
+		    strand, 
+		    trans_positions[trans].strand, 
+		    true);
 
+    //extract the id for end of the fusion gene
     regex_search(trans_id2,m,regex("_(EN[^_]*)__"));
-    trans_positions[m[1].str()].get_position(trans_start2-1, false, base2, offset2); //to fix...
-    chrom2=trans_positions[m[1].str()].chrom;
-
-    cout << chrom1 << "\t" << base1 << "\t" << offset1 << "\t" 
-	 << chrom2 << "\t" << base2 << "\t" << offset2 << "\t" << endl ;
+    trans=m[1].str();
+    trans_positions[trans].get_position(trans_start2, false, base, offset); //to fix...
+    print_alignment(read, r_size,
+		    r_start, r_end,
+		    trans_positions[trans].chrom,
+		    base, offset, 
+		    strand, 
+		    trans_positions[trans].strand, 
+		    false);
 
   }
   return(0);
