@@ -40,6 +40,8 @@ transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char=
 blat_table<-read.delim(blat_table_file,stringsAsFactors=F,header=F) #,skip=5)
 sgb=split(blat_table,blat_table$V10)
 
+#show(sgb)
+
 #############  check the contig location in the genome ###########
 get_break_pos<-function(n){
    # get the transcript to genome blat results for the nth transcript
@@ -70,6 +72,7 @@ get_break_pos<-function(n){
 	 genome_starts=genome_starts+width
       }
       block=(start <= brk) & ((start + width) >= brk)
+
       if(sum(block)==0){ return() }
       offset=brk-start[block]
       if(genome_dir){
