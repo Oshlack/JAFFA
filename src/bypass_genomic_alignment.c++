@@ -118,7 +118,7 @@ void print_alignment(string read, int read_length,
 		     string trans_genome_strand, 
 		     bool is_start){
 
-  const int FLANK=100;
+  const int FLANK=200;
   const int FAKE_CHROM_LENGTH=1000000000;
 
   if(offset>=10) offset=0; // only adjust towards exon boundary if the distance to exon boundary is <10bp
@@ -147,10 +147,10 @@ void print_alignment(string read, int read_length,
        << read_start << "\t" << read_end << "\t"
        << chrom << "\t" << FAKE_CHROM_LENGTH << "\t" 
        << genome_start << "\t" << genome_end << "\t" 
-       << "1" << "\t" << FLANK+offset << ",\t"
-       << read_start << ",\t" << genome_start <<","
-       << endl;
-
+       << "1" << "\t" << FLANK+offset << ",\t" ;
+  if(strand=="+"){ cout << read_start ; }
+  else { cout << read_length-(read_start+FLANK+offset) ; }
+  cout << ",\t" << genome_start << "," << endl;
 }
 
 int main(int argc, char **argv){

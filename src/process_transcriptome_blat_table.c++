@@ -67,7 +67,6 @@ public:
     start(start_q), end(end_q), score(sc), t_id(id_t), t_length(length_t), q_id(id_q), t_start(start_t), t_end(end_t), strand(strnd) {};
 };
 
-
 template <typename T> vector<T> remove_redundant( vector<T> unreduced ){
   for(int a=0; a < unreduced.size(); ++a){
     for(int b=0; b < unreduced.size(); ++b){
@@ -132,6 +131,12 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     if(this_al[a].start==min && this_al[a].end==max) return;
   }
 
+  //sort alignments by gene id. Takes away some randomness in which transcript
+  //gets assigned to the fusion.
+  sort(this_al.begin(),this_al.end(),[](Alignment const& lhs, Alignment const& rhs) { 
+      return lhs.q_id < rhs.q_id; });
+
+
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
 
@@ -192,22 +197,30 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   // find overlaps. continue until we find one the meets the criteria (small or no overlap)
   const int OVERLAP_BUFFER=15; //maximum number of bases that both genes can share
   for(int i=0; i< new_ranges.size()-1; ++i){
-    if(abs(new_ranges[i].end-new_ranges[i+1].start)<OVERLAP_BUFFER ){
+    int start=i;
+    int end=i+1;
+    if(new_ranges[start].strand==new_ranges[end].strand &&
+       abs(new_ranges[start].end-new_ranges[end].start)<OVERLAP_BUFFER ){ 
+      //define the start and end based on strand
+      if(new_ranges[start].strand=="-"){
+	start=i+1; end=i;
+      }
       // check they aren't from the same gene
-      string gene1=gene_name_lookup[new_ranges[i].q_id];
-      string gene2=gene_name_lookup[new_ranges[i+1].q_id];
+      string gene1=gene_name_lookup[new_ranges[start].q_id];
+      string gene2=gene_name_lookup[new_ranges[end].q_id];
       if(gene1!=gene2){ //can't be back splicing within the same gene
-	cout << new_ranges[i].t_id << "\t" //print candidate
-	   << std::min(new_ranges[i].end,new_ranges[i+1].start)-1 << "\t" 
-	   << std::max(new_ranges[i].end,new_ranges[i+1].start)+1 << "\t"
-	   << gene1 << ":" << gene2 << "\t"
-	     << new_ranges[i].t_length << "\t" 
-	     << new_ranges[i].q_id << "\t" << new_ranges[i].t_start << "\t" << new_ranges[i].t_end << "\t"
-	     << new_ranges[i].strand << "\t"
-	     << new_ranges[i+1].q_id << "\t" << new_ranges[i+1].t_start << "\t" << new_ranges[i+1].t_end << "\t"
-	     << new_ranges[i+1].strand << "\t"
-	     << endl;
-	
+	cout << new_ranges[start].t_id << "\t" //print candidate
+	     << std::min(new_ranges[i].end,new_ranges[i+1].start)-1 << "\t" 
+	     << std::max(new_ranges[i].end,new_ranges[i+1].start)+1 << "\t"
+	     << gene1 << ":" << gene2 << "\t"
+	     << new_ranges[start].t_length << "\t"
+	     << new_ranges[start].q_id << "\t" 
+	     << new_ranges[start].t_end << "\t"
+	     << new_ranges[end].q_id << "\t"
+	     << new_ranges[end].t_start << "\t"
+	     << new_ranges[i].end << "\t"
+	     << new_ranges[i+1].start << "\t"
+	     << new_ranges[end].strand << endl;
       }
     }
   }
@@ -281,7 +294,7 @@ int main(int argc, char **argv){
   /**********  Read all the blat alignments ****************/
   cerr << "Reading the input alignment file, "<< filename << endl;
   map<string,vector<Alignment> > split_results;
-  for(int i=0; i<5 ; i++) getline(file,line) ; //skip the first 5 lines
+  //  for(int i=0; i<5 ; i++) getline(file,line) ; //skip the first 5 lines
   while(getline(file,line) ){
     istringstream line_stream(line);
     vector<string> columns;

@@ -23,12 +23,21 @@ get_fasta = {
 minimap2_transcriptome = {
    doc "Aligning candidates to transcriptome using minimap2"
    output.dir=jaffa_output+branch
-   produce(branch+".paf",branch+".psl"){
+   produce(branch+".paf"){
         exec """
-           time $minimap2 -x map-ont -c $refBase/hg38_genCode22.k14.mmi $input > $output1 ;
-           cat $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,\$10-\$4+\$3,\$1,\$3,\$4,\$6,\$2 }' > $output2
+           time $minimap2 -x map-ont -c $transFasta $input > $output1 ;
         """
    }
+}
+
+infer_genome_alignment = {
+   doc "Bypassing genomic alignment and infering genome position from transcriptome alignments"
+   output.dir=jaffa_output+branch
+   produce(branch+"_genome.psl"){
+      exec """
+       $bypass_genomic_alignment $transTable $input.txt > $output
+       """
+       }
 }
 
 minimap2_genome = {
@@ -36,7 +45,7 @@ minimap2_genome = {
    output.dir=jaffa_output+branch
    produce(branch+"_genome.paf",branch+"_genome.psl"){
 	exec """
-	   time $minimap2 -x splice -c $refBase/hg38.k14.mmi $input > $output1 ;
+	   time $minimap2 -x splice -c $genomeFasta $input > $output1 ;
 	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
 	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", \$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," }' >> $output2
         """
@@ -55,7 +64,8 @@ common_steps = segment {
    minimap2_transcriptome + //align_reads_to_annotation +
    filter_transcripts +
    extract_fusion_sequences +
-   minimap2_genome + //align_transcripts_to_genome +
+   infer_genome_alignment + 
+   //minimap2_genome + //align_transcripts_to_genome +
    make_fasta_reads_table +
    get_final_list }
 
