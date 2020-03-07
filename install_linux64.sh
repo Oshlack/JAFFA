@@ -25,7 +25,7 @@ function minimap2_install {
 
 
 function blastn_install {
-    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.9.0+-x64-linux.tar.gz
+    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-x64-linux.tar.gz
     tar -xvf ncbi-blast-2.9.0+-x64-linux.tar.gz
     rm ncbi-blast-2.9.0+-x64-linux.tar.gz
     cp ncbi-blast-2.9.0+/bin/blastn bin/blastn
