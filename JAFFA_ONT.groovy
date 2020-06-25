@@ -3,9 +3,9 @@
  ** without read assembly. Run like so:
  **    bpipe run <path_to_this_file> <path_to_fastq/fasta_files>
  ** See our website for details	on running options:
- ** https://code.google.com/p/jaffa-project/.
+ ** https://github.com/Oshlack/JAFFA/wiki.
  **
- ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>
+ ** Author: Nadia Davidson <nadia.davidson@petermac.org>
  ** Last Update: 2020
  *********************************************************/
 
@@ -53,9 +53,9 @@ minimap2_genome = {
 }
 
 
-blast_options="-perc_identity=0 -evalue=0.0001"
-blat_options="-tileSize=11 -stepSize=7 -minIdentity=0 -minScore=100"
-blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen evalue\""
+//blast_options="-perc_identity=0 -evalue=0.0001"
+//blat_options="-tileSize=11 -stepSize=7 -minIdentity=0 -minScore=100"
+//blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen evalue\""
 
 readLayout="single"
 fastqInputFormat="%.gz"
@@ -64,8 +64,8 @@ common_steps = segment {
    minimap2_transcriptome + //align_reads_to_annotation +
    filter_transcripts +
    extract_fusion_sequences +
-   infer_genome_alignment + 
-   //minimap2_genome + //align_transcripts_to_genome +
+   //   infer_genome_alignment + 
+   minimap2_genome + //align_transcripts_to_genome +
    make_fasta_reads_table +
    get_final_list }
 
