@@ -11,7 +11,9 @@ message("Compiling the results from:")
 message(paste(dir,collapse=" "))
 
 #check to see if the summary file was even made:
-exists=file.exists(summary_files)
+#exists=file.exists(summary_files)
+info = file.info(summary_files)
+exists = summary_files %in% rownames(info[!is.na(info$size) & info$size>0, ])
 if(sum(!exists)>0){
    show("No fusions were found for the following samples:")
    show(dir[!exists])
