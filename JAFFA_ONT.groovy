@@ -52,10 +52,7 @@ minimap2_genome = {
    }
 }
 
-
-//blast_options="-perc_identity=0 -evalue=0.0001"
-//blat_options="-tileSize=11 -stepSize=7 -minIdentity=0 -minScore=100"
-//blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen evalue\""
+reassign_dist=50
 
 readLayout="single"
 fastqInputFormat="%.gz"

@@ -83,6 +83,7 @@ gapSize=1000 //minimum distance between the two fusion candidates for the 1st fi
 finalGapSize=10000 //minimum distance for the final filtering
 exclude="NoSupport,PotentialRegularTranscript" //fusions marked with these classifications will be 
                            //thrown away. Can be a comma seperated list. 
+reassign_dist=0 //minimum distance between low-confidence fusion and others for it to be reassigned to another breakpoint.
 
 //mapping and counting the coverage
 mapParams="-k1 --no-mixed --no-discordant --mm"
@@ -464,7 +465,7 @@ get_final_list = {
 	        if [ ! -s $input1 ] ; then
 		   touch $output ;
  		else 
-                   $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $output < $R_get_final_list ;
+                   $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
 		 fi;
             ""","get_final_list"
         }
