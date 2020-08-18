@@ -25,14 +25,17 @@ fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads
 trans_table_file=args[3]  # a reference annotation file
 known_table_file=args[4]
 gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[6]		  # which "classifications" to remove"
-output_file=args[7]       # name of the output file, will be <X>.summary
+exclude=args[6]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[7])  #Break points and corresponding reads will get reassigned if within this distance
+				    #Low confidence only. Used for long reads. 
+output_file=args[8]       # name of the output file, will be <X>.summary
+
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
 REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flagged as regular
 TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
-MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning reads will be remove
+MIN_LOW_SPANNING_READS=1 #LowConfidence calls with less than this many spanning reads will be remove
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
@@ -298,11 +301,61 @@ our_fusions=unlist(lapply(cand$fusion_genes,function(x){paste(sort(strsplit(x,":
 cand$known<-"-"
 cand$known[ our_fusions %in% known_fusions ]<-"Yes"
 
+########## reallocate reads from low confidence calls if they are close
+#         to a high / medium confidence call of the same fusion.
+#         This is especially useful for noisy long read data
+##########
+if(MIN_REASSIGNMENT_BASE_DIFF>0){
+   message("Reassigning Low Confidence breakpoints")
+
+   #rank the events by classification and then spanning reads
+   cand=cand[order(cand$spanning_reads,decreasing=T),]	
+   cand=cand[order(cand$aligns,decreasing=T),]
+   rownames(cand) <- NULL
+   scand=split(1:dim(cand)[1],cand$fusion_genes)
+
+   #keep all the HighConfidence calls (these are most likely to be aligned correctly
+   #since they coincide with an exon boundary
+   for(i in scand){
+      if(length(i)!=1){
+        this_fus=cand[i,]
+
+        #calculate the distance between each break point
+        d=as.matrix(dist(this_fus[,c("base1","base2")]))
+        d[d==0]<-Inf
+        d[upper.tri(d)]<-Inf
+
+        #which other breakpoint is within 50bp (eucledian) for the LowConfidence fusions
+        closest_break_dist=apply(d,1,min)
+        closest_break_index=apply(d,1,which.min)
+
+        to_correct=which((this_fus$aligns==FALSE) & (closest_break_dist<MIN_REASSIGNMENT_BASE_DIFF))
+
+        #start at the end of the list to correct and reassign reads
+        for(d_index in rev(to_correct)){
+           n=i[d_index]
+           m=i[which.min(d[d_index,])]
+           #update reads
+           cand$spanning_reads[m]=cand$spanning_reads[m]+cand$spanning_reads[n]
+           cand$spanning_reads[n]=0
+        }
+      }
+   }
+   #remove breaks which have been reassigned
+   cand=cand[cand$spanning_reads>0,]
+}
+
+
 ########### now classify the candidates #########################
 
 cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"
 spanP=TRUE #cand$spanning_pairs>0
+#if(any(cand$spanning_pairs>0)){ #if data appears to be paired end
+#       spanP=cand$spanning_pairs>0 #require a split pair for high confidence calls
+#} else {
+#       spanP=cand$spanning_reads>1 #for single-end / long read data required 2 split read support.
+#}
 spanR=cand$spanning_reads>0
 spanRL=cand$spanning_reads>=MIN_LOW_SPANNING_READS
 cand$classification[ spanP & spanRL ]<-"LowConfidence"
