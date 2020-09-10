@@ -81,7 +81,7 @@ blat_options="-minIdentity=96 -minScore=30"
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
 finalGapSize=10000 //minimum distance for the final filtering
-exclude="NoSupport,PotentialRegularTranscript" //fusions marked with these classifications will be 
+exclude="NoSupport,PotentialRunThrough" //fusions marked with these classifications will be 
                            //thrown away. Can be a comma seperated list. 
 reassign_dist=0 //minimum distance between low-confidence fusion and others for it to be reassigned to another breakpoint.
 
