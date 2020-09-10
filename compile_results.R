@@ -55,7 +55,7 @@ full_list=full_list[order(supporting_reads,decreasing=T),]
 v=split(full_list,full_list$classification)
 
 #then order on classification
-full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialRegularTranscript"]])
+full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialTransSplicing"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
 
 message(paste("Done writing output ",out_name,".csv",sep=""))
