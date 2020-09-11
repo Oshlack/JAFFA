@@ -380,8 +380,8 @@ cand$classification[ cand$aligns & spanR ]<-"MediumConfidence"
 cand$classification[ cand$aligns & (spanP | single) & spanT ]<-"HighConfidence"
 
 ## special cases
-cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement & cand$known!="Yes" ]<-"PotentialRunThrough"
 cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1) & cand$known!="Yes" ]<-"PotentialTransSplicing"
+cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRunThrough"
 
 #remove any group in the exclude list
 exclude=unlist(strsplit(exclude,","))
