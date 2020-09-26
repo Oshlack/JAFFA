@@ -25,12 +25,12 @@ minimap2_transcriptome = {
    output.dir=jaffa_output+branch
    produce(branch+".paf"){
         exec """
-           time $minimap2 -x map-ont -c $transFasta $input > $output1 ;
+           $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
         """
    }
 }
 
-infer_genome_alignment = {
+/**infer_genome_alignment = {
    doc "Bypassing genomic alignment and infering genome position from transcriptome alignments"
    output.dir=jaffa_output+branch
    produce(branch+"_genome.psl"){
@@ -38,14 +38,14 @@ infer_genome_alignment = {
        $bypass_genomic_alignment $transTable $input.txt > $output
        """
        }
-}
+}**/
 
 minimap2_genome = {
    doc "Aligning candidates to genome using minimap2"
    output.dir=jaffa_output+branch
    produce(branch+"_genome.paf",branch+"_genome.psl"){
 	exec """
-	   time $minimap2 -x splice -c $genomeFasta $input > $output1 ;
+	   $minimap2 -t $threads -x splice -c $genomeFasta $input > $output1 ;
 	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
 	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", \$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," }' >> $output2
         """

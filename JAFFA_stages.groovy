@@ -150,7 +150,7 @@ prepare_reads = {
             exec """
                 $trimmomatic SE -threads $threads -phred$scores $input.gz
                     ${output.dir}/${branch}_trim.fastq
-                    LEADING:$minScore TRAILING:$minQScore MINLEN:$minlen ;
+                    LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
                 $bowtie2 $mapParams --very-fast
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
