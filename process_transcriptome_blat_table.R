@@ -24,9 +24,9 @@ colnames(gene_positions)<-c("chrom","start","end")
 #load the .psl file and split based on de novo transcript ID
 rows<-read.table(file=blat_table,skip=5,stringsAsFactors=F, nrows=5)
 classes<-sapply(rows, class)
-blat_results=read.table(file=blat_table,skip=5,stringsAsFactors=F,colClasses = classes,comment.char="")
+blat_results=read.table(file=blat_table,skip=0,stringsAsFactors=F,colClasses = classes,comment.char="")#skip=5
 
-split_results=split(1:length(blat_results$V10),blat_results$V10)
+split_results=split(1:length(blat_results$V3),blat_results$V3)#V10
 
 getEnsemblTranscriptID <- function(x) {
    y <- regexpr("ENS(\\w+)?T\\d{11}(.\\d+)?", x, ignore.case=FALSE)
@@ -40,8 +40,8 @@ multi_gene<-function(x){
 
    #if one reference transcript covered the whole range then return.
    if(length(x)==1) return()
-   starts=blat_results$V12[x]
-   ends=blat_results$V13[x]
+   starts=blat_results$V4[x]-1 #V12 (without -1)
+   ends=blat_results$V5[x]#V13
    maxs=which(ends==max(ends))
    mins=which(starts==min(starts))
    if(any(mins %in% maxs)) return()
@@ -53,7 +53,7 @@ multi_gene<-function(x){
    regions=ranges[reduced]
 
    #where are these regions in the genome?
-   genes=blat_results$V14[x[reduced]] 
+   genes=blat_results$V6[x[reduced]]#V14 
    # here we are expecting the fasta ids to be in the format: ">hg19_annotation_geneName__otherStuff"
    gene_names=sapply(genes,getEnsemblTranscriptID)
    gp=gene_positions[gene_names,]
@@ -95,7 +95,7 @@ multi_gene<-function(x){
 	       rbr=blat_results[x[reduced],]
 
 	       get_gene_symbol_at_base<-function(b){
-	           g=which( (rbr$V12 < b) & (b < rbr$V13 ))
+	           g=which( (rbr$V4-1 < b) & (b < rbr$V5 )) #V12, V13 -1 added
 		   g=g[which(rbr[g,]$V1==max(rbr[g,]$V1))[1]]
 		   symbols[gene_names[g]] 
 	       }
@@ -104,7 +104,7 @@ multi_gene<-function(x){
 
 	       show(rbr)
 	       show(cov)
-	       return(data.frame(rbr$V10[1],base_before,base_after,fusion_genes,rbr$V11[1]))
+	       return(data.frame(rbr$V3[1],base_before,base_after,fusion_genes,rbr$V7[1])) #V10 V11
 	}
      }
 }

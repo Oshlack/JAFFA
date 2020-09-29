@@ -10,8 +10,10 @@ hang=as.numeric(args[6])
 show(candidates_table)
 show(output_table)
 
+fus_cols_of_interest=c("transcript","break_min","break_max","fusion_genes","contig_length")
 fusions=read.delim(candidates_table,header=F,stringsAsFactors=F)
-colnames(fusions)<-c("transcript","break_min","break_max","fusion_genes","contig_length")
+colnames(fusions)<-fus_cols_of_interest
+fusions=fusions[,fus_cols_of_interest]
 
 alignments_table=data.frame(read.delim(bam_data_file,header=F,stringsAsFactors=F),
 			    read.delim(read_length_list,header=F,stringsAsFactors=F))
@@ -27,7 +29,7 @@ get_spanning_pairs<-function(x){
 	if(is.na(mean_length))
 		return(0) #case for no aligments
 	if((pos<mean_length*2)||((contig_length-pos)<mean_length*2))
-		return("-") #flag short contigs
+		return(0) #flag short contigs
 	this_below=alignments$V2<(pos-read_lengths)
 	pair_above=alignments$V3>pos
 	sum(this_below&pair_above)

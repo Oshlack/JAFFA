@@ -11,7 +11,9 @@ message("Compiling the results from:")
 message(paste(dir,collapse=" "))
 
 #check to see if the summary file was even made:
-exists=file.exists(summary_files)
+#exists=file.exists(summary_files)
+info = file.info(summary_files)
+exists = summary_files %in% rownames(info[!is.na(info$size) & info$size>0, ])
 if(sum(!exists)>0){
    show("No fusions were found for the following samples:")
    show(dir[!exists])
@@ -53,7 +55,7 @@ full_list=full_list[order(supporting_reads,decreasing=T),]
 v=split(full_list,full_list$classification)
 
 #then order on classification
-full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialRegularTranscript"]])
+full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialTransSplicing"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
 
 message(paste("Done writing output ",out_name,".csv",sep=""))

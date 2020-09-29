@@ -4,9 +4,8 @@
  ** https://code.google.com/p/jaffa-project/.
  **
  ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
- ** Last Update: 8th May 2017
  ********************************************************************************/
-VERSION="1.10_dev"
+VERSION="2.0_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -73,24 +72,29 @@ Ks="19,36,4" //kmer lengths to use for the assembly: 19,23,27,31,35
 Kmerge=27 //what kmer should Oases use to merge the assemblies.
 transLength=100 //the minimum length for Oases to report an assembled contig
 
-// for aligning to known genes using blat
-minIdTrans=98 //98% similar when we blat to the human transcriptome
-minScore=30 //this is the minimum matches to report an alignment - ie required flanking sequence around a breakpoint
-contigTile=18 //big tile size makes blat fast
-readTile=0 //This is a dummy. It gets set dynamically later. //reduce this for reads shorted than 100 bases. e.g. 15 for 75bp. 
-maxIntron=0 //don't expect intron when mapping to the transcriptome
+// for aligning to known genes using blastn
+//96% similar when we blat to the human transcriptome
+blast_options="-perc_identity 96"
+//for aligning candidate fusions against the genome
+blat_options="-minIdentity=96 -minScore=30"
 
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
 finalGapSize=10000 //minimum distance for the final filtering
-exclude="NoSupport,PotentialRegularTranscript" //fusions marked with these classifications will be 
+exclude="NoSupport,PotentialRunThrough" //fusions marked with these classifications will be 
                            //thrown away. Can be a comma seperated list. 
+reassign_dist=0 //minimum distance between low-confidence fusion and others for it to be reassigned to another breakpoint.
 
 //mapping and counting the coverage
 mapParams="-k1 --no-mixed --no-discordant --mm"
 overHang=15 //how many bases are require on either side of a break to count the read.
 
 /********** Variables that shouldn't need to be changed ***********************/
+
+//blastn output format
+//blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
+blast_out_fmt="\"6 qseqid qlen qstart qend sstrand sseqid slen sstart send nident length bitscore\""
+
 
 //location of the genome with genes masked out - used to filter the reads
 maskedGenome=maskedBase+"/Masked_"+genome
@@ -103,16 +107,16 @@ transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinat
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
 
 //name of scripts
-R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
+//R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
 R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
-R_get_spanning_reads_direct_script1=codeBase+"/get_spanning_reads_for_direct_1.R"
-R_get_spanning_reads_direct_script2=codeBase+"/get_spanning_reads_for_direct_2.R"
 R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
 
 //helper scripts
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
+
+
 
 /******************* Here are the pipeline stages **********************/
 
@@ -292,25 +296,15 @@ run_assembly = {
     }
 }
 
-//Align the assembled transcripts against reference gene sequences using blat
+//Align the assembled transcripts against reference gene sequences using blastn
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
     output.dir=jaffa_output+branch
-    produce(input.prefix+".psl") {
+    produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
-                function run_blat {
-                    time $blat $transFasta $inputs
-                        -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
-                } ;
-                run_blat $contigTile;
-                `### test for the Blat tileSize bug (version 35) ###` ;
-                if [[ `cat ${output.dir}/log_blat` == *"Internal error genoFind.c"* ]] ; then 
-                    echo "Blat error with tileSize=$contigTile" ;
-                    echo "Let's try again with tileSize=15" ;
-                    run_blat 15;
-                fi ;
+		time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		     -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_transcripts_to_annotation"
         }
     } 
@@ -321,37 +315,11 @@ align_transcripts_to_annotation = {
 align_reads_to_annotation = {
     doc "Align reads to annotation"
     output.dir=jaffa_output+branch
-    var CUTOFF_READ_LENGTH : 100
-    var DEFAULT_TILE_SIZE : 15
-    var DEFAULT_LARGE_TILE_SIZE : 18
-    var SAMPLE_SIZE : 1000
-    produce(input.prefix+".psl") {
-        // find out the average read length so we can set blat's tileSize accordingly
-        // we just use the first few thousand from the fasta file as a sample
+    produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
-                SEQ_COUNT=`head -n $SAMPLE_SIZE $input | grep "^>" | wc -l` ;
-                SUM_READ_LENGTHS=`head -n $SAMPLE_SIZE $input | grep -v ">" | tr -d "\\n" | wc --chars` ;
-                AVERAGE_READ_LENGTH=`expr $SUM_READ_LENGTHS / $SEQ_COUNT` ;
-                if [ $readTile -eq "0" ] ; then
-                    if [ $AVERAGE_READ_LENGTH -le $CUTOFF_READ_LENGTH ] ; then
-                        readTile=$DEFAULT_TILE_SIZE ;
-                    else readTile=$DEFAULT_LARGE_TILE_SIZE ;
-                    fi ;
-                else readTile=$readTile ;
-                fi ;
-                echo "Using tileSize of \$readTile" ;
-                function run_blat {
-                    time $blat $transFasta $input -minIdentity=$minIdTrans -minScore=$minScore -tileSize=\$1
-                        -maxIntron=$maxIntron $output 2>&1 | tee ${output.dir}/log_blat ;
-                } ;
-                run_blat \$readTile;
-                `### test for the Blat tileSize bug (version 35) ###` ;
-                if [[ `cat ${output.dir}/log_blat` == *"Internal error genoFind.c"* ]] ; then
-                   echo "Blat error with tileSize=\$readTile" ;
-                   echo "Let's try again with tileSize=15" ;
-                   run_blat $DEFAULT_TILE_SIZE;
-                fi ;
+		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_reads_to_annotation"
         }
     }
@@ -362,10 +330,9 @@ filter_transcripts = {
     doc "Filter transcripts"
     output.dir=jaffa_output+branch
     produce(input.prefix+".txt") {
-        from(".psl") {
+        from(".paf") {
             exec """
-                time $R --vanilla --args $input $output $gapSize $transTable <
-                    $R_filter_transcripts_script &> ${output.dir}/log_filter
+	    $process_transcriptome_blat_table $input $gapSize $transTable > $output
             ""","filter_transcripts"
         }
     }
@@ -378,9 +345,8 @@ extract_fusion_sequences = {
     produce(input.prefix+".fusions.fa") {
         from(".txt", ".fasta") {
             exec """
-                cat $input1 | awk '{print \$1}' | sed 's/^/>/g' > ${output}.temp ;
-                $reformat in=$input2 out=stdout.fasta fastawrap=0 | awk '{print \$1}' |
-                grep -F -A1 -f ${output}.temp | grep -v "^\\-\\-" > $output ;
+                cat $input1 | awk '{print \$1}' > ${output}.temp ;
+                $reformat in=$input2 out=stdout.fasta fastawrap=0 | $extract_seq_from_fasta ${output}.temp > $output ;
                 rm ${output}.temp ;
             ""","extract_fusion_sequences"
         }
@@ -410,6 +376,7 @@ map_reads = {
 } 
  
 //Calculate the number of reads which span the breakpoint of the fusions
+//Used for assembly mode
 get_spanning_reads = {
     doc "Calculate the number of reads which span the breakpoint of the fusions"
     output.dir=jaffa_output+branch
@@ -433,30 +400,13 @@ make_simple_reads_table = {
     output.dir=jaffa_output+branch
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
-            exec """
-                $samtools view -H $input2 | grep "@SQ" | cut -f2 | sed 's/SN://g' > ${output.dir}/temp_gene_ids ;
-                $R --no-save --args $input1 $transTable ${output.dir}/temp_gene_ids ${output.dir}/paired_contigs.temp
-                    < $R_get_spanning_reads_direct_script1 ;
-                function get_spanning_pairs {
-                    gene=`echo \$1 | cut -f1 -d"?"` ;
-                    g1=`echo \$1 | cut -f2 -d"?"` ;
-                    g2=`echo \$1 | cut -f3 -d "?"` ;
-                    $samtools view $input2 \$g1 | cut -d "/" -f1 | sort -u > ${output.dir}/g1 ;
-                    $samtools view $input2 \$g2 | cut -d "/" -f1 | sort -u > ${output.dir}/g2 ;
-                    left=`cat ${output.dir}/g1 | wc -l` ;
-                    right=`cat ${output.dir}/g2 | wc -l` ;
-                    both=`cat ${output.dir}/g1 ${output.dir}/g2 | sort -u | wc -l` ;
-                    echo -e "\$gene\t\$(( \$left + \$right - \$both ))" ;
-                } ;
-                cat ${output.dir}/paired_contigs.temp | while read line ; do
-                    get_spanning_pairs "\$line" >> ${output.dir}/spanning_pair_counts.temp ;
-                done ;
-                $R --no-save --args $input1 ${output.dir}/spanning_pair_counts.temp $output < $R_get_spanning_reads_direct_script2 ;
-                rm ${output.dir}/temp_gene_ids ${output.dir}/spanning_pair_counts.temp ${output.dir}/paired_contigs.temp ${output.dir}/g1 ${output.dir}/g2
-            ""","make_simple_reads_table"
-        }
+	   exec """
+	      $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable > $output
+	   ""","make_simple_reads_table"
+	   }
     }
-} 
+}
+
 
 make_fasta_reads_table = {
     doc "Make fasta reads table"
@@ -495,7 +445,11 @@ align_transcripts_to_genome = {
     produce(branch+"_genome.psl") {
         from(".fusions.fa") {
             exec """
-                set -o pipefail; $blat $genomeFasta $input1 -minScore=$minScore $output 2>&1 | tee ${output.dir}/log_genome_blat
+	       if [ ! -s $input ]; then
+	          touch $output ;
+	       else
+	          time set -o pipefail; $blat $genomeFasta $input1 $blat_options -noHead $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	       fi ;
             ""","align_transcripts_to_genome"
         }
     }
@@ -508,7 +462,11 @@ get_final_list = {
     produce(branch+".summary") {
         from(".psl", ".reads") {
             exec """
-                $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $output < $R_get_final_list
+	        if [ ! -s $input1 ] ; then
+		   touch $output ;
+ 		else 
+                   $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
+		 fi;
             ""","get_final_list"
         }
     }
