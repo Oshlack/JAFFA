@@ -374,7 +374,7 @@ if(any(spanP)){ #if data appears to be paired end
        single=TRUE #for single-end / long read data, not required for HighConfidence
 }
 spanR=cand$spanning_reads>0
-spanT=(cand$spanning_reads + cand$spanning_pairs)>=MIN_LOW_SPANNING_READS
+spanT=spanR & ((cand$spanning_reads + cand$spanning_pairs)>=MIN_LOW_SPANNING_READS)
 cand$classification[ (spanP | single ) & spanT ]<-"LowConfidence"
 cand$classification[ cand$aligns & spanR ]<-"MediumConfidence"
 cand$classification[ cand$aligns & (spanP | single) & spanT ]<-"HighConfidence"
