@@ -1,11 +1,11 @@
 /*********************************************************************************
  ** This file defines all the JAFFA pipeline stages (used in JAFFA_assembly.groovy, JAFFA_hybrid.groovy and
  ** JAFFA_direct.groovy). See our website for details on running, 
- ** https://code.google.com/p/jaffa-project/.
+ ** https://github.com/Oshlack/JAFFA.
  **
- ** Author: Nadia Davidson <nadia.davidson@mcri.edu.au>, Rebecca Evans <rebecca.evans@mcri.edu.au>
+ ** Author: Nadia Davidson <nadia.davidson@petermac.org>, Rebecca Evans <rebecca.evans@petermac.org>
  ********************************************************************************/
-VERSION="2.0_dev"
+VERSION="2.0"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -92,7 +92,6 @@ overHang=15 //how many bases are require on either side of a break to count the 
 /********** Variables that shouldn't need to be changed ***********************/
 
 //blastn output format
-//blast_out_fmt="\"6 nident mismatch qseqid qstart qend sseqid qlen\""
 blast_out_fmt="\"6 qseqid qlen qstart qend sstrand sseqid slen sstart send nident length bitscore\""
 
 
@@ -107,7 +106,6 @@ transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinat
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
 
 //name of scripts
-//R_filter_transcripts_script=codeBase+"/process_transcriptome_blat_table.R"
 R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
 R_compile_results_script=codeBase+"/compile_results.R"
@@ -296,20 +294,22 @@ run_assembly = {
     }
 }
 
-//Align the assembled transcripts against reference gene sequences using blastn
+
+//Align transcripts to the annotation
+//A bit redundant as we also have align_reads_to_annotation, but
+//this ensures the pipelines are separated for the hybrid mode. 
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
     output.dir=jaffa_output+branch
-    produce(input.prefix+".paf") {
+    produce(branch+".paf") {
         from(".fasta") {
             exec """
-		time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
-		     -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
+		   time $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
+		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_transcripts_to_annotation"
         }
-    } 
+    }
 }
-
 
 //Align the reads to the annotation 
 align_reads_to_annotation = {
@@ -318,21 +318,21 @@ align_reads_to_annotation = {
     produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
-		   time $blastn -db ${refBase}/hg38_genCode22_blast -query $input 
+		   time $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
 		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_reads_to_annotation"
         }
     }
 }
 
-//Parse the blat alignment table and filter for candidate fusions (uses an R script)
+//Parse the alignment table and filter for candidate fusions (now uses a c++ program from src/)
 filter_transcripts = {
     doc "Filter transcripts"
     output.dir=jaffa_output+branch
     produce(input.prefix+".txt") {
         from(".paf") {
             exec """
-	    $process_transcriptome_blat_table $input $gapSize $transTable > $output
+	    $process_transcriptome_align_table $input $gapSize $transTable > $output
             ""","filter_transcripts"
         }
     }
@@ -488,7 +488,14 @@ compile_all_results = {
             rm -f ${outputName}.fasta ;
             while read line; do $get_fusion_seqs \$line; done < ${outputName}.csv;
             echo "Done writing ${outputName}.fasta" ;
-            echo "All Done"
+            echo "All Done." ;
+	    echo "***********************************************************************" ;
+	    echo " Citation: " ;
+	    echo "   Davidson, N.M., Majewski, I.J. & Oshlack, A. ";
+	    echo "   JAFFA: High sensitivity transcriptome-focused fusion gene detection." ;
+	    echo "   Genome Med 7, 43 (2015)" ;
+	    echo "***********************************************************************" ;
         ""","compile_all_results"
     }
 }
+
