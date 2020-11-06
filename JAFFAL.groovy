@@ -1,6 +1,7 @@
 /***********************************************************
  ** This is the JAFFA pipeline file for fusion detection
- ** without read assembly. Run like so:
+ ** with noisy long read data. For polished long read data, 
+ ** use JAFFA_direct.groovy. Run like so:
  **    bpipe run <path_to_this_file> <path_to_fastq/fasta_files>
  ** See our website for details	on running options:
  ** https://github.com/Oshlack/JAFFA/wiki.
@@ -58,11 +59,11 @@ readLayout="single"
 fastqInputFormat="%.gz"
 
 common_steps = segment { 
-   minimap2_transcriptome + //align_reads_to_annotation +
+   minimap2_transcriptome + 
    filter_transcripts +
    extract_fusion_sequences +
    //   infer_genome_alignment + 
-   minimap2_genome + //align_transcripts_to_genome +
+   minimap2_genome + 
    make_fasta_reads_table +
    get_final_list }
 

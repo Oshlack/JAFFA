@@ -12,7 +12,7 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_blat_table bypass_genomic_alignment"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table" # bypass_genomic_alignment"
 
 #installation methods
 
@@ -39,13 +39,13 @@ function make_simple_read_table_install {
     g++ -std=c++11 -O3 -o bin/make_simple_read_table ../src/make_simple_read_table.c++
 }
 
-function process_transcriptome_blat_table_install {
-    g++ -std=c++11 -O3 -o bin/process_transcriptome_blat_table ../src/process_transcriptome_blat_table.c++
+function process_transcriptome_align_table_install {
+    g++ -std=c++11 -O3 -o bin/process_transcriptome_align_table ../src/process_transcriptome_align_table.c++
 }
 
-function bypass_genomic_alignment_install {
-    g++ -std=c++11 -O3 -o bin/bypass_genomic_alignment ../src/bypass_genomic_alignment.c++
-}
+#function bypass_genomic_alignment_install {
+#    g++ -std=c++11 -O3 -o bin/bypass_genomic_alignment ../src/bypass_genomic_alignment.c++
+#}
 
 function bpipe_install {
    wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz

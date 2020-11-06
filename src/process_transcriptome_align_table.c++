@@ -1,5 +1,4 @@
-// Copyright 2019 Nadia Davidson for Peter Mac
-// This program is distributed under the GNU
+// Copyright 2019 Nadia Davidson. This program is distributed under the GNU
 // General Public License. We also ask that you cite this software in
 // publications where you made use of it for any part of the data
 // analysis.
@@ -7,11 +6,10 @@
 /** 
  ** Rewritten to c++ from the original R version.
  ** This code is pretty ugly, but we tried to keep variable names / methods as close
- ** to original R version for the purposes of transparence and to avoid introducing
+ ** to the original R version for the purposes of transparence and to avoid introducing
  ** unforseen bugs.
  ** 
- ** Parses a .psl style alignment table and report inital candidate fusions
- **
+ ** Parses a .paf style alignment table and report inital candidate fusions
  **
  ** Author: Nadia Davidson
  ** Modified: December 2019
@@ -39,8 +37,9 @@ void print_usage(){
   cerr << endl;
 }
 
-static const int MAX_OVERLAP=15 ;
+static const int MAX_OVERLAP=15 ; //maximum number of bases that both genes can share
 
+//class to hold genomic position information
 class Position {
 public:
   string chrom ;
@@ -51,6 +50,7 @@ public:
   Position(string c, int s, int e, string g) : chrom(c), start(s), end(e), gene(g) {} ;
 };
 
+//class to hold information about a read to transcript alignment
 class Alignment {
 public:
   int score ;
@@ -67,6 +67,7 @@ public:
     start(start_q), end(end_q), score(sc), t_id(id_t), t_length(length_t), q_id(id_q), t_start(start_t), t_end(end_t), strand(strnd) {};
 };
 
+// This method will remove intervals that are equal or buried within other intervals.
 template <typename T> vector<T> remove_redundant( vector<T> unreduced ){
   for(int a=0; a < unreduced.size(); ++a){
     for(int b=0; b < unreduced.size(); ++b){
@@ -80,10 +81,19 @@ template <typename T> vector<T> remove_redundant( vector<T> unreduced ){
   return(unreduced);
 }
 
+// print information about a set of intervals (only used for debugging)
+template <typename T> void print_vec(vector<T> vec){
+  for(int i=0; i < vec.size(); i++)
+    cout << vec[i].start << "-" << vec[i].end << endl;
+  cout << "****" << endl;
+}
+
+// merges overlapping intervals
 template <typename T> vector<T> reduce(vector<T> unreduced){
   vector<int> index_to_keep;
   //sort vector
   sort(unreduced.begin(), unreduced.end(),[](T const& lhs, T const& rhs) { return lhs.start < rhs.start; }); 
+
   //loop through and find overlaps
   index_to_keep.push_back(0);
   int current=0;
@@ -101,51 +111,48 @@ template <typename T> vector<T> reduce(vector<T> unreduced){
   //now copy to final vector
   vector<T> result;
   for(int i=0; i<index_to_keep.size(); ++i){
-    result.push_back(unreduced.at(i));
+    result.push_back(unreduced.at(index_to_keep.at(i)));
   }
-
   return result;
 }
 
-template <typename T> void print_vec(vector<T> vec){
-  for(int i=0; i < vec.size(); i++)
-    cout << vec[i].start << "-" << vec[i].end << endl;
-  cout << "****" << endl;
-}
-
-
+/**
+   multi_gene checks all the alignments of a read to see if they are consistent with a fusion gene
+   and if they are it will print relevant information for latter steps in JAFFA.
+   This method does the brunt of work in filtering alignments to detect fusions.
+**/
 void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_positions, int gap_size){
 
   //if it only matches one transcript, return
   if(this_al.size()<2) return;
   
-  //if one reference transcript covered the whole range then return.
+  //if one reference transcript coveres the start and end of the read then return.
+  //Note: this will automatically remove Fusions like Gene1-Gene2-Gene1
   int min=this_al[0].start;
   int max=this_al[0].end;
   for(int a=1; a < this_al.size() ; a++){ //loop to get the min and max
     if(this_al[a].start<min) min=this_al[a].start;
     if(this_al[a].end>max) max=this_al[a].end;
   }
-  //loop again to see if a single alignments coverages it all
+  //loop again to see if a single alignment coverages it all
   for(int a=0; a < this_al.size() ; a++){
     if(this_al[a].start==min && this_al[a].end==max) return;
   }
 
-  //sort alignments by gene id. Takes away some randomness in which transcript
+  //sort alignments by gene id to take away some randomness to which transcript
   //gets assigned to the fusion.
   sort(this_al.begin(),this_al.end(),[](Alignment const& lhs, Alignment const& rhs) { 
       return lhs.q_id < rhs.q_id; });
 
-
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
 
-  //what do these alignment correspond to in the genome?
+  //what do these alignments correspond to in the genome?
   vector< string > gene_names; //actually these are the transcript IDs
   map< string, string > gene_name_lookup; //maps trans ids to gene symbols 
   smatch m; //extract the gene id
   for(int a=0; a<regions.size(); a++){
-    if(regex_search(regions[a].q_id,m,regex("_(EN[^_]*)__"))){
+    if(regex_search(regions[a].q_id,m,regex("_(EN[^_]*)__"))){ //Assumed ENSEMBL annotation naming here
       gene_names.push_back(m[1].str());
       gene_name_lookup[regions[a].q_id]=gene_positions.at(m[1].str()).gene;
     } else {
@@ -165,6 +172,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     } 
     string gp_chrom=gene_positions.at(trans).chrom; 
     //if(gp_chrom=="chrM") return; //likely false chimera from library prep or other artificat if fusion involved chrM
+    //this now gets filtered at the summary stage of JAFFA
     split_chroms[gp_chrom].push_back(i);
     gp.push_back(gene_positions.at(trans));
   }
@@ -176,14 +184,14 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     if(sc.size()==1){
       new_ranges.push_back(regions[sc[0]]);
     } else {
-      //add extra bases to the end of each gene to check if they are close togther/same gene?
+      //add extra bases to the end of each gene to check if they are close together/same gene?
       vector<Position> ir;
       for(int s=0; s<sc.size(); ++s){
 	Position new_pos(gp[sc[s]].chrom,gp[sc[s]].start,gp[sc[s]].end+gap_size,"");
 	ir.push_back(new_pos);
       }
       vector<Position> iru = reduce(ir);
-    //merge alignments if the genes in the genome are close together
+      //merge alignments if the genes in the genome are close together
       //loop over reduced regions. Collect transcripts that overlaps and merge alignment
       for(int r=0 ; r < iru.size() ; ++r){
 	vector<Alignment> regions_w;
@@ -198,15 +206,14 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   }
   sort(new_ranges.begin(), new_ranges.end(),[](Alignment const& lhs,Alignment const& rhs) { return lhs.start < rhs.start; });
 
-  // find overlaps. continue until we find one the meets the criteria (small or no overlap)
-  const int OVERLAP_BUFFER=15; //maximum number of bases that both genes can share
+  // find overlaps. continue until we find one that meets the criteria (small or no overlap)
   for(int i=0; i< new_ranges.size()-1; ++i){
     int start=i;
     int end=i+1;
     if(new_ranges[start].strand==new_ranges[end].strand &&
-       abs(new_ranges[start].end-new_ranges[end].start)<OVERLAP_BUFFER ){ 
+       abs(new_ranges[start].end-new_ranges[end].start)<MAX_OVERLAP ){ 
       //define the start and end based on strand
-      if(new_ranges[start].strand=="-"){
+      if(new_ranges[start].strand=="-" || new_ranges[start].strand=="minus" ){ //account for minimap or blast style strand info
 	start=i+1; end=i;
       }
       // check they aren't from the same gene
@@ -232,9 +239,11 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 }
 
 
-// the real stuff starts here.
+// Main does the I/O and call multi_gene for each read and its associated
+// set of transcript alignments.
 int main(int argc, char **argv){
 
+  //wrong number of arguements. Print help.
   if(argc!=4){
     print_usage();
     exit(1);
@@ -254,11 +263,11 @@ int main(int argc, char **argv){
     exit(1);
   }
   //assume the first line is the header
-  //  map<string,string > symbols;
+  //use this to work out which columns to get
   map<string,Position > gene_positions;
   string line;
   getline (file,line);
-  int n_name=0; int n_name2=0; int n_chrom=0; int n_start=0; int n_end=0; 
+  int n_name=0; int n_name2=0; int n_chrom=0; int n_start=0; int n_end=0; //column index
   istringstream line_stream(line);
   for(int i=0; line_stream ; i++){
     string temp;
@@ -269,7 +278,8 @@ int main(int argc, char **argv){
     if(temp=="txStart") n_start=i;
     if(temp=="txEnd") n_end=i;
   }
-  while ( getline (file,line) ){
+  //loop over transcripts and fill information into data structure.
+  while ( getline (file,line) ){ 
     istringstream line_stream(line);
     string gene; string trans; string chrom;
     int start; int end;
@@ -288,17 +298,16 @@ int main(int argc, char **argv){
   file.close();
   cerr << "Done reading in transcript IDs" << endl;
 
-  //Now load the .psl file
+  //Now load the .paf alignment file
   string filename=argv[1];
   file.open(filename);
   if(!(file.good())){
     cerr << "Unable to open file " << filename << endl;
     exit(1);
   } 
-  /**********  Read all the blat alignments ****************/
+  /**********  Read all the alignments ****************/
   cerr << "Reading the input alignment file, "<< filename << endl;
   map<string,vector<Alignment> > split_results;
-  //  for(int i=0; i<5 ; i++) getline(file,line) ; //skip the first 5 lines
   while(getline(file,line) ){
     istringstream line_stream(line);
     vector<string> columns;
@@ -307,7 +316,7 @@ int main(int argc, char **argv){
       columns.push_back(temp);
     if(columns.size()<7){ 
       cerr << columns.size() ; 
-      cerr << "Warning: unexpected number of columns in psl file, "
+      cerr << "Warning: unexpected number of columns in paf file, "
 	   << filename << endl; continue ; 
     }
     Alignment al(atoi(columns[9].c_str()),
@@ -333,7 +342,7 @@ int main(int argc, char **argv){
     if(i%10000 == 0  ) cerr << i << endl;
     i++;
   }
-  cerr << i << " alignments processed. Finished." << endl;
+  cerr << i << " reads processed. Finished." << endl;
 
   return(0);
 }
