@@ -1,5 +1,4 @@
-// Copyright 2019 Nadia Davidson for Murdoch Childrens Research
-// Institute Australia. This program is distributed under the GNU
+// Copyright 2019 Nadia Davidson. This program is distributed under the GNU
 // General Public License. We also ask that you cite this software in
 // publications where you made use of it for any part of the data
 // analysis.
@@ -35,6 +34,7 @@ void print_usage(){
   cerr << endl;
 }
 
+//struct for fusion information
 struct fusion_candidate {
   string read ;
   int break_min ;
@@ -174,16 +174,13 @@ int main(int argc, char **argv){
     reads.erase( unique( reads.begin(), reads.end() ), reads.end() );   
     //now loop over the reads and separate the read start and ends
     for(int r=0; r<reads.size(); r++){
-      /**smatch m;
-      regex_search(reads.at(r),m,regex("(.*)/([12])$"));
-      if(m[2].str()=="1")**/
       //separate the read id and pair end
       string read_id=reads.at(r).substr(0,reads.at(r).size()-1); 
       char read_end=reads.at(r).back();
       if(read_end=='1') // First of pair (assumes the read IDs ends with 1).
-	gene_reads[gt_itr->first].first.push_back(read_id); //m[1].str());
+	gene_reads[gt_itr->first].first.push_back(read_id);
       else
-	gene_reads[gt_itr->first].second.push_back(read_id); //m[1].str());
+	gene_reads[gt_itr->first].second.push_back(read_id); 
     }
   }
   trans_read_map_fixed.clear();
@@ -196,39 +193,20 @@ int main(int argc, char **argv){
   //loop over the fusion list
   map<pair<string,string >, int> spanning_reads;
   for(int f=0; f<fusion_list.size(); f++){
-    //cout << "Up to " << f << endl;
     //check from intersection of read ids.
     vector<string> g1_r1=gene_reads[fusion_list.at(f).first].first;
     vector<string> g1_r2=gene_reads[fusion_list.at(f).first].second;
     vector<string> g2_r1=gene_reads[fusion_list.at(f).second].first;
     vector<string> g2_r2=gene_reads[fusion_list.at(f).second].second;
-    //cout << fusion_list.at(f) << endl;
     int total=0;
-    //cout << g1_r1.size() << " " << g2_r2.size() << endl;
     unordered_set<string> temp_set1(g1_r1.begin(),g1_r1.end());
     temp_set1.insert(g2_r2.begin(), g2_r2.end());
-    //cout << "Number=" << g1_r1.size() + g2_r2.size() - temp_set1.size() <<  endl;
     total+=g1_r1.size() + g2_r2.size() - temp_set1.size();
-    /**    for(vector<string>::iterator i = g1_r1.begin(); i!=g1_r1.end(); ++i){
-      if (find(g2_r2.begin(), g2_r2.end(), *i) != g2_r2.end()){
-	//cout << *i << endl;
-	total++;
-      }
-      }**/
-    //    cout <<"Total=" << total << endl;
-    //  cout << g2_r1.size() << " " << g1_r2.size() << endl;
+
     unordered_set<string> temp_set2(g2_r1.begin(),g2_r1.end());
     temp_set2.insert(g1_r2.begin(), g1_r2.end());
-    //    cout << "Number=" << g1_r2.size() + g2_r1.size() - temp_set2.size() <<  endl;
     total+=g1_r2.size() + g2_r1.size() - temp_set2.size();
-    /**    for(vector<string>::iterator i = g2_r1.begin(); i!=g2_r1.end(); ++i){
-      if (find(g1_r2.begin(), g1_r2.end(), *i) != g1_r2.end()){
-	//cout << *i << endl;
-	total++;
-      }
-      }**/
     spanning_reads[fusion_list.at(f)]=total;
-    //cout << total << endl;
   }
   cerr << "Done calculating spanning pairs" << endl;
 

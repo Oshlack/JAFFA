@@ -1,5 +1,5 @@
-// Copyright 2019 Nadia Davidson for Murdoch Childrens Research
-// Institute Australia. This program is distributed under the GNU
+// Copyright 2019 Nadia Davidson 
+// This program is distributed under the GNU
 // General Public License. We also ask that you cite this software in
 // publications where you made use of it for any part of the data
 // analysis.
@@ -39,7 +39,7 @@ void print_usage(){
 int main(int argc, char **argv){
 
   unordered_set<string> ids_to_keep;
-  if(argc!=2){
+  if(argc!=2){ //wrong number of arguments
     print_usage();
     exit(1);
   }
@@ -60,12 +60,7 @@ int main(int argc, char **argv){
   }
   file.close();
 
-  //Now open the fasta file and report if the id is in the list.
-  /**  file.open(argv[2]);
-  if(!(file.good())){
-    cout << "Unable to open file " << argv[1] << endl;
-    exit(1);
-    }**/
+  //Now open the fasta file and report the read/contig if the id is in the list.
   bool print=false;
   while ( getline (cin,line) ){
     int start=line.find(">")+1;
@@ -73,7 +68,6 @@ int main(int argc, char **argv){
       int end=line.find_first_of("\t\n ")-1;
       string id=line.substr(start,end);
       if(ids_to_keep.count(id)){
-      //if(find(ids_to_keep.begin(), ids_to_keep.end(), id) != ids_to_keep.end()){
 	print=true;
 	cout << line << endl;
       } else {
@@ -84,7 +78,6 @@ int main(int argc, char **argv){
 	cout << line << endl; //output
     }
   }
-  //  file.close();
   
   return(0);
 }
