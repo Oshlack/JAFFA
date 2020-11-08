@@ -11,7 +11,7 @@ doc: "Convert jaffa fusion output to bedpe format"
 
 hints:
   DockerRequirement:
-    dockerPull: beccyl/jaffa
+    dockerPull: beccyl/jaffa:1.09_dev
 
 requirements:
   - class: InlineJavascriptRequirement
