@@ -25,19 +25,28 @@ fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads
 trans_table_file=args[3]  # a reference annotation file
 known_table_file=args[4]
 gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[6]		  # which "classifications" to remove"
-output_file=args[7]       # name of the output file, will be <X>.summary
+exclude=args[6]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[7])  #Break points and corresponding reads will get reassigned if within this distance
+				    #Low confidence only. Used for long reads. 
+output_file=args[8]       # name of the output file, will be <X>.summary
+
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
 OVERHANG_MAX=20
 REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flagged as regular
 TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
 MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning reads will be remove
+REMOVE_ALT=TRUE
+REMOVE_CHRM=TRUE
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
 transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char="/")
-blat_table<-read.delim(blat_table_file,stringsAsFactors=F,skip=5,header=F)
+blat_table<-read.delim(blat_table_file,stringsAsFactors=F,header=F) #,skip=5)
+
+#filter out alignments to alternative chromosomes
+if(REMOVE_ALT) blat_table=blat_table[grep("_alt",blat_table$V14,invert=TRUE),]
+
 sgb=split(blat_table,blat_table$V10)
 
 #############  check the contig location in the genome ###########
@@ -70,6 +79,7 @@ get_break_pos<-function(n){
 	 genome_starts=genome_starts+width
       }
       block=(start <= brk) & ((start + width) >= brk)
+
       if(sum(block)==0){ return() }
       offset=brk-start[block]
       if(genome_dir){
@@ -255,9 +265,19 @@ format_positions<-function(x){
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
 message("Merging with read coverage data...")
-
 #############  merge with read coverage and gene name information  ###########
 result=cbind(fusion_info[,c("transcript","spanning_pairs","spanning_reads")],do.call(rbind.data.frame,genome_info))
+#in case no reads passed the genome alignment filters:
+if(all(is.na(result$chrom1))){ 
+   message("No genome alignments which look like fusions")
+   file.create(output_file) 
+   quit()
+}
+result=result[order(result$aligns,decreasing=T),] #reorder so aligned break are first]
+
+### Remove double counts (reads that align to a fusion break-point twice ###
+dup=duplicated(result[,c("fusion_genes","transcript")])
+result=result[!dup,]
 
 #group fusions by break-point
 break_string=paste(result[,"chrom1"],result[,"base1"],":",result[,"chrom2"],result[,"base2"],sep="")
@@ -272,7 +292,7 @@ merge_result<-function(x){
    x=x[order(x$fusion_genes),]
    x_rep=x[1,]
    if(is_short){ x_rep$spanning_pairs= "-" } else {
-      x_rep$spanning_pairs=sum(x$spanning_pairs) }
+      x_rep$spanning_pairs=max(x$spanning_pairs) }
    x_rep$spanning_reads=sum(x$spanning_reads)
    x_rep
 }
@@ -289,17 +309,79 @@ our_fusions=unlist(lapply(cand$fusion_genes,function(x){paste(sort(strsplit(x,":
 cand$known<-"-"
 cand$known[ our_fusions %in% known_fusions ]<-"Yes"
 
+#######
+# remove fusions involving chrM
+#######
+if(REMOVE_CHRM){
+   with_chrM = cand$chrom1=="chrM" | cand$chrom2=="chrM"
+   cand=cand[!with_chrM,]
+}
+
+
+########## reallocate reads from low confidence calls if they are close
+#         to a high / medium confidence call of the same fusion.
+#         This is especially useful for noisy long read data
+##########
+if(MIN_REASSIGNMENT_BASE_DIFF>0){
+   message("Reassigning Low Confidence breakpoints")
+
+   #rank the events by classification and then spanning reads
+   cand=cand[order(cand$spanning_reads,decreasing=T),]	
+   cand=cand[order(cand$aligns,decreasing=T),]
+   rownames(cand) <- NULL
+   scand=split(1:dim(cand)[1],cand$fusion_genes)
+
+   #keep all the HighConfidence calls (these are most likely to be aligned correctly
+   #since they coincide with an exon boundary
+   for(i in scand){
+      if(length(i)!=1){
+        this_fus=cand[i,]
+
+        #calculate the distance between each break point
+        d=as.matrix(dist(this_fus[,c("base1","base2")]))
+        d[d==0]<-Inf
+        d[upper.tri(d)]<-Inf
+
+        #which other breakpoint is within 50bp (eucledian) for the LowConfidence fusions
+        closest_break_dist=apply(d,1,min)
+        closest_break_index=apply(d,1,which.min)
+
+        to_correct=which((this_fus$aligns==FALSE) & (closest_break_dist<MIN_REASSIGNMENT_BASE_DIFF))
+
+        #start at the end of the list to correct and reassign reads
+        for(d_index in rev(to_correct)){
+           n=i[d_index]
+           m=i[which.min(d[d_index,])]
+           #update reads
+           cand$spanning_reads[m]=cand$spanning_reads[m]+cand$spanning_reads[n]
+           cand$spanning_reads[n]=0
+        }
+      }
+   }
+   #remove breaks which have been reassigned
+   cand=cand[cand$spanning_reads>0,]
+}
+
+
 ########### now classify the candidates #########################
 
 cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"
 spanP=cand$spanning_pairs>0
+if(any(spanP)){ #if data appears to be paired end
+       single=FALSE #require a split pair for high confidence calls
+} else {
+       single=TRUE #for single-end / long read data, not required for HighConfidence
+}
 spanR=cand$spanning_reads>0
-spanRL=cand$spanning_reads>=MIN_LOW_SPANNING_READS
-cand$classification[ spanP & spanRL ]<-"LowConfidence"
-cand$classification[ cand$aligns & (spanP | spanR ) ]<-"MediumConfidence"
-cand$classification[ cand$aligns & spanP & spanR ]<-"HighConfidence"
-cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRegularTranscript"
+spanT=spanR & ((cand$spanning_reads + cand$spanning_pairs)>=MIN_LOW_SPANNING_READS)
+cand$classification[ (spanP | single ) & spanT ]<-"LowConfidence"
+cand$classification[ cand$aligns & spanR ]<-"MediumConfidence"
+cand$classification[ cand$aligns & (spanP | single) & spanT ]<-"HighConfidence"
+
+## special cases
+cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1) & cand$known!="Yes" ]<-"PotentialTransSplicing"
+cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRunThrough"
 
 #remove any group in the exclude list
 exclude=unlist(strsplit(exclude,","))

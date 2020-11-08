@@ -20,7 +20,7 @@ if(readLayout=="single"){ fastqInputFormat="%.gz" }
 run{ run_check + fastqInputFormat * [ 
 		      prepare_reads +
 		      run_assembly +
-		      align_transcripts_to_annotation.using(tile:contigTile) + 
+		      align_transcripts_to_annotation  + 
 		      filter_transcripts + 
 		      extract_fusion_sequences + 
 		      map_reads + 

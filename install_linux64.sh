@@ -12,9 +12,41 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table" # bypass_genomic_alignment"
 
-#installation method
+#installation methods
+
+function minimap2_install {
+   wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17.tar.bz2
+   tar -xvf minimap2-2.17.tar.bz2 ; rm minimap2-2.17.tar.bz2
+   make -C minimap2-2.17
+   cp minimap2-2.17/minimap2 bin/
+}
+
+
+function blastn_install {
+    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-x64-linux.tar.gz
+    tar -xvf ncbi-blast-2.9.0+-x64-linux.tar.gz
+    rm ncbi-blast-2.9.0+-x64-linux.tar.gz
+    cp ncbi-blast-2.9.0+/bin/blastn bin/blastn
+}
+
+function extract_seq_from_fasta_install {
+    g++ -O3 -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
+}
+
+function make_simple_read_table_install {
+    g++ -std=c++11 -O3 -o bin/make_simple_read_table ../src/make_simple_read_table.c++
+}
+
+function process_transcriptome_align_table_install {
+    g++ -std=c++11 -O3 -o bin/process_transcriptome_align_table ../src/process_transcriptome_align_table.c++
+}
+
+#function bypass_genomic_alignment_install {
+#    g++ -std=c++11 -O3 -o bin/bypass_genomic_alignment ../src/bypass_genomic_alignment.c++
+#}
+
 function bpipe_install {
    wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
    tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz
@@ -22,17 +54,17 @@ function bpipe_install {
 }
 
 function velveth_install {
-    wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz
-    tar -zxvf velvet_1.2.10.tgz ; rm velvet_1.2.10.tgz
-    make -C velvet_1.2.10/ MAXKMERLENGTH=37 LONGSEQUENCES=1 #OPENMP=1
-    ln -s $PWD/velvet_1.2.10/velvetg $PWD/bin/
-    ln -s $PWD/velvet_1.2.10/velveth $PWD/bin/
+    wget -O velvet-1.2.10.tar.gz https://github.com/dzerbino/velvet/archive/v1.2.10.tar.gz
+    tar -zxvf velvet-1.2.10.tar.gz ; rm velvet-1.2.10.tar.gz
+    make -C velvet-1.2.10/ MAXKMERLENGTH=37 LONGSEQUENCES=1 #OPENMP=1
+    ln -s $PWD/velvet-1.2.10/velvetg $PWD/bin/
+    ln -s $PWD/velvet-1.2.10/velveth $PWD/bin/
 }
 
 function oases_install {
     wget -O oases_0.2.09.tgz https://github.com/dzerbino/oases/archive/0.2.09.tar.gz
     tar -zxvf oases_0.2.09.tgz ; rm oases_0.2.09.tgz
-    make -C oases-0.2.09/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet_1.2.10'
+    make -C oases-0.2.09/ MAXKMERLENGTH=37 LONGSEQUENCES=1 'VELVET_DIR=../velvet-1.2.10'
     ln -s $PWD/oases-0.2.09/oases $PWD/bin/
 }
 
