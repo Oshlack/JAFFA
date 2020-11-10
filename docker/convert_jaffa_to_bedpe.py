@@ -17,4 +17,4 @@ with open(sys.argv[1], 'r') as jaffaOutput:
         geneR = vals[1].split(':')[1].strip('"')
         bedpe = '\t'.join([chrL, posL, str(int(posL)+1), chrR, posR,
             str(int(posR)+1), '>>'.join([geneL, geneR]), '0', strandL, strandR])
-        print bedpe
+        print(bedpe)
