@@ -22,13 +22,15 @@ options(stringsAsFactors=F)
 args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
-trans_table_file=args[3]  # a reference annotation file
-known_table_file=args[4]
-gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[6]		  # which "classifications" to remove
-MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[7])  #Break points and corresponding reads will get reassigned if within this distance
+gene_count_table_file=args[3] # approximate gene-level counts
+trans_table_file=args[4]  # a reference annotation file
+known_table_file=args[5]
+gapmin=as.numeric(args[6]) # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[7]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[8])  #Break points and corresponding reads will get reassigned if within this distance
 				    #Low confidence only. Used for long reads. 
-output_file=args[8]       # name of the output file, will be <X>.summary
+
+output_file=args[9]       # name of the output file, will be <X>.summary
 
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
@@ -363,7 +365,18 @@ if(MIN_REASSIGNMENT_BASE_DIFF>0){
 }
 
 
+## Add information about gene-level counts
+geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
+geneCounts=geneCountsTemp[,2]
+names(geneCounts)=geneCountsTemp[,1]
+sFus=strsplit(cand$fusion_genes,":")
+gcS=sapply(sFus,function(x){geneCounts[x[1]]})
+gcE=sapply(sFus,function(x){geneCounts[x[2]]})
+cand$geneCounts1=gcS
+cand$geneCounts2=gcE
+
 ########### now classify the candidates #########################
+
 
 cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"

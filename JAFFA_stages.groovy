@@ -5,7 +5,7 @@
  **
  ** Author: Nadia Davidson <nadia.davidson@petermac.org>, Rebecca Evans <rebecca.evans@petermac.org>
  ********************************************************************************/
-VERSION="2.0"
+VERSION="2.1_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -144,17 +144,19 @@ prepare_reads = {
     output.dir=jaffa_output+branch
     if (inputs.size() == 1) {  // single reads
         produce(branch+"_filtered_reads.fastq.gz",
-                branch+"_leftover_reads.fastq.gz") {
+                branch+"_leftover_reads.fastq.gz",
+		branch+".transCounts") {
             exec """
                 $trimmomatic SE -threads $threads -phred$scores $input.gz
                     ${output.dir}/${branch}_trim.fastq
                     LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
-                $bowtie2 $mapParams --very-fast
+                $bowtie2 $mapParams --very-fast --no-head
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
-                    -U ${output.dir}/${branch}_trim.fastq
-                    -S /dev/null ; 
+                    -U ${output.dir}/${branch}_trim.fastq |
+                    cut -f3 | sort | uniq -c |
+                    sed 's/^ *//g' > $output3 ;
                 $bowtie2 $mapParams --very-fast
                     --un-gz $output2 -p $threads -x $maskedGenome
                     -U ${output.dir}/temp_trans_unmap_reads.fastq -S /dev/null ;
@@ -166,7 +168,8 @@ prepare_reads = {
         produce(branch+"_filtered_reads.fastq.1.gz",
                 branch+"_filtered_reads.fastq.2.gz",
                 branch+"_leftover_reads.fastq.1.gz",
-                branch+"_leftover_reads.fastq.2.gz") {
+                branch+"_leftover_reads.fastq.2.gz",
+		branch+".transCounts") {
                 // need to check here for whether the files are zipped - FIX
                 //trim & fix the file names so Trinity handles the paired-ends reads correctly
             exec """
@@ -188,13 +191,14 @@ prepare_reads = {
                 fix_ids ${output.dir}/tempp2.fq 2 > ${output.dir}/${branch}_trim2.fastq ;
                 rm ${output.dir}/tempp1.fq ${output.dir}/tempp2.fq ;
 
-                $bowtie2 $mapParams --very-fast
+                $bowtie2 $mapParams --very-fast --no-head
                     --al-conc-gz ${output1.prefix.prefix}.gz
                     --un-conc ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
                     -1 ${output.dir}/${branch}_trim1.fastq
-                    -2 ${output.dir}/${branch}_trim2.fastq
-                    -S /dev/null ;
+                    -2 ${output.dir}/${branch}_trim2.fastq |
+		    cut -f3 | sort | uniq -c |
+                    sed 's/^ *//g' > $output5 ;
                 $bowtie2 $mapParams --very-fast
                     --un-conc-gz ${output3.prefix.prefix}.gz
                     -p $threads -x $maskedGenome
@@ -325,14 +329,17 @@ align_reads_to_annotation = {
     }
 }
 
-//Parse the alignment table and filter for candidate fusions (now uses a c++ program from src/)
+//Append the count table with the reads from the alignment to transcriptome. Then
+//parse the alignment table and filter for candidate fusions (now uses a c++ program from src/)
 filter_transcripts = {
     doc "Filter transcripts"
     output.dir=jaffa_output+branch
-    produce(input.prefix+".txt") {
+    produce(input.prefix+".txt",branch+".geneCounts") {
         from(".paf") {
             exec """
-	    $process_transcriptome_align_table $input $gapSize $transTable > $output
+	    sort -u -k1,1 $input | cut -f6 | sort | uniq -c | sed 's/^ *//g' >> ${output.dir}/${branch}.transCounts ;
+	    $make_count_table ${output.dir}/${branch}.transCounts $transTable > $output2 ;
+	    $process_transcriptome_align_table $input $gapSize $transTable > $output1
             ""","filter_transcripts"
         }
     }
@@ -460,12 +467,13 @@ get_final_list = {
     doc "Get final list"
     output.dir=jaffa_output+branch
     produce(branch+".summary") {
-        from(".psl", ".reads") {
+        from(".psl", ".reads", ".geneCounts") {
             exec """
 	        if [ ! -s $input1 ] ; then
 		   touch $output ;
  		else 
-                   $R --vanilla --args $input1 $input2 $transTable $knownTable $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
+                   $R --vanilla --args $input1 $input2 $input3 $transTable $knownTable 
+		   $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
 		 fi;
             ""","get_final_list"
         }

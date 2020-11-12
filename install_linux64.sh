@@ -12,7 +12,7 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table" # bypass_genomic_alignment"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table make_count_table" # bypass_genomic_alignment"
 
 #installation methods
 
@@ -41,6 +41,10 @@ function make_simple_read_table_install {
 
 function process_transcriptome_align_table_install {
     g++ -std=c++11 -O3 -o bin/process_transcriptome_align_table ../src/process_transcriptome_align_table.c++
+}
+
+function make_count_table_install {
+    g++ -O3 -o bin/make_count_table ../src/make_count_table.c++
 }
 
 #function bypass_genomic_alignment_install {
