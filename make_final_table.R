@@ -190,8 +190,8 @@ get_frame_info<-function(x){
 		   #which exon in this trans
 		   dist=exon_pos[[trans]]-pos
 		   closest=which(abs(dist)==min(abs(dist)))[1]
-		   overhang<-dist[closest]   
-		   closestExon=closest 
+		   overhang<-dist[closest]
+		   closestExon=closest
 		   is_actually_the_start=((gene$strand=="+")==x[j,]$genome_dir)==x[j,]$is_start
 		   frames=as.integer(unlist(strsplit(as.character(gene$exonFrames),",")))
 		   frame=frames[closestExon]
@@ -202,7 +202,8 @@ get_frame_info<-function(x){
 		         frame=-1 # return non-coding frame if we hit the end of the transcript
 		      } else { frame=frames[nextExon] }
 		   }
-		   return(data.frame(x[j,],overhang,frame,is_actually_the_start,gene_name));
+		   exons=paste(closestExon,length(dist),sep="/");
+		   return(data.frame(x[j,],overhang,frame,is_actually_the_start,gene_name,exons));
 		}
 		all_possible_frames=do.call("rbind",lapply(best_trans,get_frame))
 		fs=all_possible_frames$frame
@@ -211,7 +212,7 @@ get_frame_info<-function(x){
 		if(any(fs!=-1)){ fm=names(tail(sort(table(fs[fs!=-1])),n=1)) }
 		return(all_possible_frames[match(fm,fs),])
 	}
-   	res=do.call(rbind.data.frame,lapply(1:(dim(x)[1]),do_one_row))   
+   	res=do.call(rbind.data.frame,lapply(1:(dim(x)[1]),do_one_row))
 	if(dim(res)[1]!=2) return()
 	if(res$gene_name[1]==res$gene_name[2]) return() #reject if two halves of the same gene
 	### check frame #####
@@ -241,10 +242,10 @@ new_new_genome_pos=lapply(new_genome_pos,get_frame_info)
 #############  format nicely  ###########
 format_positions<-function(x){
 	if(length(x)==0){
-	   res=data.frame(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
+	   res=data.frame(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
 	   colnames(res)<-c("contig_break","chrom1","base1","strand1",
 					   "chrom2","base2","strand2",
-			"gap","rearrangement","aligns","inframe","fusion_genes")
+			"gap","rearrangement","aligns","inframe","fusion_genes","exon1","exon2")
 	   return(res)
 	 }
 	#there should only be 2 or 0 genomic positions at this point.
@@ -261,8 +262,9 @@ format_positions<-function(x){
 	aligns=all(x$aligns) ; inframe=x$inFrame[1]
 	contig_break=min(x$brk)[1] 
 	fusion_genes=paste(x$gene_name[ord[1]],x$gene_name[ord[2]],sep=":")
+	exon1=x$exons[1] ; exon2=x$exons[2]
 	return(data.frame(contig_break,chrom1,base1,strand1,chrom2,base2,strand2,
-		          gap,rearrangement,aligns,inframe,fusion_genes))
+		          gap,rearrangement,aligns,inframe,fusion_genes,exon1,exon2))
 }
 genome_info<-lapply(new_new_genome_pos,format_positions)
 
@@ -369,9 +371,10 @@ if(MIN_REASSIGNMENT_BASE_DIFF>0){
 geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
 geneCounts=geneCountsTemp[,2]
 names(geneCounts)=geneCountsTemp[,1]
-sFus=strsplit(cand$fusion_genes,":")
-gcS=sapply(sFus,function(x){geneCounts[x[1]]})
-gcE=sapply(sFus,function(x){geneCounts[x[2]]})
+sFus=strsplit(cand$fusion_genes,":") #split fusion gene names
+gcS=sapply(sFus,function(x){geneCounts[x[1]]}) #look up counts for start gene
+gcE=sapply(sFus,function(x){geneCounts[x[2]]}) #look up counts for end gene
+gcS[is.na(gcS)]<-0 ; gcE[is.na(gcE)]<-0 #if gene not in table -> counts are zero
 cand$geneCounts1=gcS
 cand$geneCounts2=gcE
 

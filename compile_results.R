@@ -40,7 +40,7 @@ colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
 full_list=full_list[,c("sample","fusion genes","chrom1","base1","strand1","chrom2","base2","strand2",
 	     "gap (kb)","spanning pairs","spanning reads",
 	     "inframe","aligns","rearrangement",
-	     "contig","contig break","classification","known","geneCounts1","geneCounts2")]
+	     "contig","contig break","classification","known","geneCounts1","geneCounts2","exon1","exon2")]
 
 #first order on the gap size (useful for direct mode where the spanning reads are mostly just 1)
 full_list=full_list[order(as.numeric(full_list$`gap (kb)`),decreasing=F),] 
