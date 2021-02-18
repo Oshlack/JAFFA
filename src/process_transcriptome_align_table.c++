@@ -12,7 +12,7 @@
  ** Parses a .paf style alignment table and report inital candidate fusions
  **
  ** Author: Nadia Davidson
- ** Modified: December 2019
+ ** Modified: 2021
  **/ 
 
 #include <iostream>
@@ -26,6 +26,7 @@
 #include <regex>
 #include <stdlib.h>
 #include <algorithm>    
+#include <unordered_set>
 
 using namespace std;
 
@@ -50,13 +51,27 @@ public:
   Position(string c, int s, int e, string g) : chrom(c), start(s), end(e), gene(g) {} ;
 };
 
+// class to store IDs, so their strings aren't stored multiple times in other classes (to save memory)
+class Id {
+  static unordered_set<string> id_set;
+  unordered_set<string>::iterator this_iterator;
+public:
+  Id(string name){
+    this_iterator=id_set.insert(name).first;
+  };
+  string get_name() const {
+    return *this_iterator;
+  };
+
+}; unordered_set<string> Id::id_set;
+
 //class to hold information about a read to transcript alignment
 class Alignment {
 public:
   int score ;
-  string t_id;
+  Id t_id;
   int t_length;
-  string q_id;
+  Id q_id;
   int start;
   int end;
   int t_start;
@@ -66,6 +81,7 @@ public:
   Alignment( int sc, string id_t, int length_t, int start_q, int end_q, string id_q, int start_t, int end_t, string strnd ) :
     start(start_q), end(end_q), score(sc), t_id(id_t), t_length(length_t), q_id(id_q), t_start(start_t), t_end(end_t), strand(strnd) {};
 };
+
 
 // This method will remove intervals that are equal or buried within other intervals.
 template <typename T> vector<T> remove_redundant( vector<T> unreduced ){
@@ -134,7 +150,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     if(this_al[a].start<min) min=this_al[a].start;
     if(this_al[a].end>max) max=this_al[a].end;
   }
-  //loop again to see if a single alignment coverages it all
+  //loop again to see if a single alignment covers it all
   for(int a=0; a < this_al.size() ; a++){
     if(this_al[a].start==min && this_al[a].end==max) return;
   }
@@ -142,7 +158,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   //sort alignments by gene id to take away some randomness to which transcript
   //gets assigned to the fusion.
   sort(this_al.begin(),this_al.end(),[](Alignment const& lhs, Alignment const& rhs) { 
-      return lhs.q_id < rhs.q_id; });
+      return ((lhs.q_id).get_name()) < ((rhs.q_id).get_name()); });
 
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
@@ -152,12 +168,13 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
   map< string, string > gene_name_lookup; //maps trans ids to gene symbols 
   smatch m; //extract the gene id
   for(int a=0; a<regions.size(); a++){
-    if(regex_search(regions[a].q_id,m,regex("_(EN[^_]*)__"))){ //Assumed ENSEMBL annotation naming here
+    string trans_id=regions[a].q_id.get_name();
+    if(regex_search(trans_id,m,regex("_(EN[^_]*)__"))){ //Assumed ENSEMBL annotation naming here
       gene_names.push_back(m[1].str());
-      gene_name_lookup[regions[a].q_id]=gene_positions.at(m[1].str()).gene;
+      gene_name_lookup[trans_id]=gene_positions.at(m[1].str()).gene;
     } else {
-      gene_names.push_back(regions[a].q_id);
-      gene_name_lookup[regions[a].q_id]=gene_positions.at(regions[a].q_id).gene;
+      gene_names.push_back(trans_id);
+      gene_name_lookup[trans_id]=gene_positions.at(trans_id).gene;
     }
   }
 
@@ -217,17 +234,17 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 	start=i+1; end=i;
       }
       // check they aren't from the same gene
-      string gene1=gene_name_lookup[new_ranges[start].q_id];
-      string gene2=gene_name_lookup[new_ranges[end].q_id];
+      string gene1=gene_name_lookup[new_ranges[start].q_id.get_name()];
+      string gene2=gene_name_lookup[new_ranges[end].q_id.get_name()];
       if(gene1!=gene2){ //can't be back splicing within the same gene
-	cout << new_ranges[start].t_id << "\t" //print candidate
+	cout << new_ranges[start].t_id.get_name() << "\t" //print candidate
 	     << std::min(new_ranges[i].end,new_ranges[i+1].start)-1 << "\t" 
 	     << std::max(new_ranges[i].end,new_ranges[i+1].start)+1 << "\t"
 	     << gene1 << ":" << gene2 << "\t"
 	     << new_ranges[start].t_length << "\t"
-	     << new_ranges[start].q_id << "\t" 
+	     << new_ranges[start].q_id.get_name() << "\t" 
 	     << new_ranges[start].t_end << "\t"
-	     << new_ranges[end].q_id << "\t"
+	     << new_ranges[end].q_id.get_name() << "\t"
 	     << new_ranges[end].t_start << "\t"
 	     << new_ranges[i].end << "\t"
 	     << new_ranges[i+1].start << "\t"
@@ -319,6 +336,7 @@ int main(int argc, char **argv){
       cerr << "Warning: unexpected number of columns in paf file, "
 	   << filename << endl; continue ; 
     }
+
     Alignment al(atoi(columns[9].c_str()),
 		 columns[0],
 		 atoi(columns[1].c_str()),
