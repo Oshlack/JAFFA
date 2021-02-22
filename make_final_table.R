@@ -22,15 +22,15 @@ options(stringsAsFactors=F)
 args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
-gene_count_table_file=args[3] # approximate gene-level counts
-trans_table_file=args[4]  # a reference annotation file
-known_table_file=args[5]
-gapmin=as.numeric(args[6]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[7]		  # which "classifications" to remove
-MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[8])  #Break points and corresponding reads will get reassigned if within this distance
+#gene_count_table_file=args[3] # approximate gene-level counts
+trans_table_file=args[3]  # a reference annotation file
+known_table_file=args[4]
+gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[6]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[7])  #Break points and corresponding reads will get reassigned if within this distance
 				    #Low confidence only. Used for long reads. 
 
-output_file=args[9]       # name of the output file, will be <X>.summary
+output_file=args[8]       # name of the output file, will be <X>.summary
 
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
@@ -39,7 +39,7 @@ REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flag
 TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
 MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning reads will be remove
 REMOVE_ALT=TRUE
-REMOVE_CHRM=TRUE
+REMOVE_CHRM=FALSE #TRUE
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
@@ -321,7 +321,6 @@ if(REMOVE_CHRM){
    cand=cand[!with_chrM,]
 }
 
-
 ########## reallocate reads from low confidence calls if they are close
 #         to a high / medium confidence call of the same fusion.
 #         This is especially useful for noisy long read data
@@ -367,16 +366,16 @@ if(MIN_REASSIGNMENT_BASE_DIFF>0){
 }
 
 
-## Add information about gene-level counts
-geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
-geneCounts=geneCountsTemp[,2]
-names(geneCounts)=geneCountsTemp[,1]
-sFus=strsplit(cand$fusion_genes,":") #split fusion gene names
-gcS=sapply(sFus,function(x){geneCounts[x[1]]}) #look up counts for start gene
-gcE=sapply(sFus,function(x){geneCounts[x[2]]}) #look up counts for end gene
-gcS[is.na(gcS)]<-0 ; gcE[is.na(gcE)]<-0 #if gene not in table -> counts are zero
-cand$geneCounts1=gcS
-cand$geneCounts2=gcE
+## Add information about gene-level counts (turn-off for now...)
+#geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
+#geneCounts=geneCountsTemp[,2]
+#names(geneCounts)=geneCountsTemp[,1]
+#sFus=strsplit(cand$fusion_genes,":") #split fusion gene names
+#gcS=sapply(sFus,function(x){geneCounts[x[1]]}) #look up counts for start gene
+#gcE=sapply(sFus,function(x){geneCounts[x[2]]}) #look up counts for end gene
+#gcS[is.na(gcS)]<-0 ; gcE[is.na(gcE)]<-0 #if gene not in table -> counts are zero
+#cand$geneCounts1=gcS
+#cand$geneCounts2=gcE
 
 ########### now classify the candidates #########################
 
@@ -396,7 +395,7 @@ cand$classification[ cand$aligns & spanR ]<-"MediumConfidence"
 cand$classification[ cand$aligns & (spanP | single) & spanT ]<-"HighConfidence"
 
 ## special cases
-cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1) & cand$known!="Yes" ]<-"PotentialTransSplicing"
+cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1)]<-"PotentialTransSplicing"
 cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialRunThrough"
 
 #remove any group in the exclude list
