@@ -7,7 +7,7 @@
  ** https://github.com/Oshlack/JAFFA/wiki.
  **
  ** Author: Nadia Davidson <nadia.davidson@petermac.org>
- ** Last Update: 2020
+ ** Last Update: 2021
  *********************************************************/
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
@@ -17,7 +17,7 @@ get_fasta = {
    doc "Converting fastqs to fasta"
    output.dir=jaffa_output+branch
    produce(branch+".fasta"){
-      exec "$reformat in=$input out=$output threads=$threads ;"
+      exec "$reformat ignorebadquality=t in=$input out=$output threads=$threads ;"
    }
 }
 
@@ -31,7 +31,7 @@ minimap2_transcriptome = {
    }
 }
 
-/**infer_genome_alignment = {
+/** CODE NOT USED infer_genome_alignment = {
    doc "Bypassing genomic alignment and infering genome position from transcriptome alignments"
    output.dir=jaffa_output+branch
    produce(branch+"_genome.psl"){
@@ -72,8 +72,8 @@ common_steps = segment {
 if(args[0].endsWith(fastaSuffix)) {
    run { run_check + fastaInputFormat * [
 	    common_steps ] + compile_all_results 
-   } //or fastq.gz will be converted to fasta.
-} else {
+   } 
+} else { //or fastq.gz will be converted to fasta.
    run { run_check + fastqInputFormat * [
 	    get_fasta + common_steps ] + compile_all_results 
    }
