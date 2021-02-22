@@ -30,6 +30,8 @@ for(i in 1:length(dir)){
       single_list$sample<-rep(dir[i],length(single_list$transcript))
       #rearrange
       n=dim(single_list)[2]
+      show(n)
+      show(summary_files[i])
       full_list<-rbind(full_list,single_list)
 }
 colnames(full_list)<-gsub("_"," ",colnames(full_list))
@@ -40,7 +42,8 @@ colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
 full_list=full_list[,c("sample","fusion genes","chrom1","base1","strand1","chrom2","base2","strand2",
 	     "gap (kb)","spanning pairs","spanning reads",
 	     "inframe","aligns","rearrangement",
-	     "contig","contig break","classification","known","geneCounts1","geneCounts2","exon1","exon2")]
+	     "contig","contig break","classification","known")]
+#	     "contig","contig break","classification","known","geneCounts1","geneCounts2","exon1","exon2")]
 
 #first order on the gap size (useful for direct mode where the spanning reads are mostly just 1)
 full_list=full_list[order(as.numeric(full_list$`gap (kb)`),decreasing=F),] 
@@ -55,7 +58,8 @@ full_list=full_list[order(supporting_reads,decreasing=T),]
 v=split(full_list,full_list$classification)
 
 #then order on classification
-full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialTransSplicing"]])
+full_list=rbind(v[["HighConfidence"]],v[["MediumConfidence"]],v[["LowConfidence"]],v[["PotentialTransSplicing"]],
+	v[["PotentialRunThrough"]])
 write.csv(full_list,paste(out_name,".csv",sep=""),row.names=F)
 
 message(paste("Done writing output ",out_name,".csv",sep=""))
