@@ -5,7 +5,7 @@
  **
  ** Author: Nadia Davidson <nadia.davidson@petermac.org>, Rebecca Evans <rebecca.evans@petermac.org>
  ********************************************************************************/
-VERSION="2.1_dev"
+VERSION="2.1"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
