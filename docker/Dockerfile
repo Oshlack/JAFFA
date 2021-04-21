@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 MAINTAINER Rebecca Louise Evans (rebecca.louise.evans@gmail.com)
 
-LABEL Description="This image is used to run JAFFA" Version="2.0"
+LABEL Description="This image is used to run JAFFA" Version="2.1"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
