@@ -30,8 +30,6 @@ for(i in 1:length(dir)){
       single_list$sample<-rep(dir[i],length(single_list$transcript))
       #rearrange
       n=dim(single_list)[2]
-      show(n)
-      show(summary_files[i])
       full_list<-rbind(full_list,single_list)
 }
 colnames(full_list)<-gsub("_"," ",colnames(full_list))

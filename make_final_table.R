@@ -39,7 +39,7 @@ REGGAP=200 #fusions with less than this kb gap and no rearanngments will be flag
 TRAN_GAP_MAX=30 #gaps in the blat alignment which are smaller that this will be adjusted for by widening the block size.
 MIN_LOW_SPANNING_READS=2 #LowConfidence calls with less than this many spanning reads will be remove
 REMOVE_ALT=TRUE
-REMOVE_CHRM=FALSE #TRUE
+REMOVE_CHRM=TRUE
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
