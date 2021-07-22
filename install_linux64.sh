@@ -32,7 +32,7 @@ function blastn_install {
 }
 
 function extract_seq_from_fasta_install {
-    g++ -O3 -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
+    g++ -std=c++11 -O3 -o bin/extract_seq_from_fasta ../src/extract_seq_from_fasta.c++
 }
 
 function make_simple_read_table_install {
