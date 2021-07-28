@@ -26,7 +26,7 @@ minimap2_transcriptome = {
    output.dir=jaffa_output+branch
    produce(branch+".paf"){
         exec """
-           $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
+           $minimap2 -r100 --no-long-join -t $threads -x map-ont -c $transFasta $input > $output1 ;
         """
    }
 }
@@ -53,6 +53,16 @@ minimap2_genome = {
    }
 }
 
+report_3_gene_fusions = {
+   doc "Checking for reads that support multi-fusion transcripts"
+   output.dir=jaffa_output+branch
+   produce(branch+".3gene_summay",branch+".3gene_reads"){
+      exec """
+         make_3_gene_fusion_table $input.summary $input.txt $output.3gene_reads > $output.3gene_summay
+      """
+   }
+}
+
 reassign_dist=50
 
 readLayout="single"
@@ -65,7 +75,9 @@ common_steps = segment {
    //   infer_genome_alignment + 
    minimap2_genome + 
    make_fasta_reads_table +
-   get_final_list }
+   get_final_list +
+   report_3_gene_fusions
+}
 
 
 // below is the pipeline for a fasta file

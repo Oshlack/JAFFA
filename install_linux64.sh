@@ -6,13 +6,13 @@
 ## end of execution of this script. These paths can be changed if a different
 ## version of software is required. Note that R must be installed manually
 ##
-## Last Modified: 22nd October by Nadia Davidson
+## Last Modified: July 2021 by Nadia Davidson
 
 mkdir -p tools/bin 
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table" # make_count_table bypass_genomic_alignment"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table make_3_gene_fusion_table" # make_count_table bypass_genomic_alignment"
 
 #installation methods
 
@@ -29,6 +29,10 @@ function blastn_install {
     tar -xvf ncbi-blast-2.9.0+-x64-linux.tar.gz
     rm ncbi-blast-2.9.0+-x64-linux.tar.gz
     cp ncbi-blast-2.9.0+/bin/blastn bin/blastn
+}
+
+function make_3_gene_fusion_table_install {
+    g++ -std=c++11 -O3 -o bin/make_3_gene_fusion_table ../src/make_3_gene_fusion_table.c++
 }
 
 function extract_seq_from_fasta_install {
