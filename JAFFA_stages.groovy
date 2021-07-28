@@ -492,7 +492,7 @@ compile_all_results = {
         // change to the jaffa output directory
         exec """
             cd ${output.dir} ;
-            $R --vanilla --args $outputName $inputs < $R_compile_results_script ;
+            $R --vanilla --args $outputName $inputs.summary < $R_compile_results_script ;
             rm -f ${outputName}.fasta ;
             while read line; do $get_fusion_seqs \$line; done < ${outputName}.csv;
             echo "Done writing ${outputName}.fasta" ;
