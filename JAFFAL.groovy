@@ -56,7 +56,7 @@ minimap2_genome = {
 report_3_gene_fusions = {
    doc "Checking for reads that support multi-fusion transcripts"
    output.dir=jaffa_output+branch
-   produce(branch+".3gene_summay",branch+".3gene_reads"){
+   produce(branch+".3gene_summary",branch+".3gene_reads"){
       exec """
          $make_3_gene_fusion_table $input.summary $input.txt $output2 > $output1
       """

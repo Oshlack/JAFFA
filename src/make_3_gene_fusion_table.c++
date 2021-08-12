@@ -116,7 +116,7 @@ int main(int argc, char **argv){
 	} else {
 	  if(fgenes[0]==end_gene){ //work out the position of this fusion relative to others
 	    fgenes.insert(fgenes.begin(),start_gene); //shift all up..
-	  } else if (fgenes[fgenes.size()-1]==end_gene) {
+	  } else if (fgenes[fgenes.size()-1]==start_gene) {
 	    fgenes.push_back(end_gene);
 	  } else {
 	    cerr << "read id: " << itr->first << " does not conform to 3 gene fusion structure." << endl;
@@ -126,12 +126,13 @@ int main(int argc, char **argv){
 	}
 	itrF++;
       }
-      if(fgenes.size()<3) break;
-      string tfname=fgenes[0];
-      for(int i=1; i<fgenes.size() ; i++)
-	tfname+=":"+fgenes[i];
-      readOutFile << itr->first << "\t" << tfname << endl;
-      tfusion_counts[tfname]++;
+      if(fgenes.size()>=3){ 
+	string tfname=fgenes[0];
+	for(int i=1; i<fgenes.size() ; i++)
+	  tfname+=":"+fgenes[i];
+	readOutFile << itr->first << "\t" << tfname << endl;
+	tfusion_counts[tfname]++;
+      }
     }
     itr++;
   }
