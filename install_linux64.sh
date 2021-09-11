@@ -6,7 +6,7 @@
 ## end of execution of this script. These paths can be changed if a different
 ## version of software is required. Note that R must be installed manually
 ##
-## Last Modified: July 2021 by Nadia Davidson
+## Last Modified: Sep. 2021 by Nadia Davidson
 
 mkdir -p tools/bin 
 cd tools 
@@ -122,6 +122,17 @@ function dedupe_install {
     done
 }
 
+#Check if the version of gcc is >= 4.9
+gcc_version=`gcc -dumpversion`
+gcc_check=`echo -e "$gcc_version\n4.9" | sort -n | tail -n1`
+if [[ $gcc_chek = "4.9" ]] 
+then 
+   echo "Your version of gcc is $gcc_version."
+   echo "gcc must be >= 4.9 to install JAFFA. Exiting..."
+   exit 1
+fi
+
+echo "gcc check passed"
 
 echo "// Path to tools used by the JAFFA pipeline" > ../tools.groovy
 
