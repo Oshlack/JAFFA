@@ -17,10 +17,11 @@ commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe r
 #installation methods
 
 function minimap2_install {
+   wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17_x64-linux.tar.bz2
    wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17.tar.bz2
-   tar -xvf minimap2-2.17.tar.bz2 ; rm minimap2-2.17.tar.bz2
-   make -C minimap2-2.17
-   cp minimap2-2.17/minimap2 bin/
+   tar -xvf minimap2-2.17_x64-linux.tar.bz2 ; rm minimap2-2.17_x64-linux.tar.bz2
+#   make -C minimap2-2.17
+   cp minimap2-2.17_x64-linux/minimap2 bin/
 }
 
 
