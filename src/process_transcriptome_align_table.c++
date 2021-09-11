@@ -357,7 +357,7 @@ int main(int argc, char **argv){
   int i=0;
   for(; itr!=split_results.end(); itr++){
     multi_gene(itr->second, gene_positions, gap_size);
-    if(i%10000 == 0  ) cerr << i << endl;
+    if(i%1000000 == 0  ) cerr << i << endl;
     i++;
   }
   cerr << i << " reads processed. Finished." << endl;
