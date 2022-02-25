@@ -2,18 +2,16 @@
 
 if [[ -z ${@} ]]
 then
-  echo "USAGE: get_fusion_seqs <FUSION EVEN LINE> [OUTPUT NAME]"
+  echo "USAGE: get_fusion_seqs <FUSION EVEN LINE> <OUTPUT NAME>"
   echo ""
   echo "Typically this script is used inside a while loop, e.g"
   echo ""
-  echo "while read l;do get_fusion_seqs \$l;done < jaffa_results.csv"
+  echo "while read l;do get_fusion_seqs \$l name ;done < jaffa_results.csv"
   echo ""
   exit
 fi
 
 function get_fusion_seqs() {
-
-  type=""
 
   IFS=","
   tokens=(${@})
@@ -33,26 +31,18 @@ function get_fusion_seqs() {
 
   res=${tokens[18]}
 
-  if [[ ${field1} =~ "sample" ]]
+  if [[ ${field2} =~ "fusion" ]]
   then
     return
   fi
 
-  if [[ -z ${res} ]]
-  then
-    res="jaffa_results"
-  fi
-
-  res="${res}.fasta"
-
-  fusions_file=${field1}/${field1}${type}.fusions.fa
+  fusions_file=$(find -name ${field1}.fusions.fa)
 
   new_id=">${field1}|${field2}|${field3}"
   echo ${new_id} >> ${res}
   brk_pnt=${field4}
 
   #NOTE not sure why grep ^> isn't working
-  #sequence=$(grep -A1 "^>${field3}" ${fusions_file} | grep -v "^>")
   sequence=$(grep -A1 "^>${field3}" ${fusions_file} | grep -v ">")
 
   start=$(echo ${sequence} | cut -c 1-$((${brk_pnt}-1)))

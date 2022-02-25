@@ -3,9 +3,9 @@
  ** JAFFA_direct.groovy). See our website for details on running, 
  ** https://github.com/Oshlack/JAFFA.
  **
- ** Author: Nadia Davidson <nadia.davidson@petermac.org>, Rebecca Evans <rebecca.evans@petermac.org>
+ ** Author: Nadia Davidson <davidson.n@wehi.edu.au>, Rebecca Evans <rebecca.evans@petermac.org>
  ********************************************************************************/
-VERSION="2.2"
+VERSION="2.3_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -489,20 +489,25 @@ compile_all_results = {
         output.dir=jaffa_output
     }
     produce(outputName+".fasta",outputName+".csv") {
-        // change to the jaffa output directory
+        // change to the jaffa output directory   
         exec """
-            cd ${output.dir} ;
-            $R --vanilla --args $outputName $inputs.summary < $R_compile_results_script ;
-            rm -f ${outputName}.fasta ;
-            while read line; do $get_fusion_seqs \$line; done < ${outputName}.csv;
-            echo "Done writing ${outputName}.fasta" ;
+            $R --vanilla --args $output2.prefix $inputs.summary < $R_compile_results_script ;
+            rm -f $output1;
+            while read line; do $get_fusion_seqs \$line $output1 ; done < $output2;
+
+            echo "Done writing $output1";
             echo "All Done." ;
-	    echo "***********************************************************************" ;
-	    echo " Citation: " ;
+	    echo "*************************************************************************" ;
+	    echo " Citation for JAFFA_direct, JAFFA_assembly and JAFFA_hybrid: " ;
 	    echo "   Davidson, N.M., Majewski, I.J. & Oshlack, A. ";
 	    echo "   JAFFA: High sensitivity transcriptome-focused fusion gene detection." ;
 	    echo "   Genome Med 7, 43 (2015)" ;
-	    echo "***********************************************************************" ;
+	    echo "*************************************************************************" ;
+	    echo " Citation for JAFFAL: " ;
+	    echo "   Davidson, N.M. et al. ";
+	    echo "   JAFFAL: detecting fusion genes with long-read transcriptome sequencing" ;
+	    echo "   Genome Biol. 23, 10 (2022)" ;
+	    echo "*************************************************************************" ;
         ""","compile_all_results"
     }
 }
