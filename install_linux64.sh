@@ -95,8 +95,8 @@ function samtools_install {
 function bowtie2_install {
     wget --no-check-certificate http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.4.4/bowtie2-2.4.4-linux-x86_64.zip
     unzip bowtie2-2.4.4-linux-x86_64.zip ; rm bowtie2-2.4.4-linux-x86_64.zip
-    ln -s $PWD/bowtie2-2.4.4/bowtie2 $PWD/bin
-    ln -s $PWD/bowtie2-2.4.4/bowtie2-build $PWD/bin
+    ln -s $PWD/bowtie2-2.4.4-linux-x86_64/bowtie2 $PWD/bin
+    ln -s $PWD/bowtie2-2.4.4-linux-x86_64/bowtie2-build $PWD/bin
 }
 
 function blat_install {
