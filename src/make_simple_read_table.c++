@@ -181,7 +181,6 @@ int main(int argc, char **argv){
 	gene_reads[gt_itr->first].first.push_back(read_id);
       else
 	gene_reads[gt_itr->first].second.push_back(read_id); 
-      cout << reads.at(r) << " " << read_id << " " << gt_itr->first << endl; 
     }
   }
   trans_read_map_fixed.clear();
