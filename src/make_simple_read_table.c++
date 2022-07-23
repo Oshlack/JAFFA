@@ -175,7 +175,7 @@ int main(int argc, char **argv){
     //now loop over the reads and separate the read start and ends
     for(int r=0; r<reads.size(); r++){
       //separate the read id and pair end
-      string read_id=reads.at(r).substr(0,reads.at(r).size()-1); 
+      string read_id=reads.at(r).substr(0,reads.at(r).find("/")-1);//reads.at(r).size()-1); 
       char read_end=reads.at(r).back();
       if(read_end=='1') // First of pair (assumes the read IDs ends with 1).
 	gene_reads[gt_itr->first].first.push_back(read_id);
