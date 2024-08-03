@@ -159,19 +159,23 @@ echo "R=\"$R_path\"" >> ../tools.groovy
 #loop through commands to check they are all installed
 echo "Checking that all required tools were installed:"
 Final_message="All commands installed successfully!"
+exit_code=0
 for c in $commands ; do
     c_path=`which $PWD/bin/$c 2>/dev/null`
     if [ -z $c_path ] ; then
-	echo -n "WARNING: $c could not be found!!!! " 
-	echo "You will need to download and install $c manually, then add its path to tools.groovy"
-	Final_message="WARNING: One or more command did not install successfully. See warning messages above. \
-                       You will need to correct this before running JAFFA."
+      echo -n "WARNING: $c could not be found!!!! " 
+      echo "You will need to download and install $c manually, then add its path to tools.groovy"
+      Final_message="WARNING: One or more command did not install successfully. See warning messages above. \
+                           You will need to correct this before running JAFFA."
+      exit_code=1
     else 
         echo "$c looks like it has been installed"
     fi
 done
 echo "**********************************************************"
 echo $Final_message
+
+exit $exit_code
 
 
 
