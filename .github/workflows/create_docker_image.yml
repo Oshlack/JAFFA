@@ -1,5 +1,6 @@
 # This Action is adapted from the GitHub Docs, located at:
 # http://docs.github.com/en/actions/publishing-packages/publishing-docker-images#publishing-images-to-github-packages
+
 name: "Publish JAFFA Docker image"
 
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
@@ -10,7 +11,7 @@ on:
         description: 'JAFFA version to tag with'
         required: true
       latest:
-        description: 'Set the :latest Docker tag. Only enable for release builds.'
+        description: 'Set the :latest Docker tag. Only enable for release builds, as it is recommended that users install the software at the :latest tag.'
         required: true
         default: true
         type: boolean
@@ -63,11 +64,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see "[AUTOTITLE](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds)."
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
