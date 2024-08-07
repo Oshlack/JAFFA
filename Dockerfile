@@ -50,6 +50,13 @@ RUN sed -i 's/refBase = codeBase/refBase = "\/ref"/' JAFFA_stages.groovy
 # we only need this to run the image
 FROM base
 
+LABEL org.opencontainers.image.title "JAFFA" \
+      org.opencontainers.image.description "High sensitivity transcriptome-focused fusion gene detection." \
+      org.opencontainers.image.authors "Davidson, N.M., Majewski, I.J. & Oshlack, A." \
+      org.opencontainers.image.source "https://github.com/Oshlack/JAFFA" \
+      org.opencontainers.image.documentation "https://github.com/Oshlack/JAFFA/wiki/HowToSetUpJAFFA#docker"
+
+
 COPY --from=build /JAFFA /JAFFA
 # RUN strip --strip-debug /usr/local/lib/R/site-library/*/libs/*.so
 
@@ -59,7 +66,7 @@ RUN apt autoremove
 ENV PATH=${PATH}:/JAFFA/tools/bin:/JAFFA
 
 # set locale
-ENV export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 ENTRYPOINT ["/JAFFA/tools/bin/bpipe", "run"]
