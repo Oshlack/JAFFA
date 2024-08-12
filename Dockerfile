@@ -1,22 +1,12 @@
 # syntax=docker/dockerfile:1
 
-#######################################
-#              BASE IMAGE             #
-#######################################
-#
-# This image contains basic packages which are needed in both
-# the build image and the runtime image. In this case,
-# it sets the locale information to en_US.UTF8 for R,
-# installs a modern version of R, and also the Java runtime.
-
-
-# bullseye is stable and contains openjdk-11-jre in stable by default
+# must use bookworm for directly compatible R version >=4.4.0
 FROM debian:bullseye-slim AS base
 
 # get latest version of R: https://cran.r-project.org/bin/linux/debian/
 RUN apt-get update
 RUN apt-get install -y gnupg2
-RUN apt-get install -y perl
+RUN apt-get install -y perl python3
 
 # set locale
 RUN apt-get install -y locales
@@ -42,13 +32,6 @@ RUN apt-get install -y r-base-core r-bioc-iranges openjdk-11-jre --no-install-re
 # # install needed packages
 # RUN R -e 'BiocManager::install("IRanges")'
 
-#######################################
-#            BUILD PACKAGE            #
-#######################################
-#
-# This is the build image, which will download and install
-# all the dependencies using the bundled ./install_linux64.sh
-# script.
 
 
 FROM base AS build
@@ -65,42 +48,31 @@ COPY ./src ./src
 
 RUN ./install_linux64.sh
 
+# apply a patch to the issue at https://github.com/ssadedin/bpipe/pull/293,
+# which seems to disproportionately affect Docker images
+RUN patch ./tools/bpipe-0.9.9.2/bin/bpipe ./src/pid-error.patch
+
 COPY . .
 
 # set a reference file path to /ref for easy binding
 RUN sed -i 's/refBase = codeBase/refBase = "\/ref"/' JAFFA_stages.groovy
 
-
-#######################################
-#              RUN IMAGE              #
-#######################################
-#
-# This is the runtime image, which is what will be executed.
-# Ensure that all necessary files are copied into this image!
-
-
+# we only need this to run the image
 FROM base
 
-# add authorship information
 LABEL org.opencontainers.image.title "JAFFA" \
       org.opencontainers.image.description "High sensitivity transcriptome-focused fusion gene detection." \
       org.opencontainers.image.authors "Davidson, N.M., Majewski, I.J. & Oshlack, A." \
       org.opencontainers.image.source "https://github.com/Oshlack/JAFFA" \
       org.opencontainers.image.documentation "https://github.com/Oshlack/JAFFA/wiki/HowToSetUpJAFFA#docker"
 
-# copy packages from the build repository
-COPY --from=build /JAFFA /JAFFA
 
-# clean up any packages lying around, if they are installed accidentially for some reason
+COPY --from=build /JAFFA /JAFFA
+# RUN strip --strip-debug /usr/local/lib/R/site-library/*/libs/*.so
+
 RUN apt remove -y gcc
 RUN apt autoremove
 
 ENV PATH=${PATH}:/JAFFA/tools/bin:/JAFFA
-
-# this flag disables the "WARNING: An illegal reflective access operation has occurred" message.
-# this can currently be safely disabled, as the Java runtime version is fixed at openjdk-11-jre,
-# where this is safely permitted. in the future, if Java or Groovy is updated, this variable
-# should be removed.
-ENV JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS --illegal-access=permit"
 
 ENTRYPOINT ["/JAFFA/tools/bin/bpipe", "run"]
