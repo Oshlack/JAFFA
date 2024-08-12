@@ -26,19 +26,15 @@ RUN apt-get update
 # fix version of Java for bpipe 0.9.9.2
 RUN apt-get install -y r-base-core r-bioc-iranges openjdk-11-jre --no-install-recommends
 
-# # install bioconductor
-# RUN R -e 'install.packages("BiocManager")'
-
-# # install needed packages
-# RUN R -e 'BiocManager::install("IRanges")'
-
+# install libncurses.so.6 for minimap2
+RUN apt-get install -y libncurses6 --no-install-recommends
 
 
 FROM base AS build
 # install useful tools for building non-R software
 # this is placed after the R installs so that they can
 # be cached
-RUN apt-get install -y build-essential wget make cmake unzip zip python3 zlib1g-dev libncurses5-dev libncursesw5-dev
+RUN apt-get install -y build-essential wget make cmake unzip zip python3 zlib1g-dev libncurses-dev
 
 
 WORKDIR /JAFFA
