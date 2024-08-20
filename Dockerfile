@@ -44,10 +44,6 @@ COPY ./src ./src
 
 RUN ./install_linux64.sh
 
-# apply a patch to the issue at https://github.com/ssadedin/bpipe/pull/293,
-# which seems to disproportionately affect Docker images
-RUN patch ./tools/bpipe-0.9.9.2/bin/bpipe ./src/pid-error.patch
-
 COPY . .
 
 # set a reference file path to /ref for easy binding
