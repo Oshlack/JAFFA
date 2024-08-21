@@ -1,0 +1,19 @@
+--- bpipe	2016-07-18 13:11:39
++++ bpipe-patched	2024-08-13 00:33:37
+@@ -633,7 +633,15 @@
+ set +f
+ 
+ tmsg " Waiting for pid to be created"
+-while [ ! -e .bpipe.$LAUNCHER_PID.run.pid ];
++
++# this checks:
++#  - whether the file .bpipe.$LAUNCHER_PID.run.pid either does not exist OR does exist and is not empty
++#  - and also validates that the PID is in fact a multi-digit string
++# in response to https://github.com/ssadedin/bpipe/issues/201 and https://github.com/ssadedin/bpipe/issues/290.
++#
++# see PR https://github.com/ssadedin/bpipe/pull/293
++while [ ! -s .bpipe.$LAUNCHER_PID.run.pid ] || \
++	! [[ $(cat .bpipe.$LAUNCHER_PID.run.pid) =~ ^[0-9]+$ ]];
+ do
+   if type usleep > /dev/null 2>&1 ;
+   then

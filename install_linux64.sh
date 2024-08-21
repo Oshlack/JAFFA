@@ -60,6 +60,11 @@ function bpipe_install {
    wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
    tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz
    ln -s $PWD/bpipe-0.9.9.2/bin/* $PWD/bin/
+
+   # apply the patch to bpipe merged in #293 to fix a race condition which
+   # is common in containerised runs, but also occurs generally under a native
+   # runtime:  for more information, see https://github.com/ssadedin/bpipe/issues/290
+   patch $PWD/bpipe-0.9.9.2/bin/bpipe ../src/pid-error.patch
 }
 
 function velveth_install {
@@ -159,19 +164,23 @@ echo "R=\"$R_path\"" >> ../tools.groovy
 #loop through commands to check they are all installed
 echo "Checking that all required tools were installed:"
 Final_message="All commands installed successfully!"
+exit_code=0
 for c in $commands ; do
     c_path=`which $PWD/bin/$c 2>/dev/null`
     if [ -z $c_path ] ; then
-	echo -n "WARNING: $c could not be found!!!! " 
-	echo "You will need to download and install $c manually, then add its path to tools.groovy"
-	Final_message="WARNING: One or more command did not install successfully. See warning messages above. \
-                       You will need to correct this before running JAFFA."
+      echo -n "WARNING: $c could not be found!!!! " 
+      echo "You will need to download and install $c manually, then add its path to tools.groovy"
+      Final_message="WARNING: One or more command did not install successfully. See warning messages above. \
+                           You will need to correct this before running JAFFA."
+      exit_code=1
     else 
         echo "$c looks like it has been installed"
     fi
 done
 echo "**********************************************************"
 echo $Final_message
+
+exit $exit_code
 
 
 
