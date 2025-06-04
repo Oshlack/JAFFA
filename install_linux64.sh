@@ -132,7 +132,7 @@ function dedupe_install {
 #Check if the version of gcc is >= 4.9
 gcc_version=`gcc -dumpversion`
 gcc_check=`echo -e "$gcc_version\n4.9" | sort -n | tail -n1`
-if [[ $gcc_chek = "4.9" ]] 
+if [[ $gcc_check = "4.9" ]] 
 then 
    echo "Your version of gcc is $gcc_version."
    echo "gcc must be >= 4.9 to install JAFFA. Exiting..."
