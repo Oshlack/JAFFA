@@ -124,7 +124,7 @@ function dedupe_install {
     for script in `ls $PWD/bbmap/*.sh` ; do
 	s=`basename $script`
 	s_pre=`echo $s | sed 's/.sh//g'`
-	echo "$PWD/bbmap/$s \$@" > $PWD/bin/$s_pre
+	echo "cd $PWD/bbmap && ./$s \$@" > $PWD/bin/$s_pre
 	chmod +x $PWD/bin/$s_pre
     done
 }
