@@ -23,6 +23,9 @@ RUN echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >> /
 
 RUN apt-get update
 
+# install procps to get ps, needed in Nextflow
+RUN apt-get install -y procps
+
 # fix version of Java for bpipe 0.9.9.2
 RUN apt-get install -y r-base-core r-bioc-iranges openjdk-11-jre --no-install-recommends
 
@@ -53,10 +56,10 @@ RUN sed -i 's/refBase = codeBase/refBase = "\/ref"/' JAFFA_stages.groovy
 FROM base
 
 LABEL org.opencontainers.image.title "JAFFA" \
-      org.opencontainers.image.description "High sensitivity transcriptome-focused fusion gene detection." \
-      org.opencontainers.image.authors "Davidson, N.M., Majewski, I.J. & Oshlack, A." \
-      org.opencontainers.image.source "https://github.com/Oshlack/JAFFA" \
-      org.opencontainers.image.documentation "https://github.com/Oshlack/JAFFA/wiki/HowToSetUpJAFFA#docker"
+    org.opencontainers.image.description "High sensitivity transcriptome-focused fusion gene detection." \
+    org.opencontainers.image.authors "Davidson, N.M., Majewski, I.J. & Oshlack, A." \
+    org.opencontainers.image.source "https://github.com/Oshlack/JAFFA" \
+    org.opencontainers.image.documentation "https://github.com/Oshlack/JAFFA/wiki/HowToSetUpJAFFA#docker"
 
 
 COPY --from=build /JAFFA /JAFFA
