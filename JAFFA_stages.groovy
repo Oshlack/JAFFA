@@ -75,6 +75,8 @@ transLength=100 //the minimum length for Oases to report an assembled contig
 // for aligning to known genes using blastn
 //96% similar when we blat to the human transcriptome
 blast_options="-perc_identity 96"
+anno_prefix="_(EN[^_]*)__"
+
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
 
@@ -336,7 +338,7 @@ filter_transcripts = {
     produce(input.prefix+".txt"){ // ,branch+".geneCounts") {
         from(".paf") {
             exec """
-	    $process_transcriptome_align_table $input $gapSize $transTable > $output1
+	    $process_transcriptome_align_table $input $gapSize $transTable \'$anno_prefix\' > $output1
             ""","filter_transcripts"
         }
 	// code related to obtaining gene-level counts in below 

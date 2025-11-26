@@ -34,7 +34,7 @@ using namespace std;
 // combination of command line options.
 void print_usage(){
   cerr << endl;
-  cerr << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> > <out table>" << endl;
+  cerr << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> <gene name prefix regex> > <out table>" << endl;
   cerr << endl;
 }
 
@@ -137,7 +137,10 @@ template <typename T> vector<T> reduce(vector<T> unreduced){
    and if they are it will print relevant information for latter steps in JAFFA.
    This method does the brunt of work in filtering alignments to detect fusions.
 **/
-void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_positions, int gap_size){
+void multi_gene(vector<Alignment> this_al,
+		const map<string, Position> & gene_positions,
+		int gap_size,
+		string anno_prefix){
 
   //if it only matches one transcript, return
   if(this_al.size()<2) return;
@@ -162,22 +165,25 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 
   //now get just the non-redundant set of transcript alignments
   vector<Alignment> regions=remove_redundant(this_al);
-
+  
   //what do these alignments correspond to in the genome?
   vector< string > gene_names; //actually these are the transcript IDs
   map< string, string > gene_name_lookup; //maps trans ids to gene symbols 
   smatch m; //extract the gene id
+
   for(int a=0; a<regions.size(); a++){
     string trans_id=regions[a].q_id.get_name();
-    if(regex_search(trans_id,m,regex("_(EN[^_]*)__"))){ //Assumed ENSEMBL annotation naming here
-      gene_names.push_back(m[1].str());
-      gene_name_lookup[trans_id]=gene_positions.at(m[1].str()).gene;
+    if(regex_search(trans_id,m,regex(anno_prefix))){ 
+	gene_names.push_back(m[1].str());
+	gene_name_lookup[trans_id]=gene_positions.at(m[1].str()).gene;
     } else {
-      gene_names.push_back(trans_id);
-      gene_name_lookup[trans_id]=gene_positions.at(trans_id).gene;
-    }
-  }
-
+      cerr << "Error: gene name prefix, " << anno_prefix ;
+      cerr << "doesn't match gene names. Exiting" << endl;
+      exit(1);
+      //	gene_names.push_back(trans_id);
+      //	gene_name_lookup[trans_id]=gene_positions.at(trans_id).gene;
+     }
+			 
   //split by chrom
   map< string, vector<int> > split_chroms;
   vector<Position> gp; 
@@ -185,7 +191,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     const string trans=gene_names.at(i);
     if(gene_positions.find(trans) == gene_positions.end()){ //throw an error if transcript id not found...
       cerr << "Could not find transcript ID: " << trans << " in reference table. Ignoring chimera." << endl;
-      return;
+      exit(1);
     } 
     string gp_chrom=gene_positions.at(trans).chrom; 
     //if(gp_chrom=="chrM") return; //likely false chimera from library prep or other artificat if fusion involved chrM
@@ -193,7 +199,7 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     split_chroms[gp_chrom].push_back(i);
     gp.push_back(gene_positions.at(trans));
   }
-  
+
   vector<Alignment> new_ranges;
   map< string, vector<int> >::iterator sc_itr = split_chroms.begin();
   for(;sc_itr!=split_chroms.end(); ++sc_itr){
@@ -253,7 +259,9 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
     }
   }
 
+  }
 }
+  
 
 
 // Main does the I/O and call multi_gene for each read and its associated
@@ -261,14 +269,17 @@ void multi_gene(vector<Alignment> this_al, const map<string, Position> & gene_po
 int main(int argc, char **argv){
 
   //wrong number of arguements. Print help.
-  if(argc!=4){
+  if(argc!=5){
     print_usage();
     exit(1);
   }
 
   //minimum gap size in genome is argv[2]
   int gap_size=atoi(argv[2]);
-
+  
+  //prefix of the gene names in the annotation file (regex pattern)
+  string anno_prefix=argv[4];
+  
   //get the gene names and positions
   /** 
    ** Now read in the gene to transcript ID mapping 
@@ -356,7 +367,7 @@ int main(int argc, char **argv){
   map< string , vector<Alignment> >:: iterator itr =  split_results.begin();
   int i=0;
   for(; itr!=split_results.end(); itr++){
-    multi_gene(itr->second, gene_positions, gap_size);
+    multi_gene(itr->second, gene_positions, gap_size, anno_prefix);
     if(i%1000000 == 0  ) cerr << i << endl;
     i++;
   }
