@@ -5,7 +5,7 @@
  **
  ** Author: Nadia Davidson <davidson.n@wehi.edu.au>, Rebecca Evans <rebecca.evans@petermac.org>
  ********************************************************************************/
-VERSION="2.4_dev"
+VERSION="2.5_dev"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -257,8 +257,8 @@ get_unmapped = {
 //transcriptome as well as the reference
 get_assembly_unmapped = {
     doc "Get assembly unmapped"
-    output.dir=jaffa_output+branch
-    produce(branch+"-unmapped.fasta", branch+"_discordant_pairs.bam") {
+    output.dir=jaffa_output+branch.toString()
+    produce(branch.toString()+"-unmapped.fasta", branch.toString()+"_discordant_pairs.bam") {
         from("*_leftover_reads*.gz") {
             def input_string = ""
             if (inputs.size() == 1) {
@@ -437,7 +437,7 @@ merge_assembly_and_unmapped_reads_candidates = {
     doc "Concatenate fusion sequence files and reads files (hybrid only)"
     output.dir=jaffa_output+branch.toString()
     produce(branch.toString()+".all.fusions.fa", branch.toString()+".all.reads") {
-        from("fusions.fa", branch+".fusions.fa", "reads", branch+".reads") {
+        from("fusions.fa", branch.toString()+".fusions.fa", "reads", branch.toString()+".reads") {
             exec """
                 cat $input1 $input2 > $output1 ;
                 cp $input3 $output2 ; tail -n+2 $input4 >> $output2
