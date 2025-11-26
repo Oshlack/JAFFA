@@ -57,14 +57,14 @@ function make_count_table_install {
 #}
 
 function bpipe_install {
-   wget -O bpipe-0.9.9.2.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.9.2/bpipe-0.9.9.2.tar.gz
-   tar -zxvf bpipe-0.9.9.2.tar.gz ; rm bpipe-0.9.9.2.tar.gz
-   ln -s $PWD/bpipe-0.9.9.2/bin/* $PWD/bin/
+   wget -O bpipe-0.9.13.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.13/bpipe-0.9.13.tar.gz
+   tar -zxvf bpipe-0.9.13.tar.gz ; rm bpipe-0.9.13.tar.gz
+   ln -s $PWD/bpipe-0.9.13/bin/* $PWD/bin/
 
    # apply the patch to bpipe merged in #293 to fix a race condition which
    # is common in containerised runs, but also occurs generally under a native
    # runtime:  for more information, see https://github.com/ssadedin/bpipe/issues/290
-   patch $PWD/bpipe-0.9.9.2/bin/bpipe ../src/pid-error.patch
+   patch $PWD/bpipe-0.9.13/bin/bpipe ../src/pid-error.patch
 }
 
 function velveth_install {
