@@ -24,7 +24,7 @@ get_fasta = {
 minimap2_transcriptome = {
    doc "Aligning candidates to transcriptome using minimap2"
    output.dir=jaffa_output+branch
-   produce(branch+".paf"){
+   produce(branch.toString() +".paf"){
         exec """
            $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
         """
@@ -34,7 +34,7 @@ minimap2_transcriptome = {
 /** CODE NOT USED infer_genome_alignment = {
    doc "Bypassing genomic alignment and infering genome position from transcriptome alignments"
    output.dir=jaffa_output+branch
-   produce(branch+"_genome.psl"){
+   produce(branch.toString() +"_genome.psl"){
       exec """
        $bypass_genomic_alignment $transTable $input.txt > $output
        """
@@ -44,7 +44,7 @@ minimap2_transcriptome = {
 minimap2_genome = {
    doc "Aligning candidates to genome using minimap2"
    output.dir=jaffa_output+branch
-   produce(branch+"_genome.paf",branch+"_genome.psl"){ 
+   produce(branch.toString()+"_genome.paf",branch.toString()+"_genome.psl"){ 
 	exec """
 	   $minimap2 -t $threads -x splice -c $genomeFasta $input > $output1;
 	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
@@ -55,8 +55,8 @@ minimap2_genome = {
 
 report_3_gene_fusions = {
    doc "Checking for reads that support multi-fusion transcripts"
-   output.dir=jaffa_output+branch
-   produce(branch+".3gene_summary",branch+".3gene_reads"){
+   output.dir=jaffa_output+branch.toString()
+   produce(branch.toString()+".3gene_summary",branch.toString()+".3gene_reads"){
       exec """
          $make_3_gene_fusion_table $input.summary $input.txt $output2 > $output1
       """
@@ -72,7 +72,6 @@ common_steps = segment {
    minimap2_transcriptome + 
    filter_transcripts +
    extract_fusion_sequences +
-   //   infer_genome_alignment + 
    minimap2_genome + 
    make_fasta_reads_table +
    get_final_list +
