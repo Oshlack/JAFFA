@@ -6,7 +6,7 @@
 ## end of execution of this script. These paths can be changed if a different
 ## version of software is required. Note that R must be installed manually
 ##
-## Last Modified: Sep. 2021 by Nadia Davidson
+## Last Modified: 2025 by Nadia Davidson
 
 mkdir -p tools/bin 
 cd tools 
@@ -17,11 +17,9 @@ commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe r
 #installation methods
 
 function minimap2_install {
-   wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17_x64-linux.tar.bz2
-   wget https://github.com/lh3/minimap2/releases/download/v2.17/minimap2-2.17.tar.bz2
-   tar -xvf minimap2-2.17_x64-linux.tar.bz2 ; rm minimap2-2.17_x64-linux.tar.bz2
-#   make -C minimap2-2.17
-   cp minimap2-2.17_x64-linux/minimap2 bin/
+    wget https://github.com/lh3/minimap2/releases/download/v2.30/minimap2-2.30_x64-linux.tar.bz2
+    tar -xvf minimap2-2.30_x64-linux.tar.bz2 ; rm minimap2-2.30_x64-linux.tar.bz2
+    cp minimap2-2.30_x64-linux/minimap2 bin/
 }
 
 
@@ -98,10 +96,10 @@ function samtools_install {
 }
 
 function bowtie2_install {
-    wget --no-check-certificate http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.4.4/bowtie2-2.4.4-linux-x86_64.zip
-    unzip bowtie2-2.4.4-linux-x86_64.zip ; rm bowtie2-2.4.4-linux-x86_64.zip
-    ln -s $PWD/bowtie2-2.4.4-linux-x86_64/bowtie2 $PWD/bin
-    ln -s $PWD/bowtie2-2.4.4-linux-x86_64/bowtie2-build $PWD/bin
+    wget --no-check-certificate https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.5.4/bowtie2-2.5.4-linux-x86_64.zip
+    unzip bowtie2-2.5.4-linux-x86_64.zip ; rm bowtie2-2.5.4-linux-x86_64.zip
+    ln -s $PWD/bowtie2-2.5.4-linux-x86_64/bowtie2 $PWD/bin
+    ln -s $PWD/bowtie2-2.5.4-linux-x86_64/bowtie2-build $PWD/bin
 }
 
 function blat_install {
