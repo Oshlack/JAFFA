@@ -6,8 +6,8 @@
  ** See our website for details	on running options:
  ** https://github.com/Oshlack/JAFFA/wiki.
  **
- ** Author: Nadia Davidson <nadia.davidson@petermac.org>
- ** Last Update: 2021
+ ** Author: Nadia Davidson <davidson.n@wehi.edu.au>
+ ** Last Update: 2025
  *********************************************************/
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath

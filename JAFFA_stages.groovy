@@ -3,7 +3,7 @@
  ** JAFFA_direct.groovy). See our website for details on running, 
  ** https://github.com/Oshlack/JAFFA.
  **
- ** Author: Nadia Davidson <davidson.n@wehi.edu.au>, Rebecca Evans <rebecca.evans@petermac.org>
+ ** Authors: Nadia Davidson <davidson.n@wehi.edu.au>, Rebecca Evans 
  ********************************************************************************/
 VERSION="2.4"
 

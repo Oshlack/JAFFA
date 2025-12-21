@@ -3,7 +3,11 @@ For instructions to install and run under linux x86_64 (other systems not suppor
 
 Questions and bug reports should be directed to the google group linked to on that page.
 
-If you use JAFFA to analyse your data, please cite our paper, "Nadia M Davidson, Ian J Majewski and Alicia Oshlack, JAFFA: High sensitivity transcriptome-focused fusion gene detection, Genome Medicine 2015, 7:43", http://www.genomemedicine.com/content/7/1/43
+If you use JAFFA to analyse your data, please cite our papers:
 
-Written and maintained by Nadia Davidson, Murdoch Childrens Research Institute, Parkville, Australia.
-Last Updated 13 January 2016
+"Nadia M Davidson, Ian J Majewski and Alicia Oshlack, JAFFA: High sensitivity transcriptome-focused fusion gene detection, Genome Medicine 2015, 7:43", http://www.genomemedicine.com/content/7/1/43
+
+"Nadia M Davidson, Ying Chen, Teresa Sadras, Georgina L Ryland, Piers Blombery, Paul G Ekert, Jonathan Göke, Alicia Oshlack, JAFFAL: detecting fusion genes with long-read transcriptome sequencing, Genome biology 2022, Volume 23, article number 10, https://link.springer.com/article/10.1186/s13059-021-02588-5"
+
+Written and maintained by Nadia Davidson, Walter and Eliza Hall Institute
+Last Updated 21 December 2025
