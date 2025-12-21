@@ -16,7 +16,7 @@ load codeBase+"/JAFFA_stages.groovy"
 get_fasta = {
    doc "Converting fastqs to fasta"
    output.dir=jaffa_output+branch
-   produce(branch+".fasta"){
+   produce(branch.toString()+".fasta"){
       exec "$reformat ignorebadquality=t in=$input out=$output threads=$threads ;"
    }
 }
@@ -26,7 +26,7 @@ minimap2_transcriptome = {
    output.dir=jaffa_output+branch
    produce(branch.toString() +".paf"){
         exec """
-           $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
+           $minimap2 -t $threads -c $transFasta $input > $output1 ;
         """
    }
 }
@@ -46,7 +46,7 @@ minimap2_genome = {
    output.dir=jaffa_output+branch
    produce(branch.toString()+"_genome.paf",branch.toString()+"_genome.psl"){ 
 	exec """
-	   $minimap2 -t $threads -x splice -c $genomeFasta $input > $output1;
+	   $minimap2 -t $threads -x splice --junc-bed $transBed -c $genomeFasta $input > $output1;
 	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
 	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", \$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," }' >> $output2 ;
         """

@@ -36,7 +36,7 @@ readLayout="paired" //change to "single" or single-end reads
 
 // Genome, Transcriptome and related data paths. 
 genome="hg38"
-annotation="genCode22"
+annotation="genCode49"
 
 // You have two options:
 // 1) put the full file name (including path) below. e.g. genomeFasta=<path_to_genome>/<genome_file_name>
@@ -103,6 +103,7 @@ maskedGenome=maskedBase+"/Masked_"+genome
 //location of transcriptomic data
 transFasta=transBase+"/"+genome+"_"+annotation+".fa"  // transcript cDNA sequences
 transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinates
+transBed=transBase+"/"+genome+"_"+annotation+".bed" // bed file
 
 //known fusions database
 knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
