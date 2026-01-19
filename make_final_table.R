@@ -24,13 +24,18 @@ blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
 #gene_count_table_file=args[3] # approximate gene-level counts
 trans_table_file=args[3]  # a reference annotation file
-known_table_file=args[4]
-gapmin=as.numeric(args[5]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[6]		  # which "classifications" to remove
-MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[7])  #Break points and corresponding reads will get reassigned if within this distance
+
+known_table_file_mitel=args[4]
+known_table_file_cosmic=args[5]
+known_table_file_cosmic_tier=args[6]
+known_table_file_gtex=args[7]
+
+gapmin=as.numeric(args[8]) # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[9]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[10])  #Break points and corresponding reads will get reassigned if within this distance
 				    #Low confidence only. Used for long reads. 
 
-output_file=args[8]       # name of the output file, will be <X>.summary
+output_file=args[11]       # name of the output file, will be <X>.summary
 
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
@@ -261,7 +266,7 @@ format_positions<-function(x){
 	gap=as.numeric(as.character(x$gap[1])) ; rearrangement=x$rearrangement[1] 
 	aligns=all(x$aligns) ; inframe=x$inFrame[1]
 	contig_break=min(x$brk)[1] 
-	fusion_genes=paste(x$gene_name[ord[1]],x$gene_name[ord[2]],sep=":")
+	fusion_genes=paste(x$gene_name[ord[1]],x$gene_name[ord[2]],sep="::")
 	exon1=x$exons[1] ; exon2=x$exons[2]
 	return(data.frame(contig_break,chrom1,base1,strand1,chrom2,base2,strand2,
 		          gap,rearrangement,aligns,inframe,fusion_genes,exon1,exon2))
@@ -304,14 +309,30 @@ result=do.call(rbind.data.frame,lapply(r,merge_result))
 cand<-result[!is.na(result$rearrangement),]
 
 ################################################################
+message("Checking for fusions in other databases...")
 # check if this is a recurrent fusions
-known_fusions=read.delim(known_table_file,header=F,stringsAsFactors=F)
-# sort alphabetically so it can be compared to the candidates 
-# (in case one is not ordered correctly)
-known_fusions=apply(known_fusions,1,function(x){paste(sort(x),collapse=":")})
-our_fusions=unlist(lapply(cand$fusion_genes,function(x){paste(sort(strsplit(x,":")[[1]]),collapse=":")}))
-cand$known<-"-"
-cand$known[ our_fusions %in% known_fusions ]<-"Yes"
+known_fusions_mitel=read.delim(known_table_file_mitel,header=F,stringsAsFactors=F)[,1]
+cand$known_mitelman<-"-"
+cand$known_mitelman[ cand$fusion_genes %in% known_fusions_mitel ]<-"Yes"
+known_fusions_cosmic=read.delim(known_table_file_cosmic,header=F,stringsAsFactors=F)[,1]
+cand$known_cosmic<-"-"
+cand$known_cosmic[ cand$fusion_genes %in% known_fusions_cosmic ]<-"Yes"
+
+known_cosmic_genes=read.delim(known_table_file_cosmic_tier,header=F,stringsAsFactors=F)[,2]
+names(known_cosmic_genes)=read.delim(known_table_file_cosmic_tier,header=F,stringsAsFactors=F)[,1]
+g1=sapply(strsplit(cand$fusion_genes,"::"),function(x){x[[1]]})
+g2=sapply(strsplit(cand$fusion_genes,"::"),function(x){x[[2]]})
+cosmic_tier_g1 = known_cosmic_genes[g1]
+cosmic_tier_g1[is.na(cosmic_tier_g1)]="-"
+cosmic_tier_g2 = known_cosmic_genes[g2]
+cosmic_tier_g2[is.na(cosmic_tier_g2)]="-"
+cand$cosmic_tier=paste(cosmic_tier_g1,cosmic_tier_g2,sep="::")
+
+gtex_freq=read.delim(known_table_file_gtex,header=F,stringsAsFactors=F)[,1]
+names(gtex_freq)=read.delim(known_table_file_gtex,header=F,stringsAsFactors=F)[,2]
+cand$gtex_samples=gtex_freq[cand$fusion_genes]
+cand$gtex_samples[is.na(cand$gtex_samples)]="0"
+
 
 #######
 # remove fusions involving chrM
