@@ -26,20 +26,10 @@ minimap2_transcriptome = {
    output.dir=jaffa_output+branch
    produce(branch.toString() +".paf"){
         exec """
-           $minimap2 -t $threads -c $transFasta $input > $output1 ;
+           $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
         """
    }
 }
-
-/** CODE NOT USED infer_genome_alignment = {
-   doc "Bypassing genomic alignment and infering genome position from transcriptome alignments"
-   output.dir=jaffa_output+branch
-   produce(branch.toString() +"_genome.psl"){
-      exec """
-       $bypass_genomic_alignment $transTable $input.txt > $output
-       """
-       }
-}**/
 
 minimap2_genome = {
    doc "Aligning candidates to genome using minimap2"

@@ -50,9 +50,6 @@ function make_count_table_install {
     g++ -O3 -o bin/make_count_table ../src/make_count_table.c++
 }
 
-#function bypass_genomic_alignment_install {
-#    g++ -std=c++11 -O3 -o bin/bypass_genomic_alignment ../src/bypass_genomic_alignment.c++
-#}
 
 function bpipe_install {
    wget -O bpipe-0.9.13.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.13/bpipe-0.9.13.tar.gz

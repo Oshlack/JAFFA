@@ -5,7 +5,7 @@
  **
  ** Authors: Nadia Davidson <davidson.n@wehi.edu.au>, Rebecca Evans 
  ********************************************************************************/
-VERSION="2.4"
+VERSION="2.5"
 
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/tools.groovy"
@@ -106,7 +106,10 @@ transTable=transBase+"/"+genome+"_"+annotation+".tab" // table of gene coordinat
 transBed=transBase+"/"+genome+"_"+annotation+".bed" // bed file
 
 //known fusions database
-knownTable=codeBase+"/known_fusions.txt" //a two column table of know/recurrent fusions
+knownTable_Mitelman=codeBase+"/inclusion_and_exclusion_lists/known_fusions_mitelman.txt" //Mitelman database fusions (downloaded Jan. 2026)
+knownTable_Cosmic=codeBase+"/inclusion_and_exclusion_lists/known_fusions_cosmic.txt" //Cosmic fusions (downloaded Dec. 2025)
+knownTable_CosmicTier=codeBase+"/inclusion_and_exclusion_lists/cosmic_genes.txt" //Cosmic genes (downloaded Dec. 2025)
+knownTable_GTEx=codeBase+"/inclusion_and_exclusion_lists/freq_in_GTEX.txt" //Freq. of chimeric RNA seen in GTex (processed with JAFFA v2.4)
 
 //name of scripts
 R_get_final_list=codeBase+"/make_final_table.R"
@@ -475,7 +478,8 @@ get_final_list = {
 	        if [ ! -s $input1 ] ; then
 		   touch $output ;
  		else 
-                   $R --vanilla --args $input1 $input2 $transTable $knownTable 
+                   $R --vanilla --args $input1 $input2 $transTable 
+		   $knownTable_Mitelman $knownTable_Cosmic $knownTable_CosmicTier $knownTable_GTEx
 		   $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
 		 fi;
             ""","get_final_list"
