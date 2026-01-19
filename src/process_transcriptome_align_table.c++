@@ -12,7 +12,7 @@
  ** Parses a .paf style alignment table and report inital candidate fusions
  **
  ** Author: Nadia Davidson
- ** Modified: 2021
+ ** Modified: 2026
  **/ 
 
 #include <iostream>
@@ -39,6 +39,7 @@ void print_usage(){
 }
 
 static const int MAX_OVERLAP=15 ; //maximum number of bases that both genes can share
+static const int MAX_GAP=30 ; //maximum gap between genes can share
 
 //class to hold genomic position information
 class Position {
@@ -234,7 +235,8 @@ void multi_gene(vector<Alignment> this_al,
     int start=i;
     int end=i+1;
     if(new_ranges[start].strand==new_ranges[end].strand &&
-       abs(new_ranges[start].end-new_ranges[end].start)<MAX_OVERLAP ){ 
+       new_ranges[start].end-new_ranges[end].start <= MAX_OVERLAP &&
+       new_ranges[end].start-new_ranges[start].end <= MAX_GAP ){ 
       //define the start and end based on strand
       if(new_ranges[start].strand=="-" || new_ranges[start].strand=="minus" ){ //account for minimap or blast style strand info
 	start=i+1; end=i;

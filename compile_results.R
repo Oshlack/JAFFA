@@ -20,18 +20,15 @@ if(sum(!exists)>0){
 }
 dir=dir[exists]
 summary_files=summary_files[exists]
+names(summary_files)=dir
 
 # parse each file:
+full_list=do.call(rbind,lapply(1:length(summary_files), function(s){
+      single_list=read.delim(summary_files[s],stringsAsFactors=F)
+      single_list$sample<-rep(names(summary_files[s]),length(single_list$transcript))
+      return(single_list)
+}))
 
-full_list<-data.frame()
-
-for(i in 1:length(dir)){
-      single_list=read.delim(summary_files[i],stringsAsFactors=F)
-      single_list$sample<-rep(dir[i],length(single_list$transcript))
-      #rearrange
-      n=dim(single_list)[2]
-      full_list<-rbind(full_list,single_list)
-}
 colnames(full_list)<-gsub("_"," ",colnames(full_list))
 colnames(full_list)[colnames(full_list)=="transcript"]<-"contig"
 colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
@@ -39,8 +36,8 @@ colnames(full_list)[colnames(full_list)=="gap"]<-"gap (kb)"
 #reorder
 full_list=full_list[,c("sample","fusion genes","chrom1","base1","strand1","chrom2","base2","strand2",
 	     "gap (kb)","spanning pairs","spanning reads",
-	     "inframe","aligns","rearrangement",
-	     "contig","contig break","classification","known")]
+	     "inframe","aligns","rearrangement","contig","contig break",
+	     "classification","known mitelman","known cosmic","cosmic tier","gtex samples")]
 #	     "contig","contig break","classification","known","geneCounts1","geneCounts2","exon1","exon2")]
 
 #first order on the gap size (useful for direct mode where the spanning reads are mostly just 1)
