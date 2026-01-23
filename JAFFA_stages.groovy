@@ -109,7 +109,7 @@ transBed=transBase+"/"+genome+"_"+annotation+".bed" // bed file
 knownTable_Mitelman=codeBase+"/inclusion_and_exclusion_lists/known_fusions_mitelman.txt" //Mitelman database fusions (downloaded Jan. 2026)
 knownTable_Cosmic=codeBase+"/inclusion_and_exclusion_lists/known_fusions_cosmic.txt" //Cosmic fusions (downloaded Dec. 2025)
 knownTable_CosmicTier=codeBase+"/inclusion_and_exclusion_lists/cosmic_genes.txt" //Cosmic genes (downloaded Dec. 2025)
-knownTable_GTEx=codeBase+"/inclusion_and_exclusion_lists/freq_in_GTEX.txt" //Freq. of chimeric RNA seen in GTex (processed with JAFFA v2.4)
+knownTable_GTEx=codeBase+"/inclusion_and_exclusion_lists/known_fusions_gtex.txt" //Freq. of chimeric RNA seen in GTex (processed with JAFFA v2.4)
 
 //name of scripts
 R_get_final_list=codeBase+"/make_final_table.R"
