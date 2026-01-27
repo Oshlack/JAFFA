@@ -17,6 +17,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <set>
 #include <map>
 #include <algorithm>
 #include <regex>
@@ -29,7 +30,7 @@ using namespace std;
 // combination of command line options.
 void print_usage(){
   cerr << endl;
-  cerr << "Usage: make_count_table <transcript count table> <ref_table> > <out table>" << endl;
+  cerr << "Usage: <read/transcripts table> > make_count_table <ref_table> > <out table>" << endl;
   cerr << endl;
 }
 
@@ -38,7 +39,7 @@ void print_usage(){
 int main(int argc, char **argv){
 
   //wrong number of arguements. Print help.
-  if(argc!=3){
+  if(argc!=2){
     print_usage();
     exit(1);
   }
@@ -50,9 +51,9 @@ int main(int argc, char **argv){
    ** Now read in the gene to transcript ID mapping 
    **/
   ifstream file; 
-  file.open(argv[2]);
+  file.open(argv[1]);
   if(!(file.good())){
-    cerr << "Unable to open file " << argv[3] << endl;
+    cerr << "Unable to open file " << argv[1] << endl;
     exit(1);
   }
   //assume the first line is the header
@@ -81,30 +82,50 @@ int main(int argc, char **argv){
     trans_gene_map[trans]=gene;
   }
   file.close();
-  cerr << "Done reading in transcript IDs" << endl;
+  cerr << "Done reading in transcript IDs." << endl;
 
   //Now read the countTable. Store everything as a map
   map<string,int> gene_counts_map;
   
-  string filename=argv[1];
+  /**  string filename=argv[1];
   file.open(filename);
   if(!(file.good())){
     cerr << "Unable to open file " << filename << endl;
     exit(1);
-  } 
+    } **/
   /**********  Read all the alignments ****************/
-  cerr << "Reading the input transcript counts file, "<< filename << endl;
-  while(getline(file,line) ){
+  cerr << "Reading the input transcript alignments." << endl;
+  string current_read="";
+  //  string line;
+  set<string> matched_genes;
+    
+  while(getline(std::cin,line) ){
     istringstream line_stream(line);
-    int counts;
-    string transcript;
-    line_stream >> counts;
-    line_stream >> transcript;
-      
+    string read, transcript;
+    line_stream >> read >> transcript;
+
+    // If we've moved to a new read, flush counts for the previous one
+    if(read != current_read && current_read!=""){
+        for(const auto& gene : matched_genes){
+            gene_counts_map[gene]++;
+        }
+        matched_genes.clear();
+    }
+
+    current_read = read;
+    
     smatch m; //extract the gene id
-    regex_search(transcript,m,regex("_(EN[^_]*)__")) ; //Assumed ENSEMBL annotation naming here
-    string gene=trans_gene_map[m[1].str()];
-    gene_counts_map[gene]+=counts;
+    if(regex_search(transcript,m,regex("_([^_]+)__range=")) ){ //Assumed annotation naming here
+      string gene=trans_gene_map[m[1].str()];
+      matched_genes.insert(gene);
+    } else {
+      cerr << "Transcript IDs don't followed the assumed pattern.. exiting" << endl;
+      exit(1);
+    }
+  }
+  // Flush the final read
+  for (const auto& gene : matched_genes) {
+    gene_counts_map[gene]++;
   }
   file.close();
 
