@@ -100,7 +100,7 @@ function bowtie2_install {
 }
 
 function blat_install {
-   wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
+   wget https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/blat/blat
    mv blat $PWD/bin
    chmod +x $PWD/bin/blat
 }
