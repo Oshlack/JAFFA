@@ -150,9 +150,10 @@ prepare_reads = {
     output.dir=jaffa_output+branch.toString()
     if (inputs.size() == 1) {  // single reads
         produce(branch.toString()+"_filtered_reads.fastq.gz",
-                branch.toString()+"_leftover_reads.fastq.gz"){
-		// branch+".transCounts") {
-            exec """
+                branch.toString()+"_leftover_reads.fastq.gz",
+		branch.toString()+".counts") {
+		// -S /dev/null ;
+		exec """
                 $trimmomatic SE -threads $threads -phred$scores $input.gz
                     ${output.dir}/${branch}_trim.fastq
                     LEADING:$minQScore TRAILING:$minQScore MINLEN:$minlen ;
@@ -160,8 +161,7 @@ prepare_reads = {
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
-                    -U ${output.dir}/${branch}_trim.fastq 
-		    -S /dev/null ;
+                    -U ${output.dir}/${branch}_trim.fastq | cut -f 1,3 | $make_count_table $transTable > $output3 ;
                 $bowtie2 $mapParams --very-fast
                     --un-gz $output2 -p $threads -x $maskedGenome
                     -U ${output.dir}/temp_trans_unmap_reads.fastq -S /dev/null ;
@@ -173,8 +173,8 @@ prepare_reads = {
         produce(branch.toString()+"_filtered_reads.fastq.1.gz",
                 branch.toString()+"_filtered_reads.fastq.2.gz",
                 branch.toString()+"_leftover_reads.fastq.1.gz",
-                branch.toString()+"_leftover_reads.fastq.2.gz") {
-		//branch.toString()+".transCounts") {
+                branch.toString()+"_leftover_reads.fastq.2.gz",
+		branch.toString()+".counts") {
                 // need to check here for whether the files are zipped - FIX
                 //trim & fix the file names so Trinity handles the paired-ends reads correctly
             exec """
@@ -201,8 +201,7 @@ prepare_reads = {
                     --un-conc ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
                     -1 ${output.dir}/${branch}_trim1.fastq
-                    -2 ${output.dir}/${branch}_trim2.fastq 
-		    -S /dev/null ;
+                    -2 ${output.dir}/${branch}_trim2.fastq | cut -f 1,3 | $make_count_table $transtable > $output5 ;
 
                 $bowtie2 $mapParams --very-fast
                     --un-conc-gz ${output3.prefix.prefix}.gz

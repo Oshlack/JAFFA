@@ -24,9 +24,10 @@ get_fasta = {
 minimap2_transcriptome = {
    doc "Aligning candidates to transcriptome using minimap2"
    output.dir=jaffa_output+branch
-   produce(branch.toString() +".paf"){
+   produce(branch.toString() +".paf", branch.toString() +".counts"){
         exec """
            $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
+	   cat $output1 | cut -f1,6 | $make_count_table $transTable > $output2 ;
         """
    }
 }
@@ -37,8 +38,14 @@ minimap2_genome = {
    produce(branch.toString()+"_genome.paf",branch.toString()+"_genome.psl"){ 
 	exec """
 	   $minimap2 -t $threads -x splice --junc-bed $transBed -c $genomeFasta $input > $output1;
-	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",\$3","\$3+100",",  \$8","\$9-\$4+\$3+100"," }' > $output2 ;
-	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", \$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," }' >> $output2 ;
+	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ 
+	   	print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",
+		\$3","\$3+100",", \$8","\$9-\$4+\$3+100"," 
+	   }' > $output2 ;
+	   grep \$'\\t-\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ 
+	   	print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",", 
+	   	\$2-\$4","\$2-\$4+100",", \$8","\$9-\$4+\$3+100"," 
+	   }' >> $output2 ;
         """
    }
 }
