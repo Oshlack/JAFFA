@@ -150,7 +150,7 @@ int main(int argc, char **argv){
   unordered_map<string,vector<string> >::iterator tr_itr=trans_read_map.begin();
   for(;tr_itr!=trans_read_map.end() ; tr_itr++){
     smatch m;
-    regex_search(tr_itr->first,m,regex("ENST\\d{11}(.\\d+)?"));
+    regex_search(tr_itr->first,m,regex("_([^_]+)__range=")); //regex("ENST\\d{11}(.\\d+)?"));
     trans_read_map_fixed[m[0].str()]=tr_itr->second;
   }
   trans_read_map.clear();

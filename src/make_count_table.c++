@@ -115,12 +115,9 @@ int main(int argc, char **argv){
     current_read = read;
     
     smatch m; //extract the gene id
-    if(regex_search(transcript,m,regex("_([^_]+)__range=")) ){ //Assumed annotation naming here
+    if(regex_search(transcript,m,regex("_([^_]+)__range=")) ){ //Assumed annotation naming here (will ignore row otherwise)
       string gene=trans_gene_map[m[1].str()];
       matched_genes.insert(gene);
-    } else {
-      cerr << "Transcript IDs don't followed the assumed pattern.. exiting" << endl;
-      exit(1);
     }
   }
   // Flush the final read
