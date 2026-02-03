@@ -45,7 +45,7 @@ struct fusion_candidate {
 // the real stuff starts here.
 int main(int argc, char **argv){
 
-  if(argc!=3){
+  if(argc!=4){
     print_usage();
     exit(1);
   }
@@ -146,12 +146,13 @@ int main(int argc, char **argv){
   }
   cerr << "Done reading in bam file" << endl;
   // Loop over all the trans_read_map and fix the names:
+  string anno_reg=argv[3];
   unordered_map<string,vector<string> > trans_read_map_fixed;
   unordered_map<string,vector<string> >::iterator tr_itr=trans_read_map.begin();
   for(;tr_itr!=trans_read_map.end() ; tr_itr++){
     smatch m;
-    regex_search(tr_itr->first,m,regex("_([^_]+)__range=")); //regex("ENST\\d{11}(.\\d+)?"));
-    trans_read_map_fixed[m[0].str()]=tr_itr->second;
+    regex_search(tr_itr->first,m,regex(anno_reg)); 
+    trans_read_map_fixed[m[1].str()]=tr_itr->second;
   }
   trans_read_map.clear();
   cerr << "Done getting trans ids" << endl;
