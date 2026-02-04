@@ -145,7 +145,7 @@ void multi_gene(vector<Alignment> this_al,
 
   //if it only matches one transcript, return
   if(this_al.size()<2) return;
-  
+
   //if one reference transcript coveres the start and end of the read then return.
   //Note: this will automatically remove Fusions like Gene1-Gene2-Gene1
   int min=this_al[0].start;
@@ -184,10 +184,10 @@ void multi_gene(vector<Alignment> this_al,
       //	gene_names.push_back(trans_id);
       //	gene_name_lookup[trans_id]=gene_positions.at(trans_id).gene;
      }
-			 
+      
   //split by chrom
   map< string, vector<int> > split_chroms;
-  vector<Position> gp; 
+  vector<Position> gp;
   for(int i=0 ; i < gene_names.size() ; ++i){
     const string trans=gene_names.at(i);
     if(gene_positions.find(trans) == gene_positions.end()){ //throw an error if transcript id not found...
@@ -237,6 +237,7 @@ void multi_gene(vector<Alignment> this_al,
     if(new_ranges[start].strand==new_ranges[end].strand &&
        new_ranges[start].end-new_ranges[end].start <= MAX_OVERLAP &&
        new_ranges[end].start-new_ranges[start].end <= MAX_GAP ){ 
+
       //define the start and end based on strand
       if(new_ranges[start].strand=="-" || new_ranges[start].strand=="minus" ){ //account for minimap or blast style strand info
 	start=i+1; end=i;
@@ -307,6 +308,8 @@ int main(int argc, char **argv){
     if(temp=="chrom") n_chrom=i;
     if(temp=="txStart") n_start=i;
     if(temp=="txEnd") n_end=i;
+    if(temp=="chromStart") n_start=i;
+    if(temp=="chromEnd") n_end=i;
   }
   //loop over transcripts and fill information into data structure.
   while ( getline (file,line) ){ 

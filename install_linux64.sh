@@ -12,7 +12,7 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table"
 
 #installation methods
 
@@ -27,7 +27,7 @@ function blastn_install {
     wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.17.0/ncbi-blast-2.17.0+-x64-linux.tar.gz
     tar -xvf ncbi-blast-2.17.0+-x64-linux.tar.gz
     rm ncbi-blast-2.17.0+-x64-linux.tar.gz
-    cp ncbi-blast-2.17.0+/bin/blastn bin/blastn
+    cp ncbi-blast-2.17.0+/bin/* bin/
 }
 
 function make_3_gene_fusion_table_install {
@@ -103,6 +103,12 @@ function blat_install {
    wget https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/blat/blat
    mv blat $PWD/bin
    chmod +x $PWD/bin/blat
+}
+
+function bedtools_install {
+    wget https://github.com/arq5x/bedtools2/releases/download/v2.31.0/bedtools.static
+    mv bedtools.static $PWD/bin/bedtools
+    chmod a+x $PWD/bin/bedtools
 }
 
 function fasta_formatter_install {

@@ -29,7 +29,7 @@ function get_fusion_seqs() {
   #echo "Processing ${field4}"
   #echo "---"
 
-  res=${tokens[21]}
+  res=${tokens[23]}
 
   if [[ ${field2} =~ "fusion" ]]
   then

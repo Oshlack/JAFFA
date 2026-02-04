@@ -30,7 +30,7 @@ using namespace std;
 // combination of command line options.
 void print_usage(){
   cerr << endl;
-  cerr << "Usage: <read/transcripts table> > make_count_table <ref_table> > <out table>" << endl;
+  cerr << "Usage: <read/transcripts table> > make_count_table <ref_table> <id regular expression> > <out table>" << endl;
   cerr << endl;
 }
 
@@ -39,7 +39,7 @@ void print_usage(){
 int main(int argc, char **argv){
 
   //wrong number of arguements. Print help.
-  if(argc!=2){
+  if(argc!=3){
     print_usage();
     exit(1);
   }
@@ -87,12 +87,6 @@ int main(int argc, char **argv){
   //Now read the countTable. Store everything as a map
   map<string,int> gene_counts_map;
   
-  /**  string filename=argv[1];
-  file.open(filename);
-  if(!(file.good())){
-    cerr << "Unable to open file " << filename << endl;
-    exit(1);
-    } **/
   /**********  Read all the alignments ****************/
   cerr << "Reading the input transcript alignments." << endl;
   string current_read="";
@@ -114,8 +108,9 @@ int main(int argc, char **argv){
 
     current_read = read;
     
-    smatch m; //extract the gene id
-    if(regex_search(transcript,m,regex("_([^_]+)__range=")) ){ //Assumed annotation naming here (will ignore row otherwise)
+    smatch m; //extract the transcript ID from the fasta header
+    string anno_reg=argv[2];
+    if(regex_search(transcript,m,regex(anno_reg))){
       string gene=trans_gene_map[m[1].str()];
       matched_genes.insert(gene);
     }

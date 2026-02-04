@@ -22,20 +22,20 @@ options(stringsAsFactors=F)
 args = commandArgs(trailingOnly = TRUE)
 blat_table_file=args[1]   # transcripts aligned to the human genome, will be <X>_genome.psl
 fusion_info_file=args[2]  # read coverage for the alignments, will be <X>.reads 
-#gene_count_table_file=args[3] # approximate gene-level counts
-trans_table_file=args[3]  # a reference annotation file
+gene_count_table_file=args[3] # approximate gene-level counts
+trans_table_file=args[4]  # a reference annotation file
 
-known_table_file_mitel=args[4]
-known_table_file_cosmic=args[5]
-known_table_file_cosmic_tier=args[6]
-known_table_file_gtex=args[7]
+known_table_file_mitel=args[5]
+known_table_file_cosmic=args[6]
+known_table_file_cosmic_tier=args[7]
+known_table_file_gtex=args[8]
 
-gapmin=as.numeric(args[8]) # minimum genomic gap of the transcriptional break-point (in bases). 
-exclude=args[9]		  # which "classifications" to remove
-MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[10])  #Break points and corresponding reads will get reassigned if within this distance
+gapmin=as.numeric(args[9]) # minimum genomic gap of the transcriptional break-point (in bases). 
+exclude=args[10]		  # which "classifications" to remove
+MIN_REASSIGNMENT_BASE_DIFF=as.numeric(args[11])  #Break points and corresponding reads will get reassigned if within this distance
 				    #Low confidence only. Used for long reads. 
 
-output_file=args[11]       # name of the output file, will be <X>.summary
+output_file=args[12]       # name of the output file, will be <X>.summary
 
 
 #maximum number of bases discrepancy between genomic alignment and exons boudary for the break-point to be corrected
@@ -48,7 +48,13 @@ REMOVE_CHRM=TRUE
 
 #load all the input files to data.frames
 fusion_info<-read.delim(fusion_info_file,stringsAsFactors=F)
-transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char="/")
+transTable=read.table(trans_table_file,header=T,stringsAsFactors=F,comment.char="",check.names = FALSE)
+colnames(transTable) <- sub("^#", "", colnames(transTable)) #fix names
+#if not txStart/End, as is the case for T2T, add in:
+if( ! "txStart" %in% colnames(transTable) ){
+    colnames(transTable)[colnames(transTable) == 'chromStart'] <-"txStart"
+    colnames(transTable)[colnames(transTable) == 'chromEnd'] <-"txEnd"
+}
 blat_table<-read.delim(blat_table_file,stringsAsFactors=F,header=F) #,skip=5)
 
 #filter out alignments to alternative chromosomes
@@ -177,11 +183,20 @@ get_frame_info<-function(x){
 		if(sum(correct_pos&correct_chrom)==0) return()
 		gene=transTable[correct_pos&correct_chrom,]
 
-		#are we looking for the starts or the ends of the exons?
+		if( !"exonEnds" %in% colnames(gene) ){ #if it T2T and the annotation file is different
+		   #need to work out the exon positions..
+		   gene$exonStarts <- sapply(1:nrow(gene),function(z){
+		      paste(gene$txStart[z] + as.numeric(unlist(strsplit(gene$chromStarts[z],","))),collapse=",")
+		   })
+		   gene$exonEnds <- sapply(1:nrow(gene),function(z){
+		      paste(gene$txStart[z] + as.numeric(unlist(strsplit(gene$chromStarts[z],",")))  +
+		      			    as.numeric(unlist(strsplit(gene$blockSizes[z],","))) , collapse=",") 
+                   })
+		} #are we looking for the starts or the ends of the exons?
 		if(x[j,]$genome_dir==x[j,]$is_start){ #use the ends
-		   exon_pos=lapply(strsplit(gene$exonEnds,","),as.integer)
+		      exon_pos=lapply(strsplit(gene$exonEnds,","),as.integer)
 		} else {
-		   exon_pos=lapply(strsplit(gene$exonStarts,","),function(y){ as.integer(y) + 1 } )
+		      exon_pos=lapply(strsplit(gene$exonStarts,","),function(y){ as.integer(y) + 1 } )
 		}
 		#get the exon positions for each transcripts
 		dists=lapply(1:length(exon_pos),function(y){ 
@@ -386,20 +401,18 @@ if(MIN_REASSIGNMENT_BASE_DIFF>0){
    cand=cand[cand$spanning_reads>0,]
 }
 
-
 ## Add information about gene-level counts (turn-off for now...)
-#geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
-#geneCounts=geneCountsTemp[,2]
-#names(geneCounts)=geneCountsTemp[,1]
-#sFus=strsplit(cand$fusion_genes,":") #split fusion gene names
-#gcS=sapply(sFus,function(x){geneCounts[x[1]]}) #look up counts for start gene
-#gcE=sapply(sFus,function(x){geneCounts[x[2]]}) #look up counts for end gene
-#gcS[is.na(gcS)]<-0 ; gcE[is.na(gcE)]<-0 #if gene not in table -> counts are zero
-#cand$geneCounts1=gcS
-#cand$geneCounts2=gcE
+geneCountsTemp=read.delim(gene_count_table_file,stringsAsFactors=F,header=F)
+geneCounts=geneCountsTemp[,2]
+names(geneCounts)=geneCountsTemp[,1]
+sFus=strsplit(cand$fusion_genes,"::") #split fusion gene names
+gcS=sapply(sFus,function(x){geneCounts[x[1]]}) #look up counts for start gene
+gcE=sapply(sFus,function(x){geneCounts[x[2]]}) #look up counts for end gene
+gcS[is.na(gcS)]<-0 ; gcE[is.na(gcE)]<-0 #if gene not in table -> counts are zero
+cand$geneCounts1=gcS
+cand$geneCounts2=gcE
 
 ########### now classify the candidates #########################
-
 
 cand=cand[cand$gap>(gapmin/1000),] #remove anything with a gap below 10kb
 cand$classification<-"NoSupport"
@@ -418,6 +431,14 @@ cand$classification[ cand$aligns & (spanP | single) & spanT ]<-"HighConfidence"
 ## special cases
 cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1)]<-"PotentialTransSplicing"
 cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialReadThrough"
+
+# reclass HC calls down if they are recurrent in GTex (20+ samples)
+down_grade=cand$classification=="HighConfidence" & cand$gtex_samples >=20 
+cand$classification[ down_grade & cand$gap>=REGGAP ]<-"PotentialTransSplicing"
+cand$classification[ down_grade & cand$gap<REGGAP ]<-"PotentialReadThrough"
+
+# reclass anything with a cosmic fusion as high confidence
+cand$classification[ cand$known_cosmic=="Yes" ]<-"HighConfidence"
 
 #remove any group in the exclude list
 exclude=unlist(strsplit(exclude,","))

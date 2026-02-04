@@ -75,7 +75,7 @@ transLength=100 //the minimum length for Oases to report an assembled contig
 // for aligning to known genes using blastn
 //96% similar when we blat to the human transcriptome
 blast_options="-perc_identity 96"
-anno_prefix="_(EN[^_]*)__"
+anno_prefix="\'V[[:alnum:]]+_(.+?)__range=\'"  //"_(EN[^_]*)__"
 
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
@@ -161,7 +161,7 @@ prepare_reads = {
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
-                    -U ${output.dir}/${branch}_trim.fastq | cut -f 1,3 | $make_count_table $transTable > $output3 ;
+                    -U ${output.dir}/${branch}_trim.fastq | cut -f 1,3 | $make_count_table $transTable $anno_prefix > $output3 ;
                 $bowtie2 $mapParams --very-fast
                     --un-gz $output2 -p $threads -x $maskedGenome
                     -U ${output.dir}/temp_trans_unmap_reads.fastq -S /dev/null ;
@@ -201,7 +201,7 @@ prepare_reads = {
                     --un-conc ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
                     -1 ${output.dir}/${branch}_trim1.fastq
-                    -2 ${output.dir}/${branch}_trim2.fastq | cut -f 1,3 | $make_count_table $transtable > $output5 ;
+                    -2 ${output.dir}/${branch}_trim2.fastq | cut -f 1,3 | $make_count_table $transTable $anno_prefix > $output5 ;
 
                 $bowtie2 $mapParams --very-fast
                     --un-conc-gz ${output3.prefix.prefix}.gz
@@ -341,7 +341,7 @@ filter_transcripts = {
     produce(input.prefix+".txt"){ // ,branch+".geneCounts") {
         from(".paf") {
             exec """
-	    $process_transcriptome_align_table $input $gapSize $transTable \'$anno_prefix\' > $output1
+	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix > $output1
             ""","filter_transcripts"
         }
 	// code related to obtaining gene-level counts in below 
@@ -413,7 +413,7 @@ make_simple_reads_table = {
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
 	   exec """
-	      $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable > $output
+	      $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable $anno_prefix > $output
 	   ""","make_simple_reads_table"
 	   }
     }
@@ -472,12 +472,12 @@ get_final_list = {
     doc "Get final list"
     output.dir=jaffa_output+branch.toString()
     produce(branch.toString()+".summary") {
-        from(".psl", ".reads") { //, ".geneCounts") {
+        from(".psl", ".reads",".counts") {
             exec """
 	        if [ ! -s $input1 ] ; then
 		   touch $output ;
  		else 
-                   $R --vanilla --args $input1 $input2 $transTable 
+                   $R --vanilla --args $input1 $input2 $input3 $transTable  
 		   $knownTable_Mitelman $knownTable_Cosmic $knownTable_CosmicTier $knownTable_GTEx
 		   $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
 		 fi;

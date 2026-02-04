@@ -27,7 +27,7 @@ minimap2_transcriptome = {
    produce(branch.toString() +".paf", branch.toString() +".counts"){
         exec """
            $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
-	   cat $output1 | cut -f1,6 | $make_count_table $transTable > $output2 ;
+	   cat $output1 | cut -f1,6 | $make_count_table $transTable $anno_prefix > $output2 ;
         """
    }
 }
