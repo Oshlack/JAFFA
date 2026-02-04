@@ -438,7 +438,7 @@ cand$classification[ down_grade ]<-"PotentialTransSplicing"
 cand$classification[ down_grade & cand$gap<REGGAP & !cand$rearrangement ]<-"PotentialReadThrough"
 
 # reclass anything with a cosmic fusion as high confidence
-cand$classification[ cand$known_cosmic=="Yes" ]<-"HighConfidence"
+cand$classification[ cand$known_cosmic=="Yes" & cand$classification!="NoSupport" ]<-"HighConfidence"
 
 #remove any group in the exclude list
 exclude=unlist(strsplit(exclude,","))
