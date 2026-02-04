@@ -343,10 +343,10 @@ cosmic_tier_g2 = known_cosmic_genes[g2]
 cosmic_tier_g2[is.na(cosmic_tier_g2)]="-"
 cand$cosmic_tier=paste(cosmic_tier_g1,cosmic_tier_g2,sep="::")
 
-gtex_freq=read.delim(known_table_file_gtex,header=F,stringsAsFactors=F)[,1]
+gtex_freq=as.numeric(read.delim(known_table_file_gtex,header=F,stringsAsFactors=F)[,1])
 names(gtex_freq)=read.delim(known_table_file_gtex,header=F,stringsAsFactors=F)[,2]
 cand$gtex_samples=gtex_freq[cand$fusion_genes]
-cand$gtex_samples[is.na(cand$gtex_samples)]="0"
+cand$gtex_samples[is.na(cand$gtex_samples)]=0
 
 
 #######
@@ -433,9 +433,9 @@ cand$classification[ cand$aligns & !spanP & (cand$spanning_reads==1)]<-"Potentia
 cand$classification[ (cand$gap<REGGAP) & ( spanP | spanR ) & !cand$rearrangement ]<-"PotentialReadThrough"
 
 # reclass HC calls down if they are recurrent in GTex (20+ samples)
-down_grade=cand$classification=="HighConfidence" & cand$gtex_samples >=20 
-cand$classification[ down_grade & cand$gap>=REGGAP ]<-"PotentialTransSplicing"
-cand$classification[ down_grade & cand$gap<REGGAP ]<-"PotentialReadThrough"
+down_grade=cand$classification=="HighConfidence" & (cand$gtex_samples >=20) 
+cand$classification[ down_grade ]<-"PotentialTransSplicing"
+cand$classification[ down_grade & cand$gap<REGGAP & !cand$rearrangement ]<-"PotentialReadThrough"
 
 # reclass anything with a cosmic fusion as high confidence
 cand$classification[ cand$known_cosmic=="Yes" ]<-"HighConfidence"
