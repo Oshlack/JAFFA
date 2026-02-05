@@ -8,7 +8,7 @@
  **
  **
  ** Author: Nadia Davidson
- ** Modified: November 2019
+ ** Modified: Feb 2026
  **/ 
 
 #include <iostream>
@@ -30,7 +30,7 @@ using namespace std;
 // combination of command line options.
 void print_usage(){
   cerr << endl;
-  cerr << "Usage: cat <bam file> | cut -f1-3 | make_simple_read_table <candidate_fusion_table> <trans_gene_map> >  <out table>" << endl;
+  cerr << "Usage: samtools view <bam file> | cut -f1-3 | make_simple_read_table <candidate_fusion_table> <trans_gene_map> <regex> >  <out table>" << endl;
   cerr << endl;
 }
 
@@ -72,12 +72,12 @@ int main(int argc, char **argv){
     line_stream >> new_cand.break_max;
     string temp;
     line_stream >> temp;
-    smatch m; //extract the gene id and sort alphabetically
+    smatch m; //extract the gene id 
     regex_search(temp,m,regex("(.*):(.*)"));
-    if(m[1].str()<m[2].str())
+    //    if(m[1].str()<m[2].str())
       new_cand.fusion=make_pair(m[1].str(), m[2].str());
-    else
-      new_cand.fusion=make_pair(m[2].str(), m[1].str());
+      //    else
+      //     new_cand.fusion=make_pair(m[2].str(), m[1].str());
     //sort
     fusion_list.push_back(new_cand.fusion);
     candidate_table.push_back(new_cand);
@@ -131,15 +131,15 @@ int main(int argc, char **argv){
   /** 
    ** Now read in the mapped reads
    **/
-  unordered_map< string, vector<string > > trans_read_map;
+  unordered_map< string, vector < pair < string , bool > > > trans_read_map;
   vector<string> trans_names;
   int i=0;
-  string temp1;
-  string temp2;
-  string temp3;
+  string sam_read;
+  string sam_flag;
+  string sam_trans;
   while(!cin.eof()){
-    cin >> temp1 >> temp2 >> temp3 ;
-    trans_read_map[temp3].push_back(temp1);
+    cin >> sam_read >> sam_flag >> sam_trans ;
+    trans_read_map[sam_trans].push_back(pair(sam_read,sam_flag=="0"));
     if(i%1000000==0)
       cerr << i << " alignments read" << endl;
     i++;
@@ -147,8 +147,8 @@ int main(int argc, char **argv){
   cerr << "Done reading in bam file" << endl;
   // Loop over all the trans_read_map and fix the names:
   string anno_reg=argv[3];
-  unordered_map<string,vector<string> > trans_read_map_fixed;
-  unordered_map<string,vector<string> >::iterator tr_itr=trans_read_map.begin();
+  unordered_map< string, vector< pair < string, bool > > > trans_read_map_fixed;
+  auto tr_itr=trans_read_map.begin();
   for(;tr_itr!=trans_read_map.end() ; tr_itr++){
     smatch m;
     regex_search(tr_itr->first,m,regex(anno_reg)); 
@@ -160,14 +160,15 @@ int main(int argc, char **argv){
   /**
    ** now loop over each gene and get all the reads aligning to it
    **/
-  unordered_map<string, pair<vector < string> , vector< string > > > gene_reads;
-  unordered_map<string,vector<string> >::iterator gt_itr=gene_trans_map.begin();
+  unordered_map<string, pair< unordered_set < string> , unordered_set< string > > > gene_reads_sense;
+  unordered_map<string, pair< unordered_set < string> , unordered_set< string > > > gene_reads_antisense;
+  auto gt_itr=gene_trans_map.begin();
   //loop over genes and get transcripts id
   for(;gt_itr!=gene_trans_map.end(); gt_itr++){
-    vector<string> reads;
+    vector<pair<string,bool>> reads;
     //for all transcripts look up the reads
     for(int t=0; t < gt_itr->second.size(); t++){
-      vector<string> reads_to_add = trans_read_map_fixed[gt_itr->second.at(t)];
+      vector<pair<string,bool> > reads_to_add = trans_read_map_fixed[gt_itr->second.at(t)];
       reads.insert(reads.end(), reads_to_add.begin(), reads_to_add.end());
     }
     // remove redundancy
@@ -176,12 +177,17 @@ int main(int argc, char **argv){
     //now loop over the reads and separate the read start and ends
     for(int r=0; r<reads.size(); r++){
       //separate the read id and pair end
-      string read_id=reads.at(r).substr(0,reads.at(r).find("/"));//reads.at(r).size()-1); 
-      char read_end=reads.at(r).back();
-      if(read_end=='1') // First of pair (assumes the read IDs ends with 1).
-	gene_reads[gt_itr->first].first.push_back(read_id);
-      else
-	gene_reads[gt_itr->first].second.push_back(read_id); 
+      string read_id=reads.at(r).first.substr(0,reads.at(r).first.find("/"));//reads.at(r).size()-1); 
+      char read_end=reads.at(r).first.back(); //split by anti-sense to fusion and R1 or R2
+      if( (read_end=='1') & reads.at(r).second ) 
+	gene_reads_sense[gt_itr->first].first.insert(read_id);
+      if( (read_end=='1') & !reads.at(r).second ) 
+	gene_reads_antisense[gt_itr->first].first.insert(read_id);
+      if( (read_end=='2') & !reads.at(r).second ) 
+	gene_reads_sense[gt_itr->first].second.insert(read_id);
+      if( (read_end=='2') & reads.at(r).second ) 
+	gene_reads_antisense[gt_itr->first].second.insert(read_id); 
+
     }
   }
   trans_read_map_fixed.clear();
@@ -195,16 +201,16 @@ int main(int argc, char **argv){
   map<pair<string,string >, int> spanning_reads;
   for(int f=0; f<fusion_list.size(); f++){
     //check from intersection of read ids.
-    vector<string> g1_r1=gene_reads[fusion_list.at(f).first].first;
-    vector<string> g1_r2=gene_reads[fusion_list.at(f).first].second;
-    vector<string> g2_r1=gene_reads[fusion_list.at(f).second].first;
-    vector<string> g2_r2=gene_reads[fusion_list.at(f).second].second;
+    unordered_set<string> g1_r1=gene_reads_sense[fusion_list.at(f).first].first;
+    unordered_set<string> g1_r2=gene_reads_antisense[fusion_list.at(f).first].second;
+    unordered_set<string> g2_r1=gene_reads_antisense[fusion_list.at(f).second].first;
+    unordered_set<string> g2_r2=gene_reads_sense[fusion_list.at(f).second].second;
     int total=0;
-    unordered_set<string> temp_set1(g1_r1.begin(),g1_r1.end());
+    unordered_set<string> temp_set1(g1_r1.begin(),g1_r1.end()); //sense supporting
     temp_set1.insert(g2_r2.begin(), g2_r2.end());
     total+=g1_r1.size() + g2_r2.size() - temp_set1.size();
 
-    unordered_set<string> temp_set2(g2_r1.begin(),g2_r1.end());
+    unordered_set<string> temp_set2(g2_r1.begin(),g2_r1.end()); //anti-sense supporting
     temp_set2.insert(g1_r2.begin(), g1_r2.end());
     total+=g1_r2.size() + g2_r1.size() - temp_set2.size();
     spanning_reads[fusion_list.at(f)]=total;
