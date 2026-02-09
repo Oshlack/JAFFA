@@ -139,7 +139,7 @@ int main(int argc, char **argv){
   string sam_trans;
   while(!cin.eof()){
     cin >> sam_read >> sam_flag >> sam_trans ;
-    trans_read_map[sam_trans].push_back(pair(sam_read,sam_flag=="0"));
+    trans_read_map[sam_trans].push_back(make_pair(sam_read,sam_flag=="0"));
     if(i%1000000==0)
       cerr << i << " alignments read" << endl;
     i++;

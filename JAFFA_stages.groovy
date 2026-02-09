@@ -243,7 +243,7 @@ get_unmapped = {
             exec """
                $bowtie2 -k1 -p $threads --un ${output.dir}/unmapped.fastq
                    -x $transFasta.prefix -U $input_string |
-               $samtools view -s 1.0 -F 4 -S -b - |
+               $samtools view -F 4 -S -b - |
                $samtools sort - $output2.prefix ;
                $samtools index $output2 ;
             ""","get_unmapped"
