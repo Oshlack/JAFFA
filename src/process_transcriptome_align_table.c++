@@ -276,7 +276,7 @@ void multi_gene(vector<Alignment> this_al,
 int main(int argc, char **argv){
 
   //wrong number of arguements. Print help.
-  if(argc!=5){
+  if(argc<=5){
     print_usage();
     exit(1);
   }
