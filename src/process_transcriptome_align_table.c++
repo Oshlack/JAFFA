@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <algorithm>    
 #include <unordered_set>
+#include <cstring>
 
 using namespace std;
 
@@ -35,11 +36,14 @@ using namespace std;
 void print_usage(){
   cerr << endl;
   cerr << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> <gene name prefix regex> > <out table>" << endl;
+  cerr << "Optional flags:\n"
+     << "  --max-gap <int>       Max allowed gap on read (default 30)\n"
+     << "  --max-overlap <int>   Max allowed overlap on read (default 15)\n";
   cerr << endl;
 }
 
-static const int MAX_OVERLAP=15 ; //maximum number of bases that both genes can share
-static const int MAX_GAP=30 ; //maximum gap between genes can share
+int max_overlap=15 ; //maximum number of bases that both genes can share
+int max_gap=30 ; //maximum gap between genes can share
 
 //class to hold genomic position information
 class Position {
@@ -235,8 +239,8 @@ void multi_gene(vector<Alignment> this_al,
     int start=i;
     int end=i+1;
     if(new_ranges[start].strand==new_ranges[end].strand &&
-       new_ranges[start].end-new_ranges[end].start <= MAX_OVERLAP &&
-       new_ranges[end].start-new_ranges[start].end <= MAX_GAP ){ 
+       new_ranges[start].end-new_ranges[end].start <= max_overlap &&
+       new_ranges[end].start-new_ranges[start].end <= max_gap ){ 
 
       //define the start and end based on strand
       if(new_ranges[start].strand=="-" || new_ranges[start].strand=="minus" ){ //account for minimap or blast style strand info
@@ -276,7 +280,17 @@ int main(int argc, char **argv){
     print_usage();
     exit(1);
   }
-
+  //assign optional parameters if they are there
+  for (int i = 1; i < argc; i++) {
+      if (strcmp(argv[i], "--max-gap") == 0 && i + 1 < argc) {
+          max_gap = atoi(argv[++i]);
+      }
+      else if (strcmp(argv[i], "--max-overlap") == 0 && i + 1 < argc) {
+          max_overlap = atoi(argv[++i]);
+      }
+  }
+  // log the parameters being used for the filtering
+  printf("Using max gap of %d and max overlap of %d\n", max_gap, max_overlap);
   //minimum gap size in genome is argv[2]
   int gap_size=atoi(argv[2]);
   
