@@ -112,12 +112,9 @@ knownTable_CosmicTier=codeBase+"/inclusion_and_exclusion_lists/cosmic_genes.txt"
 knownTable_GTEx=codeBase+"/inclusion_and_exclusion_lists/known_fusions_gtex.txt" //Freq. of chimeric RNA seen in GTex (processed with JAFFA v2.4)
 
 //name of scripts
-R_get_final_list=codeBase+"/make_final_table.R"
 R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
 R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
-
-//helper scripts
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
 
 
@@ -326,7 +323,7 @@ align_reads_to_annotation = {
     produce(input.prefix+".paf") {
         from(".fasta") {
             exec """
-		   time $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
+		   /usr/bin/time -v $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
 		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_reads_to_annotation"
         }
@@ -477,9 +474,9 @@ get_final_list = {
 	        if [ ! -s $input1 ] ; then
 		   touch $output ;
  		else 
-                   $R --vanilla --args $input1 $input2 $input3 $transTable  
+                   $make_final_table $input1 $input2 $input3 $transTable  
 		   $knownTable_Mitelman $knownTable_Cosmic $knownTable_CosmicTier $knownTable_GTEx
-		   $finalGapSize $exclude $reassign_dist $output < $R_get_final_list ;
+		   $finalGapSize $exclude $reassign_dist $output;
 		 fi;
             ""","get_final_list"
         }

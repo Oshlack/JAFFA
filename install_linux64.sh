@@ -12,7 +12,7 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat extract_seq_from_fasta make_simple_read_table blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat  blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table make_final_table extract_seq_from_fasta make_simple_read_table"
 
 #installation methods
 
@@ -48,6 +48,10 @@ function process_transcriptome_align_table_install {
 
 function make_count_table_install {
     g++ -O3 -o bin/make_count_table ../src/make_count_table.c++
+}
+
+function make_final_table_install {
+    g++ -O3 -o bin/make_final_table ../src/make_final_table.c++
 }
 
 
