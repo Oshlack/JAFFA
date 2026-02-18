@@ -312,7 +312,7 @@ align_transcripts_to_annotation = {
     produce(branch.toString()+".paf") {
         from(".fasta") {
             exec """
-		   time $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
+		   $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
 		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
             ""","align_transcripts_to_annotation"
         }
@@ -329,7 +329,7 @@ align_reads_to_annotation = {
 	    	 split --lines $blast_batch_size --additional-suffix=.fa $input ${output.dir}/temp_for_blastn ;
 		 > $output ;
 		 for q in ${output.dir}/temp_for_blastn*.fa ; do
-  		     /usr/bin/time -v $blastn -db ${refBase}/${genome}_${annotation}_blast -query $q
+  		     $blastn -db ${refBase}/${genome}_${annotation}_blast -query $q
                       -outfmt $blast_out_fmt $blast_options -num_threads $threads >> $output ;
 		  done ;
 		  rm ${output.dir}/temp_for_blastn*.fa
