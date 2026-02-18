@@ -1483,7 +1483,7 @@ int main(int argc, char** argv) {
       tmp.reserve(cand.size());
       for (size_t i = 0; i < cand.size(); ++i) if (cand[i].spanning_reads > 0) tmp.push_back(cand[i]);
       cand.swap(tmp);
-    }
+      }**/
 
     // Add gene-level counts
     std::unordered_map<std::string, double> geneCounts = read_gene_counts(gene_count_table_file);
@@ -1508,7 +1508,7 @@ int main(int argc, char** argv) {
         if (cand[i].gap > gapmin_kb) tmp.push_back(cand[i]);
       }
       cand.swap(tmp);
-    } ******/
+    }
 
     // Classification logic
     // spanP = spanning_pairs > 0 (numeric); single if no spanP anywhere

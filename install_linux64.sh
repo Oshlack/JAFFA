@@ -6,13 +6,13 @@
 ## end of execution of this script. These paths can be changed if a different
 ## version of software is required. Note that R must be installed manually
 ##
-## Last Modified: 2025 by Nadia Davidson
+## Last Modified: 2026 by Nadia Davidson
 
 mkdir -p tools/bin 
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat  blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table make_final_table extract_seq_from_fasta make_simple_read_table"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat  blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table make_final_table extract_seq_from_fasta make_simple_read_table make_simple_read_table_assembly compile_results"
 
 #installation methods
 
@@ -54,6 +54,13 @@ function make_final_table_install {
     g++ -O3 -o bin/make_final_table ../src/make_final_table.c++
 }
 
+function make_simple_read_table_assembly_install {
+    g++ -O3 -o bin/make_simple_read_table_assembly ../src/make_simple_read_table_assembly.c++
+}
+
+function compile_results_install {
+    g++ -O3 -o bin/compile_results ../src/compile_results.c++
+}
 
 function bpipe_install {
    wget -O bpipe-0.9.13.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.13/bpipe-0.9.13.tar.gz
@@ -156,15 +163,6 @@ for c in $commands ; do
     fi
     echo "$c=\"$c_path\"" >> ../tools.groovy
 done
-
-#finally check that R is install
-R_path=`which R 2>/dev/null`
-if [ -z $R_path ] ; then
-    echo "R not found!"
-    echo "Please go to http://www.r-project.org/ and follow the installation instructions."
-    echo "Note that the IRanges R package must be installed."
-fi
-echo "R=\"$R_path\"" >> ../tools.groovy
 
 #loop through commands to check they are all installed
 echo "Checking that all required tools were installed:"

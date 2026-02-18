@@ -75,7 +75,10 @@ transLength=100 //the minimum length for Oases to report an assembled contig
 // for aligning to known genes using blastn
 //96% similar when we blat to the human transcriptome
 blast_options="-perc_identity 96"
-anno_prefix="\'V[[:alnum:]]+_(.+?)__range=\'"  //"_(EN[^_]*)__"
+// number of lines from fasta to process at a time for blastn (#reads*2). This reduces the memory required.
+blast_batch_size=1000000
+//pattern used to fetch transcript ID within reference transcritome FA
+anno_prefix="\'V[[:alnum:]]+_(.+?)__range=\'" 
 
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
@@ -112,8 +115,8 @@ knownTable_CosmicTier=codeBase+"/inclusion_and_exclusion_lists/cosmic_genes.txt"
 knownTable_GTEx=codeBase+"/inclusion_and_exclusion_lists/known_fusions_gtex.txt" //Freq. of chimeric RNA seen in GTex (processed with JAFFA v2.4)
 
 //name of scripts
-R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
-R_compile_results_script=codeBase+"/compile_results.R"
+//R_get_spanning_reads_script=codeBase+"/get_spanning_reads.R"
+//R_compile_results_script=codeBase+"/compile_results.R"
 oases_assembly_script=codeBase+"/assemble.sh"
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
 
@@ -321,29 +324,32 @@ align_reads_to_annotation = {
     doc "Align reads to annotation"
     output.dir=jaffa_output+branch
     produce(input.prefix+".paf") {
-        from(".fasta") {
+        from(".fasta") { //split the reads to ensure RAM doesn't blow up for blastn
             exec """
-		   /usr/bin/time -v $blastn -db ${refBase}/${genome}_${annotation}_blast -query $input 
-		      -outfmt $blast_out_fmt $blast_options -num_threads $threads > $output ;
+	    	 split --lines $blast_batch_size --additional-suffix=.fa $input ${output.dir}/temp_for_blastn ;
+		 > $output ;
+		 for q in ${output.dir}/temp_for_blastn*.fa ; do
+  		     /usr/bin/time -v $blastn -db ${refBase}/${genome}_${annotation}_blast -query $q
+                      -outfmt $blast_out_fmt $blast_options -num_threads $threads >> $output ;
+		  done ;
+		  rm ${output.dir}/temp_for_blastn*.fa
             ""","align_reads_to_annotation"
         }
     }
 }
+
 
 //Append the count table with the reads from the alignment to transcriptome. Then
 //parse the alignment table and filter for candidate fusions (now uses a c++ program from src/)
 filter_transcripts = {
     doc "Filter transcripts"
     output.dir=jaffa_output+branch.toString()
-    produce(input.prefix+".txt"){ // ,branch+".geneCounts") {
+    produce(input.prefix+".txt"){
         from(".paf") {
             exec """
 	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix > $output1
             ""","filter_transcripts"
         }
-	// code related to obtaining gene-level counts in below 
-	//sort -u -k1,1 $input | cut -f6 | sort | uniq -c | sed 's/^ *//g' >> ${output.dir}/${branch}.transCounts ;
-	//$make_count_table ${output.dir}/${branch}.transCounts $transTable > $output2 ;
     }
 }
 
@@ -394,13 +400,14 @@ get_spanning_reads = {
            exec """ 
                $samtools view $input2 | cut -f 3,4,8  > ${output.dir}/${branch}.temp ;
                $samtools view $input2 | cut -f 10 | awk '{print length}' > ${output.dir}/${branch}.readLengths ;
-               $R --vanilla --args ${output.dir}/${branch} $input1 ${output.dir}/${branch}.temp 
-                   $output ${output.dir}/${branch}.readLengths $overHang < $R_get_spanning_reads_script ;
+	       $make_simple_read_table_assembly ${output.dir}/${branch} $input1 ${output.dir}/${branch}.temp 
+	       			   $output ${output.dir}/${branch}.readLengths $overHang ;
                rm ${output.dir}/${branch}.temp ${output.dir}/${branch}.readLengths
            ""","get_spanning_reads"
         }
     }
 }
+
 
 //Used for the direct and hybrid pipelines - In this case the spanning reads will be 1 for each
 //read and the spanning pairs will be 0. 
@@ -416,7 +423,6 @@ make_simple_reads_table = {
     }
 }
 
-
 make_fasta_reads_table = {
     doc "Make fasta reads table"
     output.dir=jaffa_output+branch.toString()
@@ -429,7 +435,6 @@ make_fasta_reads_table = {
         }
     }
 }
-
 
 //This stage is only used the by hybrid mode.
 //It concatenates the fusions sequence files, then the read files.
@@ -445,7 +450,6 @@ merge_assembly_and_unmapped_reads_candidates = {
         }
     }
 }
-
 
 //Align candidate fusions to the genome
 align_transcripts_to_genome = {
@@ -492,9 +496,9 @@ compile_all_results = {
         output.dir=jaffa_output
     }
     produce(outputName+".fasta",outputName+".csv") {
-        // change to the jaffa output directory   
+        // change to the jaffa output directory
         exec """
-            $R --vanilla --args $output2.prefix $inputs.summary < $R_compile_results_script ;
+	    $compile_results $output2.prefix $inputs.summary ;
             rm -f $output1;
             while read line; do $get_fusion_seqs \$line $output1 ; done < $output2;
 
