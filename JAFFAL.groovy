@@ -13,6 +13,12 @@
 codeBase = file(bpipe.Config.config.script).parentFile.absolutePath
 load codeBase+"/JAFFA_stages.groovy"
 
+
+//different defaults for long-reads
+reassign_dist=50
+split_buffer=1 //reads are split at breakpoint+buffer before realignment to genome
+
+
 get_fasta = {
    doc "Converting fastqs to fasta"
    output.dir=jaffa_output+branch
@@ -32,12 +38,24 @@ minimap2_transcriptome = {
    }
 }
 
+extract_left_right_sequence = {
+   doc "Spliting fusion reads ready for realignment"
+   output.dir=jaffa_output+branch
+   produce(branch.toString() +".fusion.left.fa", branch.toString() +".fusion.right.fa"){
+      exec """
+          $split_fusion_reads $input.txt $input.fa $split_buffer $output1 $output2 ;
+      """
+      }
+}
+
 minimap2_genome = {
    doc "Aligning candidates to genome using minimap2"
    output.dir=jaffa_output+branch
    produce(branch.toString()+"_genome.paf",branch.toString()+"_genome.psl"){ 
 	exec """
-	   $minimap2 -t $threads -x splice --junc-bed $transBed -c $genomeFasta $input > $output1;
+	   $minimap2 -t $threads -x splice --junc-bed $transBed -c --score-N 1 $genomeFasta $input1 > $output1;
+	   $minimap2 -t $threads -x splice --junc-bed $transBed -c --score-N 1 $genomeFasta $input2 >> $output1;
+
 	   grep \$'\\t+\\t' $output1 | awk -F'\\t' -v OFS="\\t" '{ 
 	   	print \$4-\$3,0,0,0,0,0,0,0,\$5,\$1,\$2,\$3,\$4,\$6,\$7,\$8,\$9,2, 100","\$4-\$3-100",",
 		\$3","\$3+100",", \$8","\$9-\$4+\$3+100"," 
@@ -60,7 +78,6 @@ report_3_gene_fusions = {
    }
 }
 
-reassign_dist=50
 
 readLayout="single"
 fastqInputFormat="%.gz"
@@ -69,6 +86,7 @@ common_steps = segment {
    minimap2_transcriptome + 
    filter_transcripts +
    extract_fusion_sequences +
+   extract_left_right_sequence +
    minimap2_genome + 
    make_fasta_reads_table +
    get_final_list +

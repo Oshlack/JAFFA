@@ -368,6 +368,7 @@ extract_fusion_sequences = {
     }
 } 
 
+
 //Map the reads back to the candidate fusion sequences
 map_reads = {
     doc "Map reads back to the candidate fusion sequences"
@@ -456,16 +457,16 @@ align_transcripts_to_genome = {
     doc "Align candidate fusions to the genome"
     output.dir=jaffa_output+branch.toString()
     produce(branch.toString()+"_genome.psl") {
-        from(".fusions.fa") {
-            exec """
+       from(".fusions.fa") {
+          exec """
 	       if [ ! -s $input ]; then
 	          touch $output ;
 	       else
-	          time set -o pipefail; $blat $genomeFasta $input1 $blat_options -noHead $output 2>&1 | tee ${output.dir}/log_genome_blat ;
+	          time set -o pipefail; $blat $genomeFasta $input $blat_options -noHead $output 2>&1 | tee ${output.dir}/log_genome_blat ;
 	       fi ;
             ""","align_transcripts_to_genome"
         }
-    }
+   }
 }
 
 //Do a bit more filtering and compile the final filtered list (uses an R script)

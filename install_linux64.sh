@@ -12,7 +12,7 @@ mkdir -p tools/bin
 cd tools 
 
 #a list of which programs need to be installed
-commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat  blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table make_final_table extract_seq_from_fasta make_simple_read_table make_simple_read_table_assembly compile_results"
+commands="bpipe velveth velvetg oases trimmomatic samtools bowtie2 blat dedupe reformat  blastn bedtools minimap2 process_transcriptome_align_table make_3_gene_fusion_table make_count_table make_final_table extract_seq_from_fasta make_simple_read_table make_simple_read_table_assembly compile_results split_fusion_reads"
 
 #installation methods
 
@@ -60,6 +60,10 @@ function make_simple_read_table_assembly_install {
 
 function compile_results_install {
     g++ -O3 -o bin/compile_results ../src/compile_results.c++
+}
+
+function split_fusion_reads_install {
+    g++ -O3 -o bin/split_fusion_reads ../src/split_fusion_reads.c++
 }
 
 function bpipe_install {

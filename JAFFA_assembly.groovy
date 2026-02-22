@@ -22,7 +22,7 @@ run{ run_check + fastqInputFormat * [
 		      run_assembly +
 		      align_transcripts_to_annotation  + 
 		      filter_transcripts + 
-		      extract_fusion_sequences + 
+		      extract_fusion_sequences +
 		      map_reads + 
 		      get_spanning_reads +
 		      align_transcripts_to_genome + 
