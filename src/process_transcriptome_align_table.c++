@@ -37,8 +37,8 @@ void print_usage(){
   cerr << endl;
   cerr << "Usage: process_transcriptome_blat_table <blat table> <gap size> <ref_table> <gene name prefix regex> > <out table>" << endl;
   cerr << "Optional flags:\n"
-     << "  --max-gap <int>       Max allowed gap on read (default 30)\n"
-     << "  --max-overlap <int>   Max allowed overlap on read (default 15)\n";
+     << "  --max-read-gap <int>       Max allowed gap on read (default 30)\n"
+     << "  --max-read-overlap <int>   Max allowed overlap on read (default 15)\n";
   cerr << endl;
 }
 
@@ -282,15 +282,15 @@ int main(int argc, char **argv){
   }
   //assign optional parameters if they are there
   for (int i = 1; i < argc; i++) {
-      if (strcmp(argv[i], "--max-gap") == 0 && i + 1 < argc) {
+      if (strcmp(argv[i], "--max-read-gap") == 0 && i + 1 < argc) {
           max_read_gap = atoi(argv[++i]);
       }
-      else if (strcmp(argv[i], "--max-overlap") == 0 && i + 1 < argc) {
+      else if (strcmp(argv[i], "--max-read-overlap") == 0 && i + 1 < argc) {
           max_read_overlap = atoi(argv[++i]);
       }
   }
   // log the parameters being used for the filtering
-  printf("Using max gap of %d and max overlap of %d\n", max_read_gap, max_read_overlap);
+  printf("Using max-read-gap of %d and max-read-overlap of %d\n", max_read_gap, max_read_overlap);
   //minimum gap size in genome is argv[2]
   int gap_size=atoi(argv[2]);
   
