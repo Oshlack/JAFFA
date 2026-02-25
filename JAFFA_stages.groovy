@@ -83,6 +83,10 @@ anno_prefix="\'V[[:alnum:]]+_(.+?)__range=\'"
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
 
+// for read overlap in filter_transcripts (process_transcriptome_align_table.c++)
+max_read_gap=30
+max_read_overlap=15
+
 // filtering
 gapSize=1000 //minimum distance between the two fusion candidates for the 1st filtering stage
 finalGapSize=10000 //minimum distance for the final filtering
@@ -347,7 +351,8 @@ filter_transcripts = {
     produce(input.prefix+".txt"){
         from(".paf") {
             exec """
-	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix > $output1
+	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix 
+        --max-read-gap $max_read_gap --max-read-overlap $max_read_overlap> $output1
             ""","filter_transcripts"
         }
     }
