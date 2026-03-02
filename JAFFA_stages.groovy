@@ -352,7 +352,7 @@ filter_transcripts = {
         from(".paf") {
             exec """
 	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix 
-        --max-read-gap $max_read_gap --max-read-overlap $max_read_overlap> $output1
+        --max-read-gap $max_read_gap --max-read-overlap $max_read_overlap > $output1
             ""","filter_transcripts"
         }
     }
