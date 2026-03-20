@@ -125,14 +125,13 @@ oases_assembly_script=codeBase+"/assemble.sh"
 get_fusion_seqs=codeBase+"/scripts/get_fusion_seqs.bash"
 
 
-
 /******************* Here are the pipeline stages **********************/
 
 //lets start by checking the dependencies
 run_check = {
     doc "check for Jaffa dependencies"
-    if (jaffa_output) {
-        output.dir=jaffa_output
+    if (jaffa_output){
+       output.dir=jaffa_output
     }
     produce("checks") {
         exec """
@@ -151,7 +150,7 @@ run_check = {
 //that map to chrM, introns and intergenetic regions
 prepare_reads = {
     doc "Prepare reads"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     if (inputs.size() == 1) {  // single reads
         produce(branch.toString()+"_filtered_reads.fastq.gz",
                 branch.toString()+"_leftover_reads.fastq.gz",
@@ -227,7 +226,7 @@ prepare_reads = {
 //Cat read pairs into a single file
 cat_reads = {
     if (inputs.size() == 1) return
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     exec "cat $input1.fastq $input2.fastq > $output.fastq"
 }
 
@@ -235,7 +234,7 @@ cat_reads = {
 //Get read which either align discordantly or not at all
 get_unmapped = {
     doc "Get Unmapped"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".fasta", branch.toString()+"_discordant_pairs.bam") {
         from("*_leftover_reads*.gz") {
             def input_string = ""
@@ -264,7 +263,7 @@ get_unmapped = {
 //transcriptome as well as the reference
 get_assembly_unmapped = {
     doc "Get assembly unmapped"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+"-unmapped.fasta", branch.toString()+"_discordant_pairs.bam") {
         from("*_leftover_reads*.gz") {
             def input_string = ""
@@ -295,7 +294,7 @@ get_assembly_unmapped = {
 //Run the de novo assembly
 run_assembly = {
     doc "Align transcripts to annotation"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".fasta") {
         from("*_filtered_reads.fastq*gz") {
             exec """
@@ -312,7 +311,7 @@ run_assembly = {
 //this ensures the pipelines are separated for the hybrid mode. 
 align_transcripts_to_annotation = {
     doc "Align transcripts to annotation"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".paf") {
         from(".fasta") {
             exec """
@@ -326,7 +325,7 @@ align_transcripts_to_annotation = {
 //Align the reads to the annotation 
 align_reads_to_annotation = {
     doc "Align reads to annotation"
-    output.dir=jaffa_output+branch
+    output.dir=jaffa_output+"/"+branch
     produce(input.prefix+".paf") {
         from(".fasta") { //split the reads to ensure RAM doesn't blow up for blastn
             exec """
@@ -347,7 +346,7 @@ align_reads_to_annotation = {
 //parse the alignment table and filter for candidate fusions (now uses a c++ program from src/)
 filter_transcripts = {
     doc "Filter transcripts"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(input.prefix+".txt"){
         from(".paf") {
             exec """
@@ -361,7 +360,7 @@ filter_transcripts = {
 //Extract the fasta sequences for the candidate fusions into their own fasta file
 extract_fusion_sequences = {
     doc "Extract fusion sequences"
-    output.dir=jaffa_output+branch
+    output.dir=jaffa_output+"/"+branch
     produce(input.prefix+".fusions.fa") {
         from(".txt", ".fasta") {
             exec """
@@ -377,7 +376,7 @@ extract_fusion_sequences = {
 //Map the reads back to the candidate fusion sequences
 map_reads = {
     doc "Map reads back to the candidate fusion sequences"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".sorted.bam") {
         from("fusions.fa","*_filtered_reads*gz") {
             def input_string=""
@@ -400,7 +399,7 @@ map_reads = {
 //Used for assembly mode
 get_spanning_reads = {
     doc "Calculate the number of reads which span the breakpoint of the fusions"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(input.txt.prefix+".reads") {
        from("txt","bam") {
            exec """ 
@@ -419,7 +418,7 @@ get_spanning_reads = {
 //read and the spanning pairs will be 0. 
 make_simple_reads_table = {
     doc "Calculate the number of reads which span the breakpoint of the fusions"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
 	   exec """
@@ -431,7 +430,7 @@ make_simple_reads_table = {
 
 make_fasta_reads_table = {
     doc "Make fasta reads table"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(input.txt.prefix+".reads") {
         from("txt") {
             exec """
@@ -446,7 +445,7 @@ make_fasta_reads_table = {
 //It concatenates the fusions sequence files, then the read files.
 merge_assembly_and_unmapped_reads_candidates = {
     doc "Concatenate fusion sequence files and reads files (hybrid only)"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".all.fusions.fa", branch.toString()+".all.reads") {
         from("fusions.fa", branch.toString()+".fusions.fa", "reads", branch.toString()+".reads") {
             exec """
@@ -460,7 +459,7 @@ merge_assembly_and_unmapped_reads_candidates = {
 //Align candidate fusions to the genome
 align_transcripts_to_genome = {
     doc "Align candidate fusions to the genome"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+"_genome.psl") {
        from(".fusions.fa") {
           exec """
@@ -477,7 +476,7 @@ align_transcripts_to_genome = {
 //Do a bit more filtering and compile the final filtered list (uses an R script)
 get_final_list = {
     doc "Get final list"
-    output.dir=jaffa_output+branch.toString()
+    output.dir=jaffa_output+"/"+branch.toString()
     produce(branch.toString()+".summary") {
         from(".psl", ".reads",".counts") {
             exec """
@@ -499,7 +498,7 @@ compile_all_results = {
     doc "Compile all results"
     var type : "" 
     if (jaffa_output) {
-        output.dir=jaffa_output
+       output.dir=jaffa_output
     }
     produce(outputName+".fasta",outputName+".csv") {
         // change to the jaffa output directory

@@ -21,7 +21,7 @@ split_buffer=1 //reads are split at breakpoint+buffer before realignment to geno
 
 get_fasta = {
    doc "Converting fastqs to fasta"
-   output.dir=jaffa_output+branch
+   output.dir=jaffa_output+"/"+branch
    produce(branch.toString()+".fasta"){
       exec "$reformat ignorebadquality=t in=$input out=$output threads=$threads ;"
    }
@@ -29,7 +29,7 @@ get_fasta = {
 
 minimap2_transcriptome = {
    doc "Aligning candidates to transcriptome using minimap2"
-   output.dir=jaffa_output+branch
+   output.dir=jaffa_output+"/"+branch
    produce(branch.toString() +".paf", branch.toString() +".counts"){
         exec """
            $minimap2 -t $threads -x map-ont -c $transFasta $input > $output1 ;
@@ -40,7 +40,7 @@ minimap2_transcriptome = {
 
 extract_left_right_sequence = {
    doc "Spliting fusion reads ready for realignment"
-   output.dir=jaffa_output+branch
+   output.dir=jaffa_output+"/"+branch
    produce(branch.toString() +".fusion.left.fa", branch.toString() +".fusion.right.fa"){
       exec """
           $split_fusion_reads $input.txt $input.fa $split_buffer $output1 $output2 ;
@@ -50,7 +50,7 @@ extract_left_right_sequence = {
 
 minimap2_genome = {
    doc "Aligning candidates to genome using minimap2"
-   output.dir=jaffa_output+branch
+   output.dir=jaffa_output+"/"+branch
    produce(branch.toString()+"_genome.paf",branch.toString()+"_genome.psl"){ 
 	exec """
 	   $minimap2 -t $threads -x splice --junc-bed $transBed -c --score-N 1 $genomeFasta $input1 > $output1;
@@ -70,7 +70,7 @@ minimap2_genome = {
 
 report_3_gene_fusions = {
    doc "Checking for reads that support multi-fusion transcripts"
-   output.dir=jaffa_output+branch.toString()
+   output.dir=jaffa_output+"/"+branch.toString()
    produce(branch.toString()+".3gene_summary",branch.toString()+".3gene_reads"){
       exec """
          $make_3_gene_fusion_table $input.summary $input.txt $output2 > $output1
