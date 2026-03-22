@@ -13,14 +13,15 @@ then
   echo ""
   echo "USAGE: ./get_cell_barcodes_by_fusion.bash <list of fusions> <sample/sample.txt>"
   echo ""
-  echo "Where <list of fusions> is a list of fusions with colon separated gene names. e.g. BCR:ABL1"
+  echo "Where <list of fusions> is a list of fusions with double colon separated gene names. e.g. BCR::ABL1"
   echo "and <sample> is a long read single cell sample which has been processed by"
   echo "FLAMES method, match_cell_barcode, as well as JAFFAL" 
   exit
 fi
 
 cat $1 | while read fusion ; do
-   grep $fusion $2 | cut -f1 -d "_" | sort -u | while read barcode ; do
+    txt_fusion=`echo $fusion | sed 's/::/:/g'`  #fix colon for old style fusion names
+    grep $txt_fusion $2 | cut -f1 -d "_" | sort -u | while read barcode ; do
        echo -e "$fusion\t$barcode"
    done
 done
