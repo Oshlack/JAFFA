@@ -58,7 +58,7 @@ fastaInputFormat="%."+fastaSuffix
 
 //Default output name
 outputName="jaffa_results"
-jaffa_output="" // used to specify an output directory for jaffa eg. set to "jaffa/" for future use by other pipelines
+jaffa_output=System.getProperty("user.dir") // used to specify an output directory for jaffa eg. set to "jaffa/" for future use by other pipelines
 
 // trimming
 scores=33 //PHRED quality score type
