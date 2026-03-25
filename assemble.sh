@@ -12,11 +12,18 @@ Kmerge=$7
 transLength=$8
 #export OMP_THREAD_LIMIT=$9
 #export OMP_NUM_THREADS=$9
-inputs="../../${10}"
-if [ $# -eq 11 ] ; then
-   inputs="$inputs ../../${11}"
+top_dir=$PWD
+inputs="${top_dir}/${10}" #make input path absolute.
+if [[ ${10} == /* ]]; then
+    inputs="${10}"
 fi
-
+if [ $# -eq 11 ] ; then
+    if [[ ${11} == /* ]]; then
+	inputs="$inputs ${11}"
+    else
+	inputs="$inputs ${top_dir}/${11}"
+    fi	
+fi
 
 # Lets start by checking that the input k-mer lengths are supported
 Kmin=`$velveth | grep "MAXKMERLENGTH" | cut -d"=" -f2`
@@ -36,7 +43,7 @@ mkdir ${base}/oases ; cd ${base}/oases
 echo "$velveth directory $Kall_original -fastq -separate $inputs >> log_velveth"
 $velveth directory $Kall_original -fastq -separate $inputs >> log_velveth
 
-for k in $Ks ; do
+for k in ${Ks} ; do
     echo "Running Assembly for k="$k
     echo "directory_${k}" >> log_${k}
     echo "running $velvetg" >> log_${k}
@@ -53,10 +60,10 @@ $velvetg mergedAssembly -read_trkg yes -conserveLong yes >> log_merge
 echo "running oases" >> log_merge
 $oases mergedAssembly -merge yes -min_trans_lgth $transLength >> log_merge
 echo "done" >> log_merge
-cd ../../
+cd $top_dir
 
 #check whether the jobs completed successfully.
-for k in $Ks ; do
+for k in ${Ks} ; do
    if ! [ -s ${base}/oases/directory_${k}/transcripts.fa  ] ; then
       echo "Oases K-mer=${k} assembly failed" 
    else
