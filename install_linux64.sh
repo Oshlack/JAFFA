@@ -70,11 +70,6 @@ function bpipe_install {
    wget -O bpipe-0.9.13.tar.gz https://github.com/ssadedin/bpipe/releases/download/0.9.13/bpipe-0.9.13.tar.gz
    tar -zxvf bpipe-0.9.13.tar.gz ; rm bpipe-0.9.13.tar.gz
    ln -s $PWD/bpipe-0.9.13/bin/* $PWD/bin/
-
-   # apply the patch to bpipe merged in #293 to fix a race condition which
-   # is common in containerised runs, but also occurs generally under a native
-   # runtime:  for more information, see https://github.com/ssadedin/bpipe/issues/290
-   patch $PWD/bpipe-0.9.13/bin/bpipe ../src/pid-error.patch
 }
 
 function velveth_install {
@@ -139,7 +134,7 @@ function dedupe_install {
     for script in `ls $PWD/bbmap/*.sh` ; do
 	s=`basename $script`
 	s_pre=`echo $s | sed 's/.sh//g'`
-	echo "$PWD/bbmap/$s \$@" > $PWD/bin/$s_pre
+	echo "cd $PWD/bbmap && ./$s \$@" > $PWD/bin/$s_pre
 	chmod +x $PWD/bin/$s_pre
     done
 }
@@ -147,7 +142,7 @@ function dedupe_install {
 #Check if the version of gcc is >= 4.9
 gcc_version=`gcc -dumpversion`
 gcc_check=`echo -e "$gcc_version\n4.9" | sort -n | tail -n1`
-if [[ $gcc_chek = "4.9" ]] 
+if [[ $gcc_check = "4.9" ]] 
 then 
    echo "Your version of gcc is $gcc_version."
    echo "gcc must be >= 4.9 to install JAFFA. Exiting..."
