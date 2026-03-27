@@ -5,7 +5,7 @@
 # ================================================
 
 # must use bookworm for directly compatible R version >=4.4.0
-FROM debian:bullseye AS base
+FROM debian:bookworm AS base
 
 # get latest version of R: https://cran.r-project.org/bin/linux/debian/
 RUN apt-get update
@@ -23,17 +23,14 @@ RUN gpg --keyserver keyserver.ubuntu.com \
 RUN gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | \
     tee /etc/apt/trusted.gpg.d/cran_debian_key.asc
 
-RUN echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >> /etc/apt/sources.list 
+RUN echo 'deb http://cloud.r-project.org/bin/linux/debian bookworm-cran40/' >> /etc/apt/sources.list 
 RUN apt-get update
 
 # install procps to get ps, needed in Nextflow
 RUN apt-get install -y procps
 
 RUN apt-get install -y --no-install-recommends \
-    r-base-core=4.5.1-1~bullseyecran.0
-
-# fix version of Java for bpipe 0.9.9.2
-RUN apt-get install -y --no-install-recommends openjdk-11-jre
+    r-base-core=4.5.3-1~bookwormcran.0
 
 # install libncurses.so.6 for minimap2
 RUN apt-get install -y libncurses6 --no-install-recommends
@@ -43,8 +40,8 @@ RUN apt-get install -y libncurses6 --no-install-recommends
 # ================================================
 FROM base AS r-build
 RUN apt-get install -y \
-    r-base-core=4.5.1-1~bullseyecran.0 \
-    r-base-dev=4.5.1-1~bullseyecran.0
+    r-base-core=4.5.3-1~bookwormcran.0 \
+    r-base-dev=4.5.3-1~bookwormcran.0
 
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org')" \
     && R -e "BiocManager::install('IRanges')"
@@ -58,6 +55,14 @@ FROM base AS software-build
 # this is placed after the R installs so that they can
 # be cached
 RUN apt-get install -y build-essential wget make cmake unzip zip python3 zlib1g-dev libncurses-dev
+
+# fix version of Java for bpipe 0.9.9.2, using unstable
+# (since openjdk-11 is not supported on stable bookworm)
+RUN echo "deb http://deb.debian.org/debian sid main" >> /etc/apt/sources.list.d/sid.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends -t sid openjdk-11-jre \
+    && rm /etc/apt/sources.list.d/sid.list \
+    && apt-get update
 
 WORKDIR /JAFFA
 
