@@ -4,7 +4,6 @@
 # BASE BUILD - everything will use this
 # ================================================
 
-# must use bookworm for directly compatible R version >=4.4.0
 FROM debian:bookworm AS base
 
 # get latest version of R: https://cran.r-project.org/bin/linux/debian/
@@ -18,51 +17,18 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
-RUN gpg --keyserver keyserver.ubuntu.com \
-    --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
-RUN gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | \
-    tee /etc/apt/trusted.gpg.d/cran_debian_key.asc
-
-RUN echo 'deb http://cloud.r-project.org/bin/linux/debian bookworm-cran40/' >> /etc/apt/sources.list 
-RUN apt-get update
-
 # install procps to get ps, needed in Nextflow
 RUN apt-get install -y procps
-
-RUN apt-get install -y --no-install-recommends \
-    r-base-core=4.5.3-1~bookwormcran.0
 
 # install libncurses.so.6 for minimap2
 RUN apt-get install -y libncurses6 --no-install-recommends
 
-# ================================================
-# R BUILD: BUILD AND INSTALL ALL R PACKAGES
-# ================================================
-FROM base AS r-build
-RUN apt-get install -y \
-    r-base-core=4.5.3-1~bookwormcran.0 \
-    r-base-dev=4.5.3-1~bookwormcran.0
-
-RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org')" \
-    && R -e "BiocManager::install('IRanges')"
-
 
 # ================================================
-# SOFTWARE BUILD: INSTALL ALL NON-R SOFTWARE
+# SOFTWARE BUILD: INSTALL ALL SOFTWARE
 # ================================================
 FROM base AS software-build
-# install useful tools for building non-R software
-# this is placed after the R installs so that they can
-# be cached
-RUN apt-get install -y build-essential wget make cmake unzip zip python3 zlib1g-dev libncurses-dev
-
-# fix version of Java for bpipe 0.9.9.2, using unstable
-# (since openjdk-11 is not supported on stable bookworm)
-RUN echo "deb http://deb.debian.org/debian sid main" >> /etc/apt/sources.list.d/sid.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends -t sid openjdk-11-jre \
-    && rm /etc/apt/sources.list.d/sid.list \
-    && apt-get update
+RUN apt-get install -y build-essential wget make cmake unzip zip python3 zlib1g-dev libncurses-dev libgomp1
 
 WORKDIR /JAFFA
 
@@ -82,6 +48,17 @@ RUN sed -i 's/refBase = codeBase/refBase = "\/ref"/' JAFFA_stages.groovy
 # ================================================
 FROM base
 
+# fix version of Java for bpipe 0.9.9.2, using unstable
+# (since openjdk-11 is not supported on stable trixie)
+RUN echo "deb http://deb.debian.org/debian sid main" >> /etc/apt/sources.list.d/sid.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends -t sid openjdk-11-jre \
+    && rm /etc/apt/sources.list.d/sid.list \
+    && apt-get update
+    
+# dependencies for individual tools
+RUN apt-get install -y libgomp1
+    
 LABEL org.opencontainers.image.title "JAFFA" \
     org.opencontainers.image.description "High sensitivity transcriptome-focused fusion gene detection." \
     org.opencontainers.image.authors "Davidson, N.M., Majewski, I.J. & Oshlack, A." \
@@ -92,17 +69,9 @@ LABEL org.opencontainers.image.title "JAFFA" \
 # copy over software
 COPY --from=software-build /JAFFA /JAFFA
 
-# copy over R packages
-COPY --from=r-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
-COPY --from=r-build /usr/lib/R/site-library /usr/lib/R/site-library
-COPY --from=r-build /usr/lib/R/library /usr/lib/R/library
-
-# RUN strip --strip-debug /usr/local/lib/R/site-library/*/libs/*.so
-
 RUN apt remove -y gcc
 RUN apt autoremove -y
 
 ENV PATH=${PATH}:/JAFFA/tools/bin:/JAFFA
-# ENV _JAVA_OPTIONS="--add-opens java.base/java.lang=ALL-UNNAMED"
 
 ENTRYPOINT ["/JAFFA/tools/bin/bpipe", "run"]
