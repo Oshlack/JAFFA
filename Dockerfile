@@ -48,14 +48,11 @@ RUN sed -i 's/refBase = codeBase/refBase = "\/ref"/' JAFFA_stages.groovy
 # ================================================
 FROM base
 
-# fix version of Java for bpipe 0.9.9.2, using unstable
-# (since openjdk-11 is not supported on stable trixie)
-RUN echo "deb http://deb.debian.org/debian sid main" >> /etc/apt/sources.list.d/sid.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends -t sid openjdk-11-jre \
-    && rm /etc/apt/sources.list.d/sid.list \
-    && apt-get update
-    
+# fix version of Java for bpipe 0.9.9.2
+# while bpipe requires openjdk 11, JAFFA testing is in Java 17 so
+# openjdk-17 is preferred
+RUN apt-get install -y --no-install-recommends openjdk-17-jre
+
 # dependencies for individual tools
 RUN apt-get install -y libgomp1
     
