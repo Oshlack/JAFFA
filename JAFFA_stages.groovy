@@ -84,8 +84,8 @@ blast_batch_size=1000000
 excludeChroms="chrM,chrMT,MT,M,chrMito,mitochondrion,Mito,MtDNA"
 
 //pattern used to fetch transcript ID within reference transcritome FA
-//anno_prefix="'(.*)'"
-anno_prefix="\'V[[:alnum:]]+_(.+?)__range=\'" 
+//anno_prefix="(.*)"
+anno_prefix="V[[:alnum:]]+_(.+?)__range=" 
 
 //for aligning candidate fusions against the genome
 blat_options="-minIdentity=96 -minScore=30"
@@ -171,7 +171,7 @@ prepare_reads = {
                     --al-gz $output1
                     --un ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
-                    -U ${output.dir}/${branch}_trim.fastq | cut -f 1,3 | $make_count_table $transTable $anno_prefix > $output3 ;
+                    -U ${output.dir}/${branch}_trim.fastq | cut -f 1,3 | $make_count_table $transTable '$anno_prefix' > $output3 ;
                 $bowtie2 $mapParams --very-fast
                     --un-gz $output2 -p $threads -x $maskedGenome
                     -U ${output.dir}/temp_trans_unmap_reads.fastq -S /dev/null ;
@@ -211,7 +211,7 @@ prepare_reads = {
                     --un-conc ${output.dir}/temp_trans_unmap_reads.fastq
                     -p $threads -x $transFasta.prefix
                     -1 ${output.dir}/${branch}_trim1.fastq
-                    -2 ${output.dir}/${branch}_trim2.fastq | cut -f 1,3 | $make_count_table $transTable $anno_prefix > $output5 ;
+                    -2 ${output.dir}/${branch}_trim2.fastq | cut -f 1,3 | $make_count_table $transTable '$anno_prefix' > $output5 ;
 
                 $bowtie2 $mapParams --very-fast
                     --un-conc-gz ${output3.prefix.prefix}.gz
@@ -357,7 +357,7 @@ filter_transcripts = {
     produce(input.prefix+".txt"){
         from(".paf") {
             exec """
-	    $process_transcriptome_align_table $input $gapSize $transTable $anno_prefix 
+        $process_transcriptome_align_table $input $gapSize $transTable '$anno_prefix' 
         --max-read-gap $max_read_gap --max-read-overlap $max_read_overlap > $output1
             ""","filter_transcripts"
         }
@@ -429,7 +429,7 @@ make_simple_reads_table = {
     produce(input.txt.prefix+".reads") {
         from(".txt", "*_discordant_pairs.bam") {
 	   exec """
-	      $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable $anno_prefix > $output
+          $samtools view $input2 | cut -f1-3 | $make_simple_read_table $input1 $transTable '$anno_prefix' > $output
 	   ""","make_simple_reads_table"
 	   }
     }
