@@ -225,7 +225,14 @@ build_tab_file() {
 
   echo "=== Building .tab gene coordinate table ==="
   if [ ! -f "$TAB_FILE" ]; then
+    # Ensembl GTFs omit gene_name for genes without a symbol (mostly lncRNAs), which
+    # leaves name2 empty and JAFFA reports those partners as chrom:pos. Fall back to
+    # gene_id, as GENCODE GTFs already do, so they are reported as ENSG... instead.
+    local NAMED_GTF=$REF_DIR/${PREFIX}.gene_name_filled.gtf
+    awk 'BEGIN{FS=OFS="\t"} !/^#/ && $9 !~ /gene_name "/ && match($9, /gene_id "[^"]+"/) {$9 = $9 " gene_name " substr($9, RSTART+8, RLENGTH-8) ";"} {print}' "$GTF" > "$NAMED_GTF"
+    GTF=$NAMED_GTF
     "$TOOLS/gtfToGenePred" "$GTF" "$GPD_FILE" -genePredExt -geneNameAsName2
+    rm -f "$NAMED_GTF"
     awk 'BEGIN{FS=OFS="\t"; print "#bin\tname\tchrom\tstrand\ttxStart\ttxEnd\tcdsStart\tcdsEnd\texonCount\texonStarts\texonEnds\tscore\tname2\tcdsStartStat\tcdsEndStat\texonFrames"} {print "1",$0}' "$GPD_FILE" > "$TAB_FILE"
   fi
 }
