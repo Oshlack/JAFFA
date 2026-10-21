@@ -45,8 +45,11 @@ set -euo pipefail
 #   g++ -std=c++11 -O2 -o tools/bin/prepare_ref_helper src/prepare_ref_helper.c++
 #
 # NOTE: since transcript headers are plain ">transcriptID" with no
-# __range= suffix, JAFFA_stages.groovy's anno_prefix must be:
-#   anno_prefix="'(.*)'"
+# __range= suffix, JAFFA_stages.groovy's anno_prefix should be:
+#   anno_prefix="(.*)"
+# or pass it at launch: bpipe run -p anno_prefix='(.*)' ...
+# (no embedded quotes -- the stages quote $anno_prefix themselves, and the
+# pattern needs a capture group, so '.*' is not equivalent)
 
 usage() {
   echo "Usage: $0 <JAFFA_PATH> <REF_DIR> <GENOME_NAME> <ANNOTATION_NAME> [THREADS]"
@@ -317,7 +320,7 @@ echo "  Masked genome:         $MASKED_FA (+ bowtie2 indexes)"
 echo "  BLAST db:              $BLAST_PREFIX"
 echo "  minimap2 genome index: $GENOME_MMI"
 echo "  Junction BED:          $BED_FILE"
-echo "anno_prefix should be: anno_prefix=\"'(.*)'\""
+echo "anno_prefix should be: anno_prefix=\"(.*)\"  (or: bpipe run -p anno_prefix='(.*)' ...)"
 if [ "$SANITIZED" -eq 1 ]; then
   echo "Names with unsafe characters were changed. See $RENAME_LOG for the (small) list."
   echo "To reverse in output files:"
