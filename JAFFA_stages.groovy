@@ -101,6 +101,12 @@ exclude="NoSupport,PotentialReadThrough" //fusions marked with these classificat
                            //thrown away. Can be a comma seperated list. 
 reassign_dist=0 //minimum distance between low-confidence fusion and others for it to be reassigned to another breakpoint.
 
+//set to true to also write <sample>.final_reads next to <sample>.summary: one line per
+//(final call, .reads row counted in its spanning reads), to find the reads behind each call.
+//A row is a read in JAFFAL and JAFFA_direct; in assembly/hybrid mode it can be an assembled contig.
+//Does not change any results. Override at runtime with -p finalReads=true
+finalReads=false
+
 //mapping and counting the coverage
 mapParams="-k1 --no-mixed --no-discordant --mm"
 overHang=15 //how many bases are require on either side of a break to count the read.
@@ -480,19 +486,23 @@ align_transcripts_to_genome = {
    }
 }
 
-//Do a bit more filtering and compile the final filtered list (uses an R script)
+//Do a bit more filtering and compile the final filtered list (make_final_table).
+//With finalReads=true, also write <sample>.final_reads: the reads counted for each final call
 get_final_list = {
     doc "Get final list"
     output.dir=jaffa_output+"/"+branch.toString()
-    produce(branch.toString()+".summary") {
+    def outs = [branch.toString()+".summary"]
+    if (finalReads.toString().toBoolean()) outs << branch.toString()+".final_reads"
+    produce(outs) {
         from(".psl", ".reads",".counts") {
+            def final_reads = (outs.size() > 1) ? output.final_reads : ""
             exec """
 	        if [ ! -s $input1 ] ; then
-		   touch $output ;
+		   touch $output $final_reads ;
  		else 
                    $make_final_table $input1 $input2 $input3 $transTable  
 		   $knownTable_Mitelman $knownTable_Cosmic $knownTable_CosmicTier $knownTable_GTEx
-		   $finalGapSize $exclude $reassign_dist $excludeChroms $output;
+		   $finalGapSize $exclude $reassign_dist $excludeChroms $output $final_reads;
 		 fi;
             ""","get_final_list"
         }

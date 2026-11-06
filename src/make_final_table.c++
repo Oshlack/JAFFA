@@ -221,6 +221,9 @@ struct FinalRow {
 
   // Classification
   std::string classification = "NoSupport";
+
+  // fusion_info rows (reads) counted in spanning_reads
+  std::vector<size_t> members;
 };
 
 static bool read_line(std::ifstream& in, std::string& line) {
@@ -1084,16 +1087,35 @@ static void write_output(const std::string& path, const std::vector<FinalRow>& r
   }
 }
 
+// One line per (final row, fusion_info row counted in its spanning_reads)
+static void write_reads_output(const std::string& path, const std::vector<FinalRow>& rows,
+                               const std::vector<FusionInfoRow>& fusion_info) {
+  std::ofstream out(path.c_str());
+  if (!out) throw std::runtime_error("Failed to write reads output_file: " + path);
+  out << "fusion_genes\tchrom1\tbase1\tchrom2\tbase2\tcontig\tclassification\t"
+      << "transcript\tbreak_min\tbreak_max\tspanning_pairs\tspanning_reads\n";
+  for (size_t i = 0; i < rows.size(); ++i) {
+    const FinalRow& r = rows[i];
+    for (size_t j = 0; j < r.members.size(); ++j) {
+      const FusionInfoRow& f = fusion_info[r.members[j]];
+      out << r.fusion_genes << "\t" << r.chrom1 << "\t" << r.base1 << "\t" << r.chrom2 << "\t" << r.base2 << "\t"
+          << r.transcript << "\t" << r.classification << "\t"
+          << f.transcript << "\t" << f.break_min << "\t" << f.break_max << "\t"
+          << f.spanning_pairs_raw << "\t" << f.spanning_reads << "\n";
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   try {
-    if (argc != 14) {
+    if (argc != 14 && argc != 15) {
       std::cerr
         << "Usage:\n"
         << "  " << argv[0]
         << " <blat.psl> <fusion_info.reads> <gene_counts> <trans_table>"
         << " <mitelman> <cosmic> <cosmic_tier> <gtex>"
         << " <gapmin_bp> <exclude_csv> <MIN_REASSIGNMENT_BASE_DIFF>"
-        << " <exclude_chroms_csv> <output>\n";
+        << " <exclude_chroms_csv> <output> [<reads_output>]\n";
       return 2;
     }
 
@@ -1111,6 +1133,7 @@ int main(int argc, char** argv) {
     const long long MIN_REASSIGNMENT_BASE_DIFF = to_ll(argv[11], 0);
     const std::string exclude_chroms_csv = argv[12];
     const std::string output_file = argv[13];
+    const std::string reads_output_file = (argc == 15) ? argv[14] : ""; // optional
     const std::set<std::string> excluded_chroms = parse_exclude_chroms(exclude_chroms_csv);
 
     std::cerr << "[INFO] Starting final fusion filtering\n";
@@ -1173,6 +1196,7 @@ int main(int argc, char** argv) {
       row.transcript = fusion_info[i].transcript;
       row.spanning_pairs = fusion_info[i].spanning_pairs_raw;
       row.spanning_reads = fusion_info[i].spanning_reads;
+      row.members.push_back(i);
 
       FinalRow g = format_positions(new_new_genome_pos[i], gene_to_strand);
 
@@ -1196,6 +1220,7 @@ int main(int argc, char** argv) {
     }
     if (!any_genome) {
       std::ofstream out(output_file.c_str()); // create empty file
+      if (!reads_output_file.empty()) std::ofstream reads_out(reads_output_file.c_str());
       return 0;
     }
 
@@ -1248,11 +1273,13 @@ int main(int argc, char** argv) {
       });
 
       FinalRow rep = v[ord[0]];
+      rep.members.clear();
       long long max_sp = 0;
       long long sum_reads = 0;
       for (size_t i = 0; i < v.size(); ++i) {
         max_sp = std::max(max_sp, sp[i]);
         sum_reads += v[i].spanning_reads;
+        rep.members.insert(rep.members.end(), v[i].members.begin(), v[i].members.end());
       }
       rep.spanning_reads = sum_reads;
       if (is_short) rep.spanning_pairs = "-";
@@ -1428,6 +1455,9 @@ int main(int argc, char** argv) {
 
 	    cand[best_target].spanning_reads += cand[idx].spanning_reads;
 	    cand[idx].spanning_reads = 0;
+	    std::vector<size_t>& m = cand[best_target].members;
+	    m.insert(m.end(), cand[idx].members.begin(), cand[idx].members.end());
+	    cand[idx].members.clear();
 	  }
 	}
       }
@@ -1525,6 +1555,7 @@ int main(int argc, char** argv) {
     std::cerr << "[INFO] Finally... writing out table\n";
     // Write
     write_output(output_file, cand);
+    if (!reads_output_file.empty()) write_reads_output(reads_output_file, cand, fusion_info);
     return 0;
 
   } catch (const std::exception& e) {
