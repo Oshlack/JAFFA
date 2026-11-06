@@ -100,7 +100,12 @@ finalGapSize=10000 //minimum distance for the final filtering
 exclude="NoSupport,PotentialReadThrough" //fusions marked with these classifications will be 
                            //thrown away. Can be a comma seperated list. 
 reassign_dist=0 //minimum distance between low-confidence fusion and others for it to be reassigned to another breakpoint.
-finalReads=false //set to true to also write <sample>.final_reads: one line per (final call, read counted in its spanning reads)
+
+//set to true to also write <sample>.final_reads next to <sample>.summary: one line per
+//(final call, .reads row counted in its spanning reads), to find the reads behind each call.
+//A row is a read in JAFFAL and JAFFA_direct; in assembly/hybrid mode it can be an assembled contig.
+//Does not change any results. Override at runtime with -p finalReads=true
+finalReads=false
 
 //mapping and counting the coverage
 mapParams="-k1 --no-mixed --no-discordant --mm"
